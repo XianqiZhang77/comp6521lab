@@ -7,19 +7,12 @@ package comp6521.lab.com;
  */
 public class MemoryManager 
 {
-	// Singleton
-	private static MemoryManager ms_Instance;
-	
-	// Singleton enforcing
+	// Constructor
 	private MemoryManager(){}
-	public Object clone() throws CloneNotSupportedException { throw new CloneNotSupportedException(); }
-	public static synchronized MemoryManager getInstance()
-	{
-		if( ms_Instance == null )
-			ms_Instance = new MemoryManager();
-		
-		return ms_Instance;
-	}
+	
+	// Singleton
+	private static final MemoryManager ms_Instance = new MemoryManager();
+	public MemoryManager getInstance() { return ms_Instance; }
 	
 	// Memory manager interface to the page manager
 	//...

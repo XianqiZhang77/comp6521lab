@@ -48,6 +48,8 @@ public class PageManagerSingleton
 		return this.path;
 	}
 	
+	public final int getNumberOfRecordsPerPage() { return 10; }
+	
 	// get page from disk. a page is equal to 10 records.
 	// preconditions: recordSize, pageNumber to retrieve, fileName containing relation data.
 	// post-conditions: byte array containing read bytes 

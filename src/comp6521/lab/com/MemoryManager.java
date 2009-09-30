@@ -53,11 +53,11 @@ public class MemoryManager
 	}
 		     
 	// Memory manager interface to the page manager
-    public byte[] getPage( RecordType pageType, int pageNumber )
+    public char[] getPage( RecordType pageType, int pageNumber )
     {
     	 int i = pageType.index;
     	 // Check if we have enough memory left, if not, return null
-    	 int NeededMemory = m_records[i].m_recordSize * PageManager.GetNumberOfRecordsPerPage();
+    	 int NeededMemory = m_records[i].m_recordSize * PageManagerSingleton.getInstance().getNumberOfRecordsPerPage();
     	 
     	 if( m_ActualMemory + NeededMemory > m_MaxMemory )
     	 {
@@ -66,7 +66,7 @@ public class MemoryManager
     	 else
     	 {
     		 m_ActualMemory += NeededMemory;
-    		 byte[] rawData = PageManager.getPage( m_records[i].m_filename, m_records[i].m_recordSize, pageNumber );
+    		 char[] rawData = PageManagerSingleton.getInstance().getPage( m_records[i].m_filename, m_records[i].m_recordSize, pageNumber );
     		 
     		 // Add memory entry
     		 m_records[i].m_pagesTaken.add( Integer.valueOf(pageNumber) );
@@ -85,7 +85,7 @@ public class MemoryManager
     	 if( m_records[i].m_pagesTaken.contains( Integer.valueOf(pageNumber) ) )
     	 {
     		 // Restore available memory
-    		 int FreedMemory = m_records[i] * PageManager.GetNumberOfRecordsPerPage();
+    		 int FreedMemory = m_records[i].m_recordSize * PageManagerSingleton.getInstance().getNumberOfRecordsPerPage();
     		 m_ActualMemory -= FreedMemory;
     	 
     		 // Remove from memory entry 

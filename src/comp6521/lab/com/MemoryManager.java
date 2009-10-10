@@ -1,10 +1,18 @@
 package comp6521.lab.com;
 
 import java.util.Set;
+import comp6521.lab.com.CustomerRecord;
+import comp6521.lab.com.LineItemRecord;
+import comp6521.lab.com.NationRecord;
+import comp6521.lab.com.OrdersRecord;
+import comp6521.lab.com.PartRecord;
+import comp6521.lab.com.PartSuppRecord;
+import comp6521.lab.com.RegionRecord;
+import comp6521.lab.com.SupplierRecord;
 
 /**
  * 
- * @author Julien
+ * @author Julien L'Heureux
  *
  */
 public class MemoryManager 
@@ -50,14 +58,14 @@ public class MemoryManager
 		
 		m_records = new RecordKeeper[8];
 		// fill in some data... like the size of the records
-		m_records[0] = new RecordKeeper( String.valueOf("Customer"), 0 );
-		m_records[1] = new RecordKeeper( String.valueOf("LineItem"), 0 );
-		m_records[2] = new RecordKeeper( String.valueOf("Nation"),   0 );
-		m_records[3] = new RecordKeeper( String.valueOf("Orders"),   0 );
-		m_records[4] = new RecordKeeper( String.valueOf("Part"),     0 );
-		m_records[5] = new RecordKeeper( String.valueOf("PartSupp"), 0 );
-		m_records[6] = new RecordKeeper( String.valueOf("Region"),   0 );
-		m_records[7] = new RecordKeeper( String.valueOf("Supplier"), 0 );
+		m_records[0] = new RecordKeeper( String.valueOf("Customer"), CustomerRecord.GetRecordSize() );
+		m_records[1] = new RecordKeeper( String.valueOf("LineItem"), LineItemRecord.GetRecordSize() );
+		m_records[2] = new RecordKeeper( String.valueOf("Nation"),   NationRecord.GetRecordSize()   );
+		m_records[3] = new RecordKeeper( String.valueOf("Orders"),   OrdersRecord.GetRecordSize()   );
+		m_records[4] = new RecordKeeper( String.valueOf("Part"),     PartRecord.GetRecordSize()     );
+		m_records[5] = new RecordKeeper( String.valueOf("PartSupp"), PartSuppRecord.GetRecordSize() );
+		m_records[6] = new RecordKeeper( String.valueOf("Region"),   RegionRecord.GetRecordSize()   );
+		m_records[7] = new RecordKeeper( String.valueOf("Supplier"), SupplierRecord.GetRecordSize() );
 	}
 	
 	// Singleton

@@ -70,7 +70,7 @@ public class MemoryManager
 	
 	// Singleton
 	private static final MemoryManager ms_Instance = new MemoryManager();
-	public MemoryManager getInstance() { return ms_Instance; }
+	public static MemoryManager getInstance() { return ms_Instance; }
 	
 	// Memory management variables
 	int m_ActualMemory;
@@ -100,11 +100,14 @@ public class MemoryManager
     	 }
     	 else
     	 {
-    		 m_ActualMemory += NeededMemory;
     		 char[] rawData = PageManagerSingleton.getInstance().getPage( m_records[i].m_filename, m_records[i].m_recordSize, pageNumber );
     		 
-    		 // Add memory entry
-    		 m_records[i].m_pagesTaken.add( Integer.valueOf(pageNumber) );
+    		 // Add memory entry if the pointer isn't null
+    		 if( rawData != null )
+    		 {
+    			 m_ActualMemory += NeededMemory;
+    			 m_records[i].m_pagesTaken.add( Integer.valueOf(pageNumber) );
+    		 }
     		 
     		 return rawData;
     	 }   	 

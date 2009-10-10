@@ -72,6 +72,17 @@ public class MemoryManager
     public char[] getPage( RecordType pageType, int pageNumber )
     {
     	 int i = pageType.index;
+    	 
+    	 // First, check if we already have the page in memory.
+    	 // In the case we do, output a log message to the console,
+    	 // but read the page anyway and do not consume memory
+    	 if( m_records[i].m_pagesTaken.contains( Integer.valueOf(pageNumber) ) )
+    	 {
+    		 System.out.println("Warning: asking for a page already in memory!");
+    		 System.out.println("-- " + m_records[i].m_type + " page n." + pageNumber );
+    		 return PageManagerSingleton.getInstance().getPage( m_records[i].m_filename, m_records[i].m_recordSize, pageNumber );
+    	 }
+    	 
     	 // Check if we have enough memory left, if not, return null
     	 int NeededMemory = m_records[i].m_recordSize * PageManagerSingleton.getInstance().getNumberOfRecordsPerPage();
     	 
@@ -110,6 +121,7 @@ public class MemoryManager
     	 else
     	 {
     		 // Explode
+    		 System.out.println("Trying to free a page that wasn't loaded or that was freed already!");
     	 }
     }
     

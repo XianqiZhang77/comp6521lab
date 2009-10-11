@@ -1,4 +1,4 @@
-package comp6521.lab.com;
+package comp6521.lab.com.Records;
 
 public abstract class Record {
 

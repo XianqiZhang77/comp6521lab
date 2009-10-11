@@ -1,5 +1,8 @@
 package comp6521.lab.com;
 import comp6521.lab.com.MemoryManager;
+import comp6521.lab.com.Pages.LineItemPage;
+import comp6521.lab.com.Records.LineItemRecord;
+
 import java.util.Date;
 
 public class Query_A {
@@ -39,19 +42,19 @@ public class Query_A {
 		
 		// Go through all records in the LineItem table.
 		int p = 0;
-		char[] rawData = null;
+		LineItemPage liPage = null;
+
 		do
 		{
-			rawData = MemoryManager.getInstance().getPage( MemoryManager.RecordType.eLineItemPage, p);
+			liPage = MemoryManager.getInstance().getPage( LineItemPage.class, p );
+			LineItemRecord[] LineItems = liPage.m_records;
 			
 			// Either get pages already constructed, or construct pages here..
-			
-			LineItemRecord[] LineItems = null;
 			for( int r = 0; r < LineItems.length; r++ )
 			{
 				// Check condition
-				if( LineItems[r].l_receiptDate >= StartDate &&
-				    LineItems[r].l_receiptDate <= EndDate      )
+				if( LineItems[r].l_receiptDate.compareTo( StartDate ) >= 0 &&
+				    LineItems[r].l_receiptDate.compareTo( EndDate )   <= 0   )
 				{
 					sum_qty        += LineItems[r].l_quantity;
 					sum_base_price += LineItems[r].l_extendedPrice;
@@ -59,14 +62,10 @@ public class Query_A {
 					count++;
 				}
 			}
-
-			if( rawData != null )
-			{
-				MemoryManager.getInstance().freePage(MemoryManager.RecordType.eLineItemPage, p);
-			}
 			
+			MemoryManager.getInstance().freePage( liPage, p );			
 			p++;			
-		} while(rawData != null);
+		} while(!liPage.isEmpty());
 		
 		// Compute averages
 		avg_qty = (count == 0 ? 0 : (sum_qty / count) );

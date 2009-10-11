@@ -6,16 +6,13 @@ import comp6521.lab.com.Records.CustomerRecord;
 public class Query_B {
 	public void PerformQuery( String[] SelList, String[] AvgList )
 	{
-		int p;
+		int p = 0;
 		// First, perform the inner query
 		// which is select avg(c_acctbal) from customer where c_acctbal > 0 and 
 		// substring(c_phone, 1,2) in AvgList
-		int countAvg     = 0;
-		float avgBalance = 0;
-		
-		p              = 0;
+		int countAvg          = 0;
+		float avgBalance      = 0;
 		CustomerPage custPage = null;
-		//char[] rawData = null;
 		
 		do
 		{
@@ -43,7 +40,7 @@ public class Query_B {
 		System.out.println("cntrycode\tc_acctbal");
 		
 		// Now, perform the main query
-		p       = 0;
+		p        = 0;
 		custPage = null;
 		
 		do
@@ -61,6 +58,7 @@ public class Query_B {
 				}
 			}
 			
+			MemoryManager.getInstance().freePage( custPage, p );
 			p++;
 		} while( !custPage.isEmpty() );
 		

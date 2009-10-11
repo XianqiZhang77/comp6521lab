@@ -71,7 +71,7 @@ public class MemoryManager
 	int m_MaxMemory;
 	
     // Simpler interface
-    public <T extends Page> T getPage( Class<T> c, int pageNumber )
+    public <T extends Page<?> > T getPage( Class<T> c, int pageNumber )
     {
     	int i = getPageIndex( c );
 
@@ -116,7 +116,7 @@ public class MemoryManager
     	return -1;
     }
     
-    private <T extends Page> T CreatePage( Class<T> c, char[] rawData )
+    private <T extends Page<?> > T CreatePage( Class<T> c, char[] rawData )
     {
     	T page = null;
     	
@@ -136,7 +136,7 @@ public class MemoryManager
          
     public int RemainingMemory() { return m_MaxMemory - m_ActualMemory; }
 
-    public <T extends Page> void freePage( T page, int pageNumber )
+    public <T extends Page<?> > void freePage( T page, int pageNumber )
     {
     	 int i = getPageIndex( page.getClass() );
     	 
@@ -175,6 +175,6 @@ public class MemoryManager
     	System.out.println("------------------");    	
     }
 	
-	public <T extends Page> void SetPageFile      ( Class<T> c, String filename ) { m_records[getPageIndex(c)].m_filename = filename; }
-	public <T extends Page> void SetPageRecordSize( Class<T> c, int size )        { m_records[getPageIndex(c)].m_recordSize = size;   }
+	public <T extends Page<?> > void SetPageFile      ( Class<T> c, String filename ) { m_records[getPageIndex(c)].m_filename = filename; }
+	public <T extends Page<?> > void SetPageRecordSize( Class<T> c, int size )        { m_records[getPageIndex(c)].m_recordSize = size;   }
 }

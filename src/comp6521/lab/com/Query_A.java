@@ -29,6 +29,12 @@ public class Query_A {
 	
 	public void PerformQuery( Date StartDate, Date EndDate )
 	{
+		ProcessQuery( StartDate, EndDate );
+		WriteResults();
+	}
+	
+	public void ProcessQuery( Date StartDate, Date EndDate )
+	{
 		ClearResults();
 		
 		// Go through all records in the LineItem table.

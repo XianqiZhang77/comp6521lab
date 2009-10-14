@@ -1,33 +1,29 @@
 package comp6521.lab.com.GUI;
 
-import java.awt.Color;
 import java.awt.GridBagLayout;
-
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
+import java.awt.Dimension;
 
-public class MainPanel extends JPanel {
+public class QueryFParameters extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
 	/**
 	 * This is the default constructor
 	 */
-	public MainPanel() {
-
+	public QueryFParameters() {
 		super();
 		initialize();
+	}
 
-    }
-	
 	/**
 	 * This method initializes this
 	 * 
 	 * @return void
 	 */
 	private void initialize() {
-		this.setSize(300, 200);
+		this.setSize(533, 343);
 		this.setLayout(new GridBagLayout());
 	}
 
-}
+}  //  @jve:decl-index=0:visual-constraint="10,10"

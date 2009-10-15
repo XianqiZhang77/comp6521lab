@@ -44,9 +44,8 @@ public class Query_A {
 		int p = 0;
 		LineItemPage liPage = null;
 
-		do
-		{
-			liPage = MemoryManager.getInstance().getPage( LineItemPage.class, p );
+		while( (liPage = MemoryManager.getInstance().getPage( LineItemPage.class, p )) != null)
+		{			
 			LineItemRecord[] LineItems = liPage.m_records;
 			
 			// Either get pages already constructed, or construct pages here..
@@ -65,7 +64,7 @@ public class Query_A {
 			
 			MemoryManager.getInstance().freePage( liPage, p );			
 			p++;			
-		} while(!liPage.isEmpty());
+		}
 		
 		// Compute averages
 		avg_qty = (count == 0 ? 0 : (sum_qty / count) );

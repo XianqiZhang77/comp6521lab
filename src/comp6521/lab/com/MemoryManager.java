@@ -122,6 +122,10 @@ public class MemoryManager
     {
     	T page = null;
     	
+    	// If the file couldn't be read, we shouldn't create a page.
+    	if( rawData == null )
+    		return page;
+    	
     	try {
 			page = c.newInstance();
 		} catch (InstantiationException e) {

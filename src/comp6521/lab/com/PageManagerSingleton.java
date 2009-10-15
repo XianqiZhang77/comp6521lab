@@ -61,7 +61,7 @@ public class PageManagerSingleton
 		try 
 		{
 			FileReader file = new FileReader(fileName);		// open file for reading
-			file.skip(pageSize*(pageNumber-1));				// move to appropriate page number
+			file.skip(pageSize*pageNumber);			    	// move to appropriate page number
 			file.read(cbuf);								// read data into character buffer
 			file.close();									// close file
 		}

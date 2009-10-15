@@ -1,5 +1,6 @@
 package comp6521.lab.com;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import comp6521.lab.com.Pages.CustomerPage;
@@ -39,6 +40,7 @@ public class MemoryManager
 		{
 			m_type = type;
 			m_recordSize = recordSize;
+			m_pagesTaken = new HashSet< Integer >();
 		}
 	}
 	

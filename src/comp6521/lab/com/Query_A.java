@@ -44,7 +44,7 @@ public class Query_A {
 		int p = 0;
 		LineItemPage liPage = null;
 
-		while( (liPage = MemoryManager.getInstance().getPage( LineItemPage.class, p )) != null)
+		while( (liPage = MemoryManager.getInstance().getPage( LineItemPage.class, p++ )) != null)
 		{			
 			LineItemRecord[] LineItems = liPage.m_records;
 			
@@ -62,8 +62,7 @@ public class Query_A {
 				}
 			}
 			
-			MemoryManager.getInstance().freePage( liPage, p );			
-			p++;			
+			MemoryManager.getInstance().freePage( liPage );			
 		}
 		
 		// Compute averages

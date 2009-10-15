@@ -14,7 +14,7 @@ public class Query_B {
 		float avgBalance      = 0;
 		CustomerPage custPage = null;
 		
-		while( (custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p )) != null )
+		while( (custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p++ )) != null )
 		{
 			// Iterate through the records in the current page
 			CustomerRecord[] customers = custPage.m_records;
@@ -27,8 +27,7 @@ public class Query_B {
 				}
 			}
 			
-			MemoryManager.getInstance().freePage( custPage, p );
-			p++;
+			MemoryManager.getInstance().freePage( custPage );
 		}
 		
 		if( countAvg > 0 )
@@ -43,7 +42,7 @@ public class Query_B {
 		
 		do
 		{
-			custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p );
+			custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p++ );
 			CustomerRecord[] customers = custPage.m_records;
 			
 			// Iterate through the records in the page
@@ -56,8 +55,7 @@ public class Query_B {
 				}
 			}
 			
-			MemoryManager.getInstance().freePage( custPage, p );
-			p++;
+			MemoryManager.getInstance().freePage( custPage );
 		} while( !custPage.isEmpty() );
 		
 	}

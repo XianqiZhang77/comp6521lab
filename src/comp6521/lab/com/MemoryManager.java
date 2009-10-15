@@ -100,6 +100,7 @@ public class MemoryManager
 			
 			if( page != null )
 			{
+				page.m_pageNumber = pageNumber;
 				m_ActualMemory += NeededMemory;
 				m_records[i].m_pagesTaken.add( Integer.valueOf(pageNumber) );				
 			}
@@ -142,9 +143,10 @@ public class MemoryManager
          
     public int RemainingMemory() { return m_MaxMemory - m_ActualMemory; }
 
-    public <T extends Page<?> > void freePage( T page, int pageNumber )
+    public <T extends Page<?> > void freePage( T page )
     {
     	 int i = getPageIndex( page.getClass() );
+    	 int pageNumber = page.m_pageNumber;
     	 
     	 // Make sure we're not cheating by checking the memory entry
     	 if( m_records[i].m_pagesTaken.contains( Integer.valueOf(pageNumber) ) )

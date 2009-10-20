@@ -30,12 +30,12 @@ public class PageManagerSingleton
 	
 	private static final PageManagerSingleton INSTANCE = new PageManagerSingleton(); 	// page manager singleton
 	
-	private String path;	// store file path 		 
+	private String path;		// store file path 		 
 	
 	// default constructor
 	private PageManagerSingleton()
 	{
-		path = "C:\\";		// set default path	 
+		path = "C:\\";		// set default path
 	}
 	
 	// retrieve singleton instance with default 
@@ -65,21 +65,18 @@ public class PageManagerSingleton
 	{
 		int pageSize = recordSize*10;			// page size
 		char[] cbuf = new char[recordSize*10];	// store data from disk	
-				
+						
 		try 
 		{
 			FileReader file = new FileReader(path+fileName);		// open file for reading
-																	//TODO: check filesize against # of characters skipped to ensure we are in file
+				
 			file.skip(pageSize*pageNumber);			    	        // move to appropriate page number
 			
 			if( !file.ready() ) 									// if we're off the file (skipped too far)
 				cbuf = null;
 			else
 				file.read(cbuf);		    						// read data into character buffer
-				
-			System.out.println(cbuf.length);
-			System.out.println(String.copyValueOf(cbuf));
-			
+							
 			file.close();											// close file
 		}
 		catch(IOException io)
@@ -98,14 +95,24 @@ public class PageManagerSingleton
 		ArrayList<Record> page = new ArrayList<Record>(10);	// parsed page array-list variable
 		
 		char[] rawPage = this.getRawPage(fileName, recordSize, pageNumber);		// get raw character[] page contents
+		
+		if (rawPage == null)													// if we requested an out of bounds page we return null
+			return null;
+			
 		String rawPageString = String.valueOf(rawPage);							// raw page string
 		String[] records = rawPageString.split("\n");							// split raw page string into string records array
 		
 		// parse each record in records array
 		for (String record : records) 
 		{
-			// parse record and add to page array-list
-			page.add(this.parseRecord(record, fileName));
+			// check if record is empty
+			String trimRecord = record.trim();	// eliminate space leading and trailing characters
+			
+			if (trimRecord.compareTo("") != 0)
+			{
+				// parse record and add to page array-list
+				page.add(this.parseRecord(record, fileName));
+			}
 		}
 		
 		// return parsed page

@@ -11,4 +11,5 @@ public class SupplierRecord extends Record {
 	
 	// Total size: 2 ints + 1 float + 225 chars
 	public static int GetRecordSize() { return 237; }
+	public static int GetRecordLength() { return 271; } // 269 + 2
 }

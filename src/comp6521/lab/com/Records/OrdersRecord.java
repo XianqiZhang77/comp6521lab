@@ -14,4 +14,5 @@ public class OrdersRecord extends Record {
 	
 	// Total size: 3 ints, 1 float, 1 date (8B), 162 chars : 186 bytes
 	public static int GetRecordSize() { return 186; }
+	public static int GetRecordLength() { return 238; } // 236 + 2
 }

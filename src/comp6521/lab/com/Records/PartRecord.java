@@ -13,4 +13,5 @@ public class PartRecord extends Record {
 	
 	// Total size: 2 ints, 1 float, 250 chars = 262 bytes 
 	public static int GetRecordSize() { return 262; }
+	public static int GetRecordLength() { return 296; } // 294 + 2
 }

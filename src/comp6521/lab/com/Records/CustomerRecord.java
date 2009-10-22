@@ -12,4 +12,5 @@ public class CustomerRecord extends Record {
 	
 	// Total size : 2 ints, 1 float, 230 chars = 254 bytes	
 	public static int GetRecordSize() { return 254; }
+	public static int GetRecordLength() { return 276; } // 274 + 2
 }

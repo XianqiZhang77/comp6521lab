@@ -34,12 +34,14 @@ public class MemoryManager
 		String m_type;
 		String m_filename;
 		int    m_recordSize;
+		int    m_recordLength;
 		Set< Integer > m_pagesTaken;
 		
-		RecordKeeper( String type, int recordSize )
+		RecordKeeper( String type, int recordSize, int recordLength )
 		{
 			m_type = type;
 			m_recordSize = recordSize;
+			m_recordLength = recordLength;
 			m_pagesTaken = new HashSet< Integer >();
 		}
 	}
@@ -54,14 +56,14 @@ public class MemoryManager
 		
 		m_records = new RecordKeeper[8];
 		// fill in some data... like the size of the records
-		m_records[0] = new RecordKeeper( CustomerPage.class.getName(), CustomerRecord.GetRecordSize() );
-		m_records[1] = new RecordKeeper( LineItemPage.class.getName(), LineItemRecord.GetRecordSize() );
-		m_records[2] = new RecordKeeper( NationPage.class.getName(),   NationRecord.GetRecordSize()   );
-		m_records[3] = new RecordKeeper( OrdersPage.class.getName(),   OrdersRecord.GetRecordSize()   );
-		m_records[4] = new RecordKeeper( PartPage.class.getName(),     PartRecord.GetRecordSize()     );
-		m_records[5] = new RecordKeeper( PartSuppPage.class.getName(), PartSuppRecord.GetRecordSize() );
-		m_records[6] = new RecordKeeper( RegionPage.class.getName(),   RegionRecord.GetRecordSize()   );
-		m_records[7] = new RecordKeeper( SupplierPage.class.getName(), SupplierRecord.GetRecordSize() );
+		m_records[0] = new RecordKeeper( CustomerPage.class.getName(), CustomerRecord.GetRecordSize(), CustomerRecord.GetRecordLength() );
+		m_records[1] = new RecordKeeper( LineItemPage.class.getName(), LineItemRecord.GetRecordSize(), LineItemRecord.GetRecordLength() );
+		m_records[2] = new RecordKeeper( NationPage.class.getName(),   NationRecord.GetRecordSize(),   NationRecord.GetRecordLength()   );
+		m_records[3] = new RecordKeeper( OrdersPage.class.getName(),   OrdersRecord.GetRecordSize(),   OrdersRecord.GetRecordLength()   );
+		m_records[4] = new RecordKeeper( PartPage.class.getName(),     PartRecord.GetRecordSize(),     PartRecord.GetRecordLength()     );
+		m_records[5] = new RecordKeeper( PartSuppPage.class.getName(), PartSuppRecord.GetRecordSize(), PartSuppRecord.GetRecordLength() );
+		m_records[6] = new RecordKeeper( RegionPage.class.getName(),   RegionRecord.GetRecordSize(),   RegionRecord.GetRecordLength()   );
+		m_records[7] = new RecordKeeper( SupplierPage.class.getName(), SupplierRecord.GetRecordSize(), SupplierRecord.GetRecordLength() );
 	}
 	
 	// Singleton
@@ -84,7 +86,7 @@ public class MemoryManager
 		{
 			System.out.println("Warning: asking for a page already in memory!");
 			System.out.println("-- " + m_records[i].m_type + " page n." + pageNumber );
-			return CreatePage( c, PageManagerSingleton.getInstance().getPage( m_records[i].m_filename, m_records[i].m_recordSize, pageNumber ) );
+			return CreatePage( c, PageManagerSingleton.getInstance().getRawPage( m_records[i].m_filename, m_records[i].m_recordLength, pageNumber ) );
 		}
     	
 	   	// Check if we have enough memory left, if not, return null
@@ -96,7 +98,7 @@ public class MemoryManager
 		}
 		else
 		{
-			T page = CreatePage( c, PageManagerSingleton.getInstance().getPage( m_records[i].m_filename, m_records[i].m_recordSize, pageNumber ) );
+			T page = CreatePage( c, PageManagerSingleton.getInstance().getRawPage( m_records[i].m_filename, m_records[i].m_recordLength, pageNumber ) );
 			
 			if( page != null )
 			{

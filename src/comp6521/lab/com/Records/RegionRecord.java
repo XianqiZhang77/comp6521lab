@@ -7,4 +7,5 @@ public class RegionRecord extends Record {
 	
 	// Total size: 1 int + 170 chars = 174 bytes
 	public static int GetRecordSize() { return 174; }
+	public static int GetRecordLength() { return 183; } // 181 + 2
 }

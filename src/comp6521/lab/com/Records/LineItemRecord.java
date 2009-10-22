@@ -21,4 +21,5 @@ public class LineItemRecord extends Record {
 	// Let us assume that the date type is 8 bytes.
 	// Total size: 5 ints, 2 floats, 3 dates, 164 chars : 216 bytes
 	public static int GetRecordSize() { return 216; }
+	public static int GetRecordLength() { return 312; } // 310 + 2
 }

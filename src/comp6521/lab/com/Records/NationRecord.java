@@ -8,4 +8,5 @@ public class NationRecord extends Record {
 	
 	// Total size : 2 ints + 135 chars = 143 bytes
 	public static int GetRecordSize() { return 143; }
+	public static int GetRecordLength() { return 198; } // 196 + 2
 }

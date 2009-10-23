@@ -58,6 +58,7 @@ public class Query_A {
 					sum_qty        += LineItems[r].l_quantity;
 					sum_base_price += LineItems[r].l_extendedPrice;
 					sum_disc_price += LineItems[r].l_extendedPrice * (1 - LineItems[r].l_discount);
+					sum_charge     += LineItems[r].l_extendedPrice * (1 - LineItems[r].l_discount) * (1 + LineItems[r].l_tax);
 					count++;
 				}
 			}
@@ -67,8 +68,6 @@ public class Query_A {
 		
 		// Compute averages
 		avg_qty = (count == 0 ? 0 : (sum_qty / count) );
-		// Copy sum_charge which is the same as sum_disc_price
-		sum_charge = sum_disc_price;
 		m_queryPerformed = true;
 	}
 	

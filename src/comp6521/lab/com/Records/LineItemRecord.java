@@ -9,6 +9,7 @@ public class LineItemRecord extends Record {
 	public int    l_quantity;
 	public float  l_extendedPrice;
 	public float  l_discount;
+	public float  l_tax;        // not in project, but is in file.... ?
 	public String l_returnFlag;      // 2 chars
 	public String l_lineStatus;      // 2 chars
 	public Date   l_shipDate;
@@ -19,7 +20,7 @@ public class LineItemRecord extends Record {
 	public String l_comment;         // 120 chars
 	
 	// Let us assume that the date type is 8 bytes.
-	// Total size: 5 ints, 2 floats, 3 dates, 164 chars : 216 bytes
-	public static int GetRecordSize() { return 216; }
-	public static int GetRecordLength() { return 312; } // 310 + 2
+	// Total size: 5 ints, 3 floats, 3 dates, 164 chars : 216 bytes
+	public static int GetRecordSize() { return 220; }
+	public static int GetRecordLength() { return 334; } // 310 + 2
 }

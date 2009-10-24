@@ -12,4 +12,15 @@ public class SupplierRecord extends Record {
 	// Total size: 2 ints + 1 float + 225 chars
 	public static int GetRecordSize() { return 237; }
 	public static int GetRecordLength() { return 271; } // 269 + 2
+	
+	public void Parse(String data)
+	{
+		s_suppKey   = Integer.parseInt(data.substring(0, 10).trim());
+		s_name      =                  data.substring(11, 35).trim();
+		s_address   =                  data.substring(36, 85).trim();
+		s_nationKey = Integer.parseInt(data.substring(86, 96).trim());
+		s_phone     =                  data.substring(97, 126).trim();
+		s_acctBal   = Float.parseFloat(data.substring(127, 148).trim());
+		s_comment   =                  data.substring(149, 268).trim();
+	}
 }

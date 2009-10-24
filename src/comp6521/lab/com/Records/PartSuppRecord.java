@@ -10,4 +10,6 @@ public class PartSuppRecord extends Record {
 	// Total size: 3 ints, 1 float, 120 chars = 136 bytes
 	public static int GetRecordSize() { return 136; }
 	public static int GetRecordLength() { return 177; } // 175 + 2
+	
+	public void Parse(String data) {}
 }

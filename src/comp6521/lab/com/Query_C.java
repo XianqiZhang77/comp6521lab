@@ -30,6 +30,9 @@ public class Query_C {
 		NationPage   nationPage   = null;
 		RegionPage   regionPage   = null;
 		
+		QCSN_Page qcsn_page = MemoryManager.getInstance().getEmptyPage( QCSN_Page.class );
+		QCSK_Page qcsk_page = MemoryManager.getInstance().getEmptyPage( QCSK_Page.class );
+		
 		int r_p = 0;
 		while( (regionPage = MemoryManager.getInstance().getPage( RegionPage.class, r_p++)) != null )
 		{
@@ -105,9 +108,9 @@ public class Query_C {
 													selRegion.s_phone   = Suppliers[s].s_phone;
 													selRegion.s_comment = Suppliers[s].s_comment;
 													
-													// TODO
 													// Add to QCSN Page
-													// If page full, write it to disk													
+													qcsn_page.AddRecord( selRegion );
+																										
 												}
 												// Or of type 2												
 												if( Regions[r].r_name.compareToIgnoreCase( regionNameMin ) == 0 )
@@ -115,9 +118,8 @@ public class Query_C {
 													QCSK_Record minRegion = new QCSK_Record();
 													minRegion.s_suppKey = Suppliers[s].s_suppKey;
 													
-													// TODO
 													// Add to QCSK Page
-													// If page full, write it to disk
+													qcsk_page.AddRecord( minRegion );
 												}
 											}
 										}
@@ -135,6 +137,10 @@ public class Query_C {
 
 			MemoryManager.getInstance().freePage(regionPage);
 		}
+		
+		// Free (and auto-write) the qcsX_pages
+		MemoryManager.getInstance().freePage( qcsn_page );
+		MemoryManager.getInstance().freePage( qcsk_page );
 		
 		// Phase II
 		// We now have all tuples of QCSN_Record & QCSK_Record to 
@@ -160,7 +166,7 @@ public class Query_C {
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Sub classes implementation                                                                //
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	private class QCSN_Record extends Record
+	public class QCSN_Record extends Record
 	{
 		// Record size is 273 ** Size in char length **
 		// Record length is 275
@@ -171,7 +177,6 @@ public class Query_C {
 		public String s_address;
 		public String s_phone;
 		public String s_comment;	
-
 		
 		public void Parse(String data)
 		{		
@@ -199,13 +204,13 @@ public class Query_C {
 		}
 	}
 	
-	private class QCSN_Page extends Page<QCSN_Record>
+	public class QCSN_Page extends Page<QCSN_Record>
 	{
 		public QCSN_Record[] CreateArray(int n){ return new QCSN_Record[n]; }
 		public QCSN_Record   CreateElement(){ return new QCSN_Record(); }
 	}
 	
-	private class QCSK_Record extends Record
+	public class QCSK_Record extends Record
 	{
 		// Record size is 11
 		// Record length is 13
@@ -222,7 +227,7 @@ public class Query_C {
 		}
 	}
 	
-	private class QCSK_Page extends Page<QCSK_Record>
+	public class QCSK_Page extends Page<QCSK_Record>
 	{
 		public QCSK_Record[] CreateArray(int n){ return new QCSK_Record[n]; }
 		public QCSK_Record   CreateElement(){ return new QCSK_Record(); }

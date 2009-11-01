@@ -138,7 +138,7 @@ public class MemoryManager
     public void AddPageType(String type, int pageSize, String filename)
     {
     	// Make sure the page type doesn't exist.
-		if( getPageIndex(type) == -1 )
+		if( getPageIndex(type) != -1 )
 			return;
     	
     	m_records.add(new RecordKeeper(type, pageSize));

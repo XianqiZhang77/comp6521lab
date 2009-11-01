@@ -12,8 +12,15 @@ public class PartRecord extends Record {
 	public String p_comment;       // 120 chars
 	
 	// Total size: 2 ints, 1 float, 250 chars = 262 bytes 
-	public static int GetRecordSize() { return 262; }
-	public static int GetRecordLength() { return 296; } // 294 + 2
+	//public static int GetRecordSize() { return 262; }
+	//public static int GetRecordLength() { return 296; } // 294 + 2
+	public static int GetRecordSize() { return 296; }
 	
 	public void Parse(String data) {}
+	
+	public String Write()
+	{
+		String data = "";
+		return data;
+	}
 }

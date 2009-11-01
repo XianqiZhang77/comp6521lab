@@ -23,8 +23,9 @@ public class LineItemRecord extends Record {
 	
 	// Let us assume that the date type is 8 bytes.
 	// Total size: 5 ints, 3 floats, 3 dates, 164 chars : 216 bytes
-	public static int GetRecordSize() { return 220; }
-	public static int GetRecordLength() { return 334; } // 310 + 2
+	//public static int GetRecordSize() { return 220; }
+	//public static int GetRecordLength() { return 334; } // 310 + 2
+	public static int GetRecordSize() { return 334; }
 	
 	public void Parse(String data)
 	{
@@ -54,5 +55,11 @@ public class LineItemRecord extends Record {
 		l_shipInstruct  = data.substring(182, 201).trim();
 		l_shipMode      = data.substring(202, 211).trim();
 		l_comment       = data.substring(212, 331).trim();
+	}
+	
+	public String Write()
+	{
+		String data = "";
+		return data;
 	}
 }

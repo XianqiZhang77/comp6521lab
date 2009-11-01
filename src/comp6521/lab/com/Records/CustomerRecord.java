@@ -11,8 +11,9 @@ public class CustomerRecord extends Record {
 	public String c_comment;        // 120 chars
 	
 	// Total size : 2 ints, 1 float, 230 chars = 254 bytes	
-	public static int GetRecordSize() { return 254; }
-	public static int GetRecordLength() { return 276; } // 274 + 2
+	//public static int GetRecordSize() { return 254; }
+	//public static int GetRecordLength() { return 276; } // 274 + 2
+	public static int GetRecordSize() { return 276; }
 	
 	public void Parse(String data)
 	{
@@ -24,5 +25,11 @@ public class CustomerRecord extends Record {
 		c_acctBal    = Float.parseFloat( data.substring(117, 138).trim());
 		c_mktSegment =                   data.substring(139, 153).trim() ;
 		c_comment    =                   data.substring(154, 273).trim() ;
+	}
+	
+	public String Write()
+	{
+		String data = "";
+		return data;
 	}
 }

@@ -7,8 +7,15 @@ public class NationRecord extends Record {
 	public String n_comment;       // 120 chars
 	
 	// Total size : 2 ints + 135 chars = 143 bytes
-	public static int GetRecordSize() { return 143; }
-	public static int GetRecordLength() { return 198; } // 196 + 2
+	//public static int GetRecordSize() { return 143; }
+	//public static int GetRecordLength() { return 198; } // 196 + 2
+	public static int GetRecordSize() { return 198; }
 	
 	public void Parse(String data) {}
+	
+	public String Write()
+	{
+		String data = "";
+		return data;
+	}
 }

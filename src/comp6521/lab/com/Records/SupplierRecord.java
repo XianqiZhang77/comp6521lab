@@ -10,8 +10,9 @@ public class SupplierRecord extends Record {
 	public String s_comment;       // 120 chars
 	
 	// Total size: 2 ints + 1 float + 225 chars
-	public static int GetRecordSize() { return 237; }
-	public static int GetRecordLength() { return 271; } // 269 + 2
+	//public static int GetRecordSize() { return 237; }
+	//public static int GetRecordLength() { return 271; } // 269 + 2
+	public static int GetRecordSize() { return 271; }
 	
 	public void Parse(String data)
 	{
@@ -22,5 +23,11 @@ public class SupplierRecord extends Record {
 		s_phone     =                  data.substring(97, 126).trim();
 		s_acctBal   = Float.parseFloat(data.substring(127, 148).trim());
 		s_comment   =                  data.substring(149, 268).trim();
+	}
+	
+	public String Write()
+	{
+		String data = "";
+		return data;
 	}
 }

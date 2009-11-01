@@ -6,8 +6,15 @@ public class RegionRecord extends Record {
 	public String r_comment;        // 120 chars
 	
 	// Total size: 1 int + 170 chars = 174 bytes
-	public static int GetRecordSize() { return 174; }
-	public static int GetRecordLength() { return 183; } // 181 + 2
+	//public static int GetRecordSize() { return 174; }
+	//public static int GetRecordLength() { return 183; } // 181 + 2
+	public static int GetRecordSize() { return 183; }
 	
 	public void Parse(String data) {}
+	
+	public String Write()
+	{
+		String data = "";
+		return data;
+	}
 }

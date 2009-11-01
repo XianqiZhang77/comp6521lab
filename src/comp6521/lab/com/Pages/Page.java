@@ -1,12 +1,15 @@
 package comp6521.lab.com.Pages;
+import comp6521.lab.com.MemoryManager;
 import comp6521.lab.com.Records.Record;
 
 public abstract class Page<T extends Record> {
 	public T[] m_records;
 	public int m_pageNumber;
+	public int m_insertionIndex = -1;
 	
-	//public abstract void Construct( char[] rawData );
 	public boolean isEmpty() { return m_records.length > 0; }
+	// To be overriden by custom page classes
+	public static int GetNumberRecordsPerPage() { return 10; }
 	
 	protected abstract T[] CreateArray(int n);
 	protected abstract T CreateElement();
@@ -38,5 +41,53 @@ public abstract class Page<T extends Record> {
 			
 			r++;
 		}
+	}
+	
+	public char[] GetRawData()
+	{
+		String stringData = "";
+		for( int i = 0; i < m_insertionIndex; i++ )
+		{
+			stringData += m_records[i].Write();
+		}
+		return stringData.toCharArray();
+	}
+	
+	public void CreateEmptyPage()
+	{
+		m_records = CreateArray( GetNumberRecordsPerPage() );
+		m_insertionIndex = 0;
+	}
+	
+	public void AddRecord( T record )
+	{
+		if( m_insertionIndex == -1 )
+		{
+			System.out.println("Trying to insert data in a non-empty page!");
+		}
+		
+		// Insert record
+		m_records[m_insertionIndex++] = record;
+		
+		// If the page is full, write it to file
+		if( m_insertionIndex == GetNumberRecordsPerPage() )
+		{
+			WritePageToFile();
+			m_insertionIndex = 0;
+		}
+	}
+	
+	public void Cleanup()
+	{
+		if( m_insertionIndex > 0 ) // not -1 (not an empty page) , not 0 (no records added)
+		{
+			// Write the page to the file.
+			WritePageToFile();
+		}
+	}
+	
+	public void WritePageToFile()
+	{
+		MemoryManager.getInstance().writePage( this );
 	}
 }

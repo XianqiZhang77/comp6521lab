@@ -19,37 +19,38 @@ public class MemoryManager
 	{
 		String m_type;
 		String m_filename;
-		int    m_recordSize;
-		int    m_recordLength;
+		int m_pageSize;
 		Set< Integer > m_pagesTaken;
 		
-		RecordKeeper( String type, int recordSize, int recordLength )
+		RecordKeeper( String type, int pageSize )
 		{
 			m_type = type;
-			m_recordSize = recordSize;
-			m_recordLength = recordLength;
+			m_pageSize = pageSize;
 			m_pagesTaken = new HashSet< Integer >();
 		}
 	}
 	
+	// Members
 	ArrayList<RecordKeeper> m_records;
+	static int m_createdPagesIndex;
 	
 	// Constructor
 	private MemoryManager()
 	{
 		m_ActualMemory = 0;
 		m_MaxMemory = 10240; // 10k = 10 * 2^10 in bytes
+		m_createdPagesIndex = -1;
 		
 		m_records = new ArrayList<RecordKeeper>();
 		// fill in some data... like the size of the records
-		m_records.add(new RecordKeeper( CustomerPage.class.getName(), CustomerRecord.GetRecordSize(), CustomerRecord.GetRecordLength() ) );
-		m_records.add(new RecordKeeper( LineItemPage.class.getName(), LineItemRecord.GetRecordSize(), LineItemRecord.GetRecordLength() ) );
-		m_records.add(new RecordKeeper( NationPage.class.getName(),   NationRecord.GetRecordSize(),   NationRecord.GetRecordLength()   ) );
-		m_records.add(new RecordKeeper( OrdersPage.class.getName(),   OrdersRecord.GetRecordSize(),   OrdersRecord.GetRecordLength()   ) );
-		m_records.add(new RecordKeeper( PartPage.class.getName(),     PartRecord.GetRecordSize(),     PartRecord.GetRecordLength()     ) );
-		m_records.add(new RecordKeeper( PartSuppPage.class.getName(), PartSuppRecord.GetRecordSize(), PartSuppRecord.GetRecordLength() ) );
-		m_records.add(new RecordKeeper( RegionPage.class.getName(),   RegionRecord.GetRecordSize(),   RegionRecord.GetRecordLength()   ) );
-		m_records.add(new RecordKeeper( SupplierPage.class.getName(), SupplierRecord.GetRecordSize(), SupplierRecord.GetRecordLength() ) );
+		m_records.add(new RecordKeeper( CustomerPage.class.getName(), CustomerRecord.GetRecordSize()* CustomerPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( LineItemPage.class.getName(), LineItemRecord.GetRecordSize()* LineItemPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( NationPage.class.getName(),   NationRecord.GetRecordSize()*   NationPage.GetNumberRecordsPerPage()   ) );
+		m_records.add(new RecordKeeper( OrdersPage.class.getName(),   OrdersRecord.GetRecordSize()*   OrdersPage.GetNumberRecordsPerPage()   ) );
+		m_records.add(new RecordKeeper( PartPage.class.getName(),     PartRecord.GetRecordSize()*     PartPage.GetNumberRecordsPerPage()     ) );
+		m_records.add(new RecordKeeper( PartSuppPage.class.getName(), PartSuppRecord.GetRecordSize()* PartSuppPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( RegionPage.class.getName(),   RegionRecord.GetRecordSize()*   RegionPage.GetNumberRecordsPerPage()   ) );
+		m_records.add(new RecordKeeper( SupplierPage.class.getName(), SupplierRecord.GetRecordSize()* SupplierPage.GetNumberRecordsPerPage() ) );
 	}
 	
 	// Singleton
@@ -72,11 +73,11 @@ public class MemoryManager
 		{
 			System.out.println("Warning: asking for a page already in memory!");
 			System.out.println("-- " + m_records.get(i).m_type + " page n." + pageNumber );
-			return CreatePage( c, PageManagerSingleton.getInstance().getRawPage( m_records.get(i).m_filename, m_records.get(i).m_recordLength, pageNumber ) );
+			return CreatePage( c, PageManagerSingleton.getInstance().getRawPage( m_records.get(i).m_filename, m_records.get(i).m_pageSize, pageNumber ) );
 		}
     	
 	   	// Check if we have enough memory left, if not, return null
-	   	int NeededMemory = m_records.get(i).m_recordSize * PageManagerSingleton.getInstance().getNumberOfRecordsPerPage();
+	   	int NeededMemory = m_records.get(i).m_pageSize;
  
 		if( m_ActualMemory + NeededMemory > m_MaxMemory )
 		{
@@ -84,7 +85,7 @@ public class MemoryManager
 		}
 		else
 		{
-			T page = CreatePage( c, PageManagerSingleton.getInstance().getRawPage( m_records.get(i).m_filename, m_records.get(i).m_recordLength, pageNumber ) );
+			T page = CreatePage( c, PageManagerSingleton.getInstance().getRawPage( m_records.get(i).m_filename, m_records.get(i).m_pageSize, pageNumber ) );
 			
 			if( page != null )
 			{
@@ -95,6 +96,28 @@ public class MemoryManager
 			
 			return page;
 		}  
+    }
+    
+    public <T extends Page<?> > T getEmptyPage( Class<T> c )
+    {
+    	int i = getPageIndex( c );
+    	// Check if we have enough memory to create the page
+    	int NeededMemory = m_records.get(i).m_pageSize;
+    	
+    	if( m_ActualMemory + NeededMemory > m_MaxMemory )
+    		return null;
+    	else
+    	{
+    		T page = CreateEmptyPage( c );
+    		if( page != null )
+    		{
+    			int pageNumber = m_createdPagesIndex--;
+    			page.m_pageNumber = pageNumber;
+    			m_ActualMemory += NeededMemory;
+    			m_records.get(i).m_pagesTaken.add( Integer.valueOf(pageNumber));
+    		}
+    		return page;
+    	}
     }
     
     private <T> int getPageIndex( Class<T> c )
@@ -112,13 +135,13 @@ public class MemoryManager
     	return -1;    
     }
     
-    public void AddPageType(String type, int recordSize, int recordLength, String filename)
+    public void AddPageType(String type, int pageSize, String filename)
     {
     	// Make sure the page type doesn't exist.
 		if( getPageIndex(type) == -1 )
 			return;
     	
-    	m_records.add(new RecordKeeper(type, recordSize, recordLength));
+    	m_records.add(new RecordKeeper(type, pageSize));
     	m_records.get(m_records.size()-1).m_filename = filename;
     }
     
@@ -143,6 +166,21 @@ public class MemoryManager
     	
 		return page;
     }
+    
+    private <T extends Page<?> > T CreateEmptyPage( Class<T> c )
+    {
+    	T page = null;
+    	
+    	try {
+			page = c.newInstance();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+    
+		return page;
+    }
          
     public int RemainingMemory() { return m_MaxMemory - m_ActualMemory; }
 
@@ -155,11 +193,15 @@ public class MemoryManager
     	 if( m_records.get(i).m_pagesTaken.contains( Integer.valueOf(pageNumber) ) )
     	 {
     		 // Restore available memory
-    		 int FreedMemory = m_records.get(i).m_recordSize * PageManagerSingleton.getInstance().getNumberOfRecordsPerPage();
+    		 int FreedMemory = m_records.get(i).m_pageSize;
     		 m_ActualMemory -= FreedMemory;
     	 
     		 // Remove from memory entry 
     		 m_records.get(i).m_pagesTaken.remove( Integer.valueOf(pageNumber));    
+    		 
+    		 // Perform any cleanup needed (auto-writes, for example)
+    		 page.Cleanup();
+    		 
     		 page = null;
     	 }
     	 else
@@ -167,6 +209,15 @@ public class MemoryManager
     		 // Explode
     		 System.out.println("Trying to free a page that wasn't loaded or that was freed already!");
     	 }
+    }
+    
+    public <T extends Page<?> > void writePage( T page )
+    {
+    	if( page == null )
+    		return;
+    	
+    	int i = getPageIndex( page.getClass() );   	
+    	PageManagerSingleton.getInstance().writePage( m_records.get(i).m_filename, page.GetRawData(), page.m_pageNumber);    	
     }
     
     public void ReportMemoryUse()
@@ -177,7 +228,7 @@ public class MemoryManager
     	{
     		if( !m_records.get(i).m_pagesTaken.isEmpty() )
     		{
-    			System.out.println( m_records.get(i).m_type + " pages used : " + m_records.get(i).m_pagesTaken.size() + " == " + m_records.get(i).m_pagesTaken.size() * m_records.get(i).m_recordSize + " bytes " );
+    			System.out.println( m_records.get(i).m_type + " pages used : " + m_records.get(i).m_pagesTaken.size() + " == " + m_records.get(i).m_pagesTaken.size() * m_records.get(i).m_pageSize + " bytes " );
     		}
     	}
     	
@@ -186,6 +237,6 @@ public class MemoryManager
     	System.out.println("------------------");    	
     }
 	
-	public <T extends Page<?> > void SetPageFile      ( Class<T> c, String filename ) { m_records.get(getPageIndex(c)).m_filename = filename; }
-	public <T extends Page<?> > void SetPageRecordSize( Class<T> c, int size )        { m_records.get(getPageIndex(c)).m_recordSize = size;   }
+	public <T extends Page<?> > void SetPageFile( Class<T> c, String filename ) { m_records.get(getPageIndex(c)).m_filename = filename; }
+	public <T extends Page<?> > void SetPageSize( Class<T> c, int size )        { m_records.get(getPageIndex(c)).m_pageSize = size;     }
 }

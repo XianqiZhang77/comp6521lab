@@ -11,12 +11,7 @@ package comp6521.lab.com;
  */
 
 import java.io.FileReader;		
-import java.io.IOException;		
-import java.util.ArrayList;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import comp6521.lab.com.Records.*;
+import java.io.IOException;
 
 public class PageManagerSingleton 
 {	
@@ -55,16 +50,13 @@ public class PageManagerSingleton
 	{
 		return this.path;
 	}
-	
-	public final int getNumberOfRecordsPerPage() { return 10; }
-	
+		
 	// get page from disk. a page is equal to 10 records.
 	// preconditions: recordSize, pageNumber to retrieve, fileName containing relation data.
 	// post-conditions: byte array containing read bytes 
-	public char[] getRawPage(String fileName, int recordSize, int pageNumber)
+	public char[] getRawPage(String fileName, int pageSize, int pageNumber)
 	{
-		int pageSize = recordSize*10;			// page size
-		char[] cbuf = new char[recordSize*10];	// store data from disk	
+		char[] cbuf = new char[pageSize];	// store data from disk	
 						
 		try 
 		{
@@ -90,7 +82,7 @@ public class PageManagerSingleton
 	}
 	
 	// write page to disk
-	public void writePage(String filename, char[] cbuf, int recordSize)
+	public void writePage(String filename, char[] cbuf, int pageNumber)
 	{
 		// TODO	
 	}

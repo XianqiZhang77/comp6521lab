@@ -153,11 +153,48 @@ public class Query_C {
 		int qn_p = 0;
 		while( (qn_page = MemoryManager.getInstance().getPage( QCSN_Page.class, qn_p++)) != null )
 		{
-			QCSN_Record QCSN[] = qn_page.m_records;
-			for( int qn = 0; qn < QCSN.length; qn++ )
+			QCSN_Record[] qcsn = qn_page.m_records;
+			
+			// First, take note of all product keys in the partSupp pages that fit any record in QCSN
+			PartSuppPage psPage = null;
+			int psp = 0;
+			while ( (psPage = MemoryManager.getInstance().getPage( PartSuppPage.class, psp++ ) ) != null )
 			{
-				//...
-			}			
+				PartSuppRecord[] psRecords = psPage.m_records;
+				
+				// Keep indexes
+				ArrayList<Integer> keptProducts = new ArrayList<Integer>();
+				for( int i = 0; i < psRecords.length; i++ )
+					for( int j = 0; j < qcsn.length; j++ )
+						if( psRecords[i].ps_suppKey == qcsn[j].s_suppKey )
+							keptProducts.add(Integer.valueOf(psRecords[i].ps_partKey));
+			
+				MemoryManager.getInstance().freePage(psPage);
+				
+				if( keptProducts.isEmpty() )
+					continue;
+				
+				ArrayList<Integer> oldKeptProducts = keptProducts;
+				keptProducts = new ArrayList<Integer>();
+				
+				// If we found potential products, find them.
+				PartPage pPage = null;
+				int pp = 0;
+				while( (pPage = MemoryManager.getInstance().getPage(PartPage.class, pp++)) != null )
+				{
+					PartRecord[] pRecords = pPage.m_records;
+					for( int i = 0; i < pRecords.length; i++ )
+						for( int j = 0; j < oldKeptProducts.size(); j++ )
+							if( pRecords[i].p_partKey == keptProducts.get(j) && pRecords[i].p_size == partSize )
+								keptProducts.add(Integer.valueOf(pRecords[i].p_partKey));
+
+					// ... continue ad vitam aeternam.
+					
+					MemoryManager.getInstance().freePage(pPage);
+				}	
+				
+				// If we found matching products in terms of size, then check for the price
+			}	
 			
 			MemoryManager.getInstance().freePage(qn_page);
 		}
@@ -206,6 +243,7 @@ public class Query_C {
 	
 	public class QCSN_Page extends Page<QCSN_Record>
 	{
+		//public static int GetNumberRecordsPerPage() { return 10; }
 		public QCSN_Record[] CreateArray(int n){ return new QCSN_Record[n]; }
 		public QCSN_Record   CreateElement(){ return new QCSN_Record(); }
 	}

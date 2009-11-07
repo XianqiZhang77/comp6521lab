@@ -17,4 +17,6 @@ public abstract class RecordElement {
 	public void   setFloat(float val)    { assert(false);                    }
 	public Date   getDate()              { assert(false); return new Date(); }
 	public void   setDate(Date val)      { assert(false);                    }
+	
+	public void set(RecordElement other) { assert(false);                    }
 }

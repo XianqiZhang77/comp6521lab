@@ -20,10 +20,10 @@ public class Query_B {
 			CustomerRecord[] customers = custPage.m_records;
 			for( int r = 0; r < customers.length; r++ )
 			{
-				if( customers[r].c_acctBal > 0 && InList( customers[r].c_phone.substring( 0, 2), AvgList ) )
+				if( customers[r].get("c_acctBal").getFloat() > 0 && InList( customers[r].get("c_phone").getString().substring( 0, 2), AvgList ) )
 				{
 					countAvg++;
-					avgBalance += customers[r].c_acctBal;
+					avgBalance += customers[r].get("c_acctBal").getFloat();
 				}
 			}
 			
@@ -49,10 +49,10 @@ public class Query_B {
 			// Iterate through the records in the page
 			for( int r = 0; r < customers.length; r++ )
 			{
-				if( customers[r].c_acctBal > avgBalance && InList( customers[r].c_phone.substring( 0, 2), SelList) )
+				if( customers[r].get("c_acctBal").getFloat() > avgBalance && InList( customers[r].get("c_phone").getString().substring( 0, 2), SelList) )
 				{
 					// Print record info
-					System.out.println(customers[r].c_phone.substring( 0, 2) + "\t" + customers[r].c_acctBal );
+					System.out.println(customers[r].get("c_phone").getString().substring( 0, 2) + "\t" + customers[r].get("c_acctBal").getFloat() );
 				}
 			}
 			

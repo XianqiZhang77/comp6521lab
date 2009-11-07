@@ -52,13 +52,13 @@ public class Query_A {
 			for( int r = 0; r < LineItems.length; r++ )
 			{
 				// Check condition
-				if( LineItems[r].l_receiptDate.compareTo( StartDate ) >= 0 &&
-				    LineItems[r].l_receiptDate.compareTo( EndDate )   <= 0   )
+				if( LineItems[r].get("l_receiptDate").getDate().compareTo( StartDate ) >= 0 &&
+				    LineItems[r].get("l_receiptDate").getDate().compareTo( EndDate )   <= 0   )
 				{
-					sum_qty        += LineItems[r].l_quantity;
-					sum_base_price += LineItems[r].l_extendedPrice;
-					sum_disc_price += LineItems[r].l_extendedPrice * (1 - LineItems[r].l_discount);
-					sum_charge     += LineItems[r].l_extendedPrice * (1 - LineItems[r].l_discount) * (1 + LineItems[r].l_tax);
+					sum_qty        += LineItems[r].get("l_quantity").getInt();
+					sum_base_price += LineItems[r].get("l_extendedPrice").getFloat();
+					sum_disc_price += LineItems[r].get("l_extendedPrice").getFloat() * (1 - LineItems[r].get("l_discount").getFloat());
+					sum_charge     += LineItems[r].get("l_extendedPrice").getFloat() * (1 - LineItems[r].get("l_discount").getFloat()) * (1 + LineItems[r].get("l_tax").getFloat());
 					count++;
 				}
 			}

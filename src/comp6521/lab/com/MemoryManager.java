@@ -41,16 +41,25 @@ public class MemoryManager
 		m_MaxMemory = 10240; // 10k = 10 * 2^10 in bytes
 		m_createdPagesIndex = -1;
 		
+		CustomerRecord cs = new CustomerRecord();
+		LineItemRecord li = new LineItemRecord();
+		NationRecord n = new NationRecord();
+		OrdersRecord o = new OrdersRecord();
+		PartRecord p = new PartRecord();
+		PartSuppRecord ps = new PartSuppRecord();
+		RegionRecord r = new RegionRecord();
+		SupplierRecord s = new SupplierRecord();
+		
 		m_records = new ArrayList<RecordKeeper>();
 		// fill in some data... like the size of the records
-		m_records.add(new RecordKeeper( CustomerPage.class.getName(), CustomerRecord.GetRecordSize()* CustomerPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( LineItemPage.class.getName(), LineItemRecord.GetRecordSize()* LineItemPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( NationPage.class.getName(),   NationRecord.GetRecordSize()*   NationPage.GetNumberRecordsPerPage()   ) );
-		m_records.add(new RecordKeeper( OrdersPage.class.getName(),   OrdersRecord.GetRecordSize()*   OrdersPage.GetNumberRecordsPerPage()   ) );
-		m_records.add(new RecordKeeper( PartPage.class.getName(),     PartRecord.GetRecordSize()*     PartPage.GetNumberRecordsPerPage()     ) );
-		m_records.add(new RecordKeeper( PartSuppPage.class.getName(), PartSuppRecord.GetRecordSize()* PartSuppPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( RegionPage.class.getName(),   RegionRecord.GetRecordSize()*   RegionPage.GetNumberRecordsPerPage()   ) );
-		m_records.add(new RecordKeeper( SupplierPage.class.getName(), SupplierRecord.GetRecordSize()* SupplierPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( CustomerPage.class.getName(), cs.GetRecordSize()* CustomerPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( LineItemPage.class.getName(), li.GetRecordSize()* LineItemPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( NationPage.class.getName(),   n.GetRecordSize() *   NationPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( OrdersPage.class.getName(),   o.GetRecordSize() *   OrdersPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( PartPage.class.getName(),     p.GetRecordSize() *     PartPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( PartSuppPage.class.getName(), ps.GetRecordSize()* PartSuppPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( RegionPage.class.getName(),   r.GetRecordSize() *   RegionPage.GetNumberRecordsPerPage() ) );
+		m_records.add(new RecordKeeper( SupplierPage.class.getName(), s.GetRecordSize() * SupplierPage.GetNumberRecordsPerPage() ) );
 	}
 	
 	// Singleton

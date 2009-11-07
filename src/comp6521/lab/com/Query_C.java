@@ -44,8 +44,8 @@ public class Query_C {
 			ArrayList<Integer> regionsKept = new ArrayList<Integer>();
 			for( int r = 0; r < Regions.length; r++ )
 			{
-				if( Regions[r].r_name.compareToIgnoreCase( regionNameSel ) == 0 ||
-					Regions[r].r_name.compareToIgnoreCase( regionNameMin ) == 0   )
+				if( Regions[r].get("r_name").getString().compareToIgnoreCase( regionNameSel ) == 0 ||
+					Regions[r].get("r_name").getString().compareToIgnoreCase( regionNameMin ) == 0   )
 				{
 					regionsKept.add(Integer.valueOf(r));
 				}
@@ -65,7 +65,7 @@ public class Query_C {
 						boolean matched = false;
 						for( int kr = 0; kr < regionsKept.size() && !matched; kr++ )
 						{
-							if( Nations[n].n_regionKey == Regions[regionsKept.get(kr)].r_regionKey )
+							if( Nations[n].get("n_regionKey").getInt() == Regions[regionsKept.get(kr)].get("r_regionKey").getInt() )
 							{
 								matched = true;
 								nationsKept.add(Integer.valueOf(n));
@@ -87,7 +87,7 @@ public class Query_C {
 								for( int kn = 0; kn < nationsKept.size() && !matched; kn++ )
 								{
 									int n = nationsKept.get(kn).intValue();
-									if( Suppliers[s].s_nationKey == Nations[n].n_nationKey )
+									if( Suppliers[s].get("s_nationKey").getInt() == Nations[n].get("n_nationKey").getInt() )
 									{
 										matched = true;
 										
@@ -95,29 +95,29 @@ public class Query_C {
 										for( int kr = 0; kr < regionsKept.size(); kr++ )
 										{
 											int r = regionsKept.get(kr).intValue();
-											if( Nations[n].n_regionKey == Regions[r].r_regionKey )
+											if( Nations[n].get("n_regionKey").getInt() == Regions[r].get("r_regionKey").getInt() )
 											{
 												// Check whether we have a match of type 1
-												if( Regions[r].r_name.compareToIgnoreCase( regionNameSel ) == 0 )
+												if( Regions[r].get("r_name").getString().compareToIgnoreCase( regionNameSel ) == 0 )
 												{
 													QCSN_Record selRegion = new QCSN_Record();
-													selRegion.s_suppKey = Suppliers[s].s_suppKey;
-													selRegion.s_acctBal = Suppliers[s].s_acctBal;
-													selRegion.s_name    = Suppliers[s].s_name;
-													selRegion.n_name    = Nations[n].n_name;
-													selRegion.s_address = Suppliers[s].s_address;
-													selRegion.s_phone   = Suppliers[s].s_phone;
-													selRegion.s_comment = Suppliers[s].s_comment;
+													selRegion.get("s_suppKey").set( Suppliers[s].get("s_suppKey"));
+													selRegion.get("s_acctBal").set( Suppliers[s].get("s_acctBal"));
+													selRegion.get("s_name").set(    Suppliers[s].get("s_name"));
+													selRegion.get("n_name").set(    Nations[n].get("n_name"));
+													selRegion.get("s_address").set( Suppliers[s].get("s_address"));
+													selRegion.get("s_phone").set(   Suppliers[s].get("s_phone"));
+													selRegion.get("s_comment").set( Suppliers[s].get("s_comment"));
 													
 													// Add to QCSN Page
 													qcsn_page.AddRecord( selRegion );
 																										
 												}
 												// Or of type 2												
-												if( Regions[r].r_name.compareToIgnoreCase( regionNameMin ) == 0 )
+												if( Regions[r].get("r_name").getString().compareToIgnoreCase( regionNameMin ) == 0 )
 												{
 													QCSK_Record minRegion = new QCSK_Record();
-													minRegion.s_suppKey = Suppliers[s].s_suppKey;
+													minRegion.get("s_suppKey").set( Suppliers[s].get("s_suppKey") );
 													
 													// Add to QCSK Page
 													qcsk_page.AddRecord( minRegion );
@@ -172,10 +172,10 @@ public class Query_C {
 				
 				for( int i = 0; i < psRecords.length; i++ )
 					for( int j = 0; j < qcsn.length; j++ )
-						if( psRecords[i].ps_suppKey == qcsn[j].s_suppKey )
+						if( psRecords[i].get("ps_suppKey").getInt() == qcsn[j].get("s_suppKey").getInt() )
 						{
-							keptProducts.add(Integer.valueOf(psRecords[i].ps_partKey));
-							keptProductsCost.add(Float.valueOf(psRecords[i].ps_supplyCost));
+							keptProducts.add(Integer.valueOf(psRecords[i].get("ps_partKey").getInt()));
+							keptProductsCost.add(Float.valueOf(psRecords[i].get("ps_supplyCost").getFloat()));
 							keptProductsSupp.add(Integer.valueOf(j));
 						}
 			
@@ -192,17 +192,16 @@ public class Query_C {
 					PartRecord[] pRecords = pPage.m_records;
 					for( int i = 0; i < pRecords.length; i++ )
 						for( int j = 0; j < keptProducts.size(); j++ )
-							if( pRecords[i].p_partKey == keptProducts.get(j) && pRecords[i].p_size == partSize )
+							if( pRecords[i].get("p_partKey").getInt() == keptProducts.get(j) && pRecords[i].get("p_size").getInt() == partSize )
 							{
 								//keptProducts.add(Integer.valueOf(pRecords[i].p_partKey));
 								// Final candidates before min removal
 								QCFinal_Record qf = new QCFinal_Record();
 								qf.copyFromQCSN( qcsn[keptProductsSupp.get(j)]);
 								
-								qf.ps_supplycost = keptProductsCost.get(j).floatValue();
-								
-								qf.p_partkey = pRecords[i].p_partKey;
-								qf.p_mfgr    = pRecords[i].p_mfgr;		
+								qf.get("ps_supplycost").setFloat( keptProductsCost.get(j).floatValue() );								
+								qf.get("p_partkey").set( pRecords[i].get("p_partKey") );
+								qf.get("p_mfgr").set( pRecords[i].get("p_mfgr") );	
 								// Save record
 								qf_page.AddRecord( qf );
 							}
@@ -253,9 +252,9 @@ public class Query_C {
 								// Check part key match (our product - part supp part key )
 								//                      (min sel supp key - part supp supp key )
 								//                      ( price check )
-								if( psRecords[k].ps_partKey == qf[i].p_partkey && 
-									psRecords[k].ps_suppKey == qcsk[j].s_suppKey &&
-									psRecords[k].ps_supplyCost < qf[i].ps_supplycost )
+								if( psRecords[k].get("ps_partKey").getInt() == qf[i].get("p_partkey").getInt() && 
+									psRecords[k].get("ps_suppKey").getInt() == qcsk[j].get("s_suppKey").getInt() &&
+									psRecords[k].get("ps_supplyCost").getFloat() < qf[i].get("ps_supplycost").getFloat() )
 								{
 									OutputRecord = false;
 								}
@@ -271,14 +270,14 @@ public class Query_C {
 				if( OutputRecord )
 				{
 					// Succesful result found! yay!!!
-					System.out.println( qf[i].s_acctBal + "\t" +
-							            qf[i].s_name + "\t" +
-							            qf[i].n_name + "\t" +
-							            qf[i].p_partkey + "\t" +
-							            qf[i].p_mfgr + "\t" +
-							            qf[i].s_address + "\t" +
-							            qf[i].s_phone + "\t" +
-							            qf[i].s_comment );
+					System.out.println( qf[i].get("s_acctBal").getFloat() + "\t" +
+							            qf[i].get("s_name").getString() + "\t" +
+							            qf[i].get("n_name").getString() + "\t" +
+							            qf[i].get("p_partKey").getInt() + "\t" +
+							            qf[i].get("p_mfgr").getString() + "\t" +
+							            qf[i].get("s_address").getString() + "\t" +
+							            qf[i].get("s_phone").getString() + "\t" +
+							            qf[i].get("s_comment").getString() );
 				}
 			}			
 			
@@ -291,39 +290,15 @@ public class Query_C {
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	public class QCSN_Record extends Record
 	{
-		// Record size is 273 ** Size in char length **
-		// Record length is 275
-		public int    s_suppKey;
-		public float  s_acctBal;
-		public String s_name;
-		public String n_name;
-		public String s_address;
-		public String s_phone;
-		public String s_comment;
-		
-		public void Parse(String data)
-		{		
-			s_suppKey   = Integer.parseInt(data.substring(0,    10).trim());
-			s_name      =                  data.substring(11,   35).trim();
-			s_address   =                  data.substring(36,   85).trim();
-			s_phone     =                  data.substring(86,  115).trim();
-			s_acctBal   = Float.parseFloat(data.substring(116, 137).trim());
-			s_comment   =                  data.substring(138, 257).trim();
-			n_name      =                  data.substring(258, 272).trim();
-		}
-		
-		public String Write()
+		public QCSN_Record()
 		{
-			String data = "";
-			data += String.format("%1$-11d", s_suppKey);
-			data += String.format("%1$-25c", s_name.toCharArray());
-			data += String.format("%1$-50c", s_address.toCharArray());
-			data += String.format("%1$-30c", s_phone.toCharArray());
-			data += String.format("%1$-22f", s_acctBal);
-			data += String.format("%1$-20c", s_comment.toCharArray());
-			data += String.format("%1$-15c", n_name.toCharArray());
-			
-			return data;
+			AddElement( "s_suppKey", new IntegerRecordElement()   );
+			AddElement( "s_acctBal", new FloatRecordElement()     );
+			AddElement( "s_name",    new StringRecordElement(25)  );
+			AddElement( "n_name",    new StringRecordElement(15)  );
+			AddElement( "s_address", new StringRecordElement(50)  );
+			AddElement( "s_phone",   new StringRecordElement(30)  );
+			AddElement( "s_comment", new StringRecordElement(120) );
 		}
 	}
 	
@@ -336,18 +311,9 @@ public class Query_C {
 	
 	public class QCSK_Record extends Record
 	{
-		// Record size is 11
-		// Record length is 13
-		public int s_suppKey;
-		
-		public void Parse(String data)
+		public QCSK_Record()
 		{
-			s_suppKey   = Integer.parseInt(data.substring(0, 10).trim());
-		}
-		
-		public String Write()
-		{
-			return String.format("%1$-11d", s_suppKey);
+			AddElement( "s_suppKey", new IntegerRecordElement() );
 		}
 	}
 	
@@ -359,60 +325,32 @@ public class Query_C {
 	
 	public class QCFinal_Record extends Record
 	{
-		// record size is 310+2 chars.
-		public float  s_acctBal;
-		public String s_name;
-		public String n_name;
-		public int    p_partkey; 
-		public String p_mfgr;		
-		public String s_address;
-		public String s_phone;
-		public String s_comment;
-		public float  ps_supplycost; // Needed for final comparison
+		public QCFinal_Record()
+		{
+			AddElement( "s_acctBal",     new FloatRecordElement() );
+			AddElement( "s_name",        new StringRecordElement(25));
+			AddElement( "n_name",        new StringRecordElement(15));
+			AddElement( "p_partKey",     new IntegerRecordElement());
+			AddElement( "p_mfgr",        new StringRecordElement(15));
+			AddElement( "s_address",     new StringRecordElement(50));
+			AddElement( "s_phone",       new StringRecordElement(30));
+			AddElement( "s_comment",     new StringRecordElement(120));
+			AddElement( "ps_supplycost", new FloatRecordElement());
+		}
 		
 		public void copyFromQCSN(QCSN_Record other)
 		{
 			//s_suppKey = other.s_suppKey; // not needed
-			s_acctBal = other.s_acctBal;
-			s_name    = other.s_name;
+			get("s_acctBal").set( other.get("s_acctBal") );
+			get("s_name").set(    other.get("s_name"));
 			//p_partkey = 0;
 			//p_mfgr    = "";
-			n_name    = other.n_name;
-			s_address = other.s_address;
-			s_phone   = other.s_phone;
-			s_comment = other.s_comment;
+			get("n_name").set(     other.get("n_name"));
+			get("s_address").set(  other.get("s_address"));
+			get("s_phone").set(    other.get("s_phone"));
+			get("s_comment").set(  other.get("s_comment"));
 		}
 		
-		public void Parse(String data)
-		{
-			//s_suppKey   = Integer.parseInt(data.substring(0,   10).trim());
-			s_acctBal   = Float.parseFloat(data.substring(0,  21).trim());
-			s_name      =                  data.substring(22,  46).trim();
-			n_name      =                  data.substring(47,  61).trim();
-			p_partkey   = Integer.parseInt(data.substring(62,  72).trim());
-			p_mfgr      =                  data.substring(73,  87).trim();
-			s_address   =                  data.substring(88,  137).trim();
-			s_phone     =                  data.substring(138, 167).trim();			
-			s_comment   =                  data.substring(168, 287).trim();		
-			ps_supplycost = Float.parseFloat(data.substring(288, 309).trim());
-		}
-		
-		public String Write()
-		{
-			String data = "";
-			//data += String.format("%1$-11d", s_suppKey);
-			data += String.format("%1$-22f", s_acctBal);
-			data += String.format("%1$-25c", s_name.toCharArray());
-			data += String.format("%1$-15c", n_name.toCharArray());
-			data += String.format("%1$-11d", p_partkey);
-			data += String.format("%1$-15c", p_mfgr.toCharArray());			
-			data += String.format("%1$-50c", s_address.toCharArray());
-			data += String.format("%1$-30c", s_phone.toCharArray());			
-			data += String.format("%1$-20c", s_comment.toCharArray());
-			data += String.format("%1$-22f", ps_supplycost);
-						
-			return data;
-		}
 	}
 	
 	public class QCFinal_Page extends Page<QCFinal_Record>

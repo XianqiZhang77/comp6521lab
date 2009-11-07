@@ -9,4 +9,6 @@ public class FloatRecordElement extends RecordElement {
 	
 	public float getFloat()        { return m_value; }
 	public void setFloat(float val){ m_value = val; }
+	
+	public void set(RecordElement other) { m_value = other.getFloat(); }
 }

@@ -9,4 +9,6 @@ public class IntegerRecordElement extends RecordElement {
 	
 	public int  getInt()           { return m_value; }
 	public void setInt(int val)    { m_value = val; }
+	
+	public void set(RecordElement other) { m_value = other.getInt(); }
 }

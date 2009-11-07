@@ -3,7 +3,7 @@ package comp6521.lab.com.Records;
 import java.util.Hashtable;
 
 public abstract class Record {
-	Record() { m_OrderKey = 0; }
+	public Record() { m_OrderKey = 0; }
 		
 	Integer m_OrderKey;
 	Hashtable<Integer, RecordElement> m_recordElementsOrder;
@@ -15,7 +15,7 @@ public abstract class Record {
 		m_recordElementsOrder.put(m_OrderKey++, el);		
 	}
 	
-	RecordElement getElement(String name) { return m_recordElements.get(name); }
+	public RecordElement get(String name) { return m_recordElements.get(name); }
 	
 	public void Parse(String data)
 	{

@@ -18,8 +18,6 @@ public abstract class Page<T extends Record> {
 	public int m_pageNumber;
 	public int m_insertionIndex = -1;
 	
-	
-	public boolean isEmpty() { return m_records.length > 0; }
 	// To be overriden by custom page classes
 	public static int GetNumberRecordsPerPage() { return 10; }
 	

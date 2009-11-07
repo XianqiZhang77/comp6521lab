@@ -12,11 +12,12 @@ public class Query_C {
 		// Now, this query promises to be ugly.
 		// Memory notes:
 		// 1 region page + 1 nation page + 1 supplier page + 
-		// 1 page of type1 + 1 page of type2 == 1830 + 1980 + 2170 + 2730 + 110 < 10240
+		// 1 page of type1 + 1 page of type2 == 1830 + 1980 + 2170 + 2730 + 1300 < 10240
 		
 		// Add the custom pages to the memory manager
-		MemoryManager.getInstance().AddPageType( QCSN_Page.class.getName(), 1750, "qc_t1.txt" ); // 275 * 10
+		MemoryManager.getInstance().AddPageType( QCSN_Page.class.getName(), 2750, "qc_t1.txt" ); // 275 * 10
 		MemoryManager.getInstance().AddPageType( QCSK_Page.class.getName(), 1300, "qc_t2.txt" ); // 13 * 100
+		MemoryManager.getInstance().AddPageType( QCFinal_Page.class.getName(), 3120, "qc_final.txt" ); // 312 * 10
 		
 		// Phase I
 		// Find all regions with one or the other name.
@@ -149,6 +150,8 @@ public class Query_C {
 		// 2- For all these parts, find the min supply cost of that part in any (partSupp -> Supplier) where partSupp.p_partkey = taken from 1)
 		//                                                                                             and Supplier in QCSK_Table.
 		// Implementation note: start from our QCSN pages since the cardinality should be low
+		QCFinal_Page qf_page = MemoryManager.getInstance().getEmptyPage( QCFinal_Page.class );
+		
 		QCSN_Page qn_page = null;
 		int qn_p = 0;
 		while( (qn_page = MemoryManager.getInstance().getPage( QCSN_Page.class, qn_p++)) != null )
@@ -164,18 +167,22 @@ public class Query_C {
 				
 				// Keep indexes
 				ArrayList<Integer> keptProducts = new ArrayList<Integer>();
+				ArrayList<Integer> keptProductsSupp = new ArrayList<Integer>();
+				ArrayList<Float>   keptProductsCost = new ArrayList<Float>();
+				
 				for( int i = 0; i < psRecords.length; i++ )
 					for( int j = 0; j < qcsn.length; j++ )
 						if( psRecords[i].ps_suppKey == qcsn[j].s_suppKey )
+						{
 							keptProducts.add(Integer.valueOf(psRecords[i].ps_partKey));
+							keptProductsCost.add(Float.valueOf(psRecords[i].ps_supplyCost));
+							keptProductsSupp.add(Integer.valueOf(j));
+						}
 			
 				MemoryManager.getInstance().freePage(psPage);
 				
 				if( keptProducts.isEmpty() )
 					continue;
-				
-				ArrayList<Integer> oldKeptProducts = keptProducts;
-				keptProducts = new ArrayList<Integer>();
 				
 				// If we found potential products, find them.
 				PartPage pPage = null;
@@ -184,20 +191,99 @@ public class Query_C {
 				{
 					PartRecord[] pRecords = pPage.m_records;
 					for( int i = 0; i < pRecords.length; i++ )
-						for( int j = 0; j < oldKeptProducts.size(); j++ )
+						for( int j = 0; j < keptProducts.size(); j++ )
 							if( pRecords[i].p_partKey == keptProducts.get(j) && pRecords[i].p_size == partSize )
-								keptProducts.add(Integer.valueOf(pRecords[i].p_partKey));
-
-					// ... continue ad vitam aeternam.
+							{
+								//keptProducts.add(Integer.valueOf(pRecords[i].p_partKey));
+								// Final candidates before min removal
+								QCFinal_Record qf = new QCFinal_Record();
+								qf.copyFromQCSN( qcsn[keptProductsSupp.get(j)]);
+								
+								qf.ps_supplycost = keptProductsCost.get(j).floatValue();
+								
+								qf.p_partkey = pRecords[i].p_partKey;
+								qf.p_mfgr    = pRecords[i].p_mfgr;		
+								// Save record
+								qf_page.AddRecord( qf );
+							}
 					
 					MemoryManager.getInstance().freePage(pPage);
 				}	
-				
-				// If we found matching products in terms of size, then check for the price
 			}	
 			
 			MemoryManager.getInstance().freePage(qn_page);
 		}
+		
+		// Write back the semi-final results
+		MemoryManager.getInstance().freePage(qf_page);
+		qf_page = null;
+		// Now, for each entry in our semi-final results,
+		// Make sure there are no matches "our product key -- suppliers from QCSK" that have a lower price
+		// If that's true, output the result!
+		
+		// 1. Output header
+		System.out.println( "s_acctbal\ts_name\tn_name\tp_partkey\tp_mfgr\ts_address\ts_phone\ts_comment");
+		
+		// 2. Check for matches		
+		int qf_p = 0;
+		while( (qf_page = MemoryManager.getInstance().getPage( QCFinal_Page.class, qf_p++)) != null )
+		{
+			QCFinal_Record[] qf = qf_page.m_records;
+			for( int i = 0; i < qf.length; i++ )
+			{
+				boolean OutputRecord = true;
+				// For all suppliers in the other table
+				qcsk_page = null;
+				int qcsk_p = 0;
+				while( (qcsk_page = MemoryManager.getInstance().getPage( QCSK_Page.class, qcsk_p++)) != null && OutputRecord )
+				{
+					QCSK_Record[] qcsk = qcsk_page.m_records;
+					
+					for( int j = 0; j < qcsk.length && OutputRecord; j++ )
+					{
+						// For matching in the partSupp table
+						PartSuppPage psPage = null;
+						int psp = 0;
+						while ( (psPage = MemoryManager.getInstance().getPage( PartSuppPage.class, psp++ ) ) != null )
+						{
+							PartSuppRecord[] psRecords = psPage.m_records;
+							
+							for( int k = 0; k < psRecords.length && OutputRecord; k++ )
+							{
+								// Check part key match (our product - part supp part key )
+								//                      (min sel supp key - part supp supp key )
+								//                      ( price check )
+								if( psRecords[k].ps_partKey == qf[i].p_partkey && 
+									psRecords[k].ps_suppKey == qcsk[j].s_suppKey &&
+									psRecords[k].ps_supplyCost < qf[i].ps_supplycost )
+								{
+									OutputRecord = false;
+								}
+							}
+							
+							MemoryManager.getInstance().freePage(psPage);
+						}
+					}					
+					
+					MemoryManager.getInstance().freePage(qcsk_page);
+				}
+				
+				if( OutputRecord )
+				{
+					// Succesful result found! yay!!!
+					System.out.println( qf[i].s_acctBal + "\t" +
+							            qf[i].s_name + "\t" +
+							            qf[i].n_name + "\t" +
+							            qf[i].p_partkey + "\t" +
+							            qf[i].p_mfgr + "\t" +
+							            qf[i].s_address + "\t" +
+							            qf[i].s_phone + "\t" +
+							            qf[i].s_comment );
+				}
+			}			
+			
+			MemoryManager.getInstance().freePage( qf_page );
+		}		
 	}
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +299,7 @@ public class Query_C {
 		public String n_name;
 		public String s_address;
 		public String s_phone;
-		public String s_comment;	
+		public String s_comment;
 		
 		public void Parse(String data)
 		{		
@@ -222,8 +308,8 @@ public class Query_C {
 			s_address   =                  data.substring(36,   85).trim();
 			s_phone     =                  data.substring(86,  115).trim();
 			s_acctBal   = Float.parseFloat(data.substring(116, 137).trim());
-			s_comment   =                  data.substring(138, 157).trim();
-			n_name      =                  data.substring(158, 172).trim();
+			s_comment   =                  data.substring(138, 257).trim();
+			n_name      =                  data.substring(258, 272).trim();
 		}
 		
 		public String Write()
@@ -269,5 +355,69 @@ public class Query_C {
 	{
 		public QCSK_Record[] CreateArray(int n){ return new QCSK_Record[n]; }
 		public QCSK_Record   CreateElement(){ return new QCSK_Record(); }
+	}
+	
+	public class QCFinal_Record extends Record
+	{
+		// record size is 310+2 chars.
+		public float  s_acctBal;
+		public String s_name;
+		public String n_name;
+		public int    p_partkey; 
+		public String p_mfgr;		
+		public String s_address;
+		public String s_phone;
+		public String s_comment;
+		public float  ps_supplycost; // Needed for final comparison
+		
+		public void copyFromQCSN(QCSN_Record other)
+		{
+			//s_suppKey = other.s_suppKey; // not needed
+			s_acctBal = other.s_acctBal;
+			s_name    = other.s_name;
+			//p_partkey = 0;
+			//p_mfgr    = "";
+			n_name    = other.n_name;
+			s_address = other.s_address;
+			s_phone   = other.s_phone;
+			s_comment = other.s_comment;
+		}
+		
+		public void Parse(String data)
+		{
+			//s_suppKey   = Integer.parseInt(data.substring(0,   10).trim());
+			s_acctBal   = Float.parseFloat(data.substring(0,  21).trim());
+			s_name      =                  data.substring(22,  46).trim();
+			n_name      =                  data.substring(47,  61).trim();
+			p_partkey   = Integer.parseInt(data.substring(62,  72).trim());
+			p_mfgr      =                  data.substring(73,  87).trim();
+			s_address   =                  data.substring(88,  137).trim();
+			s_phone     =                  data.substring(138, 167).trim();			
+			s_comment   =                  data.substring(168, 287).trim();		
+			ps_supplycost = Float.parseFloat(data.substring(288, 309).trim());
+		}
+		
+		public String Write()
+		{
+			String data = "";
+			//data += String.format("%1$-11d", s_suppKey);
+			data += String.format("%1$-22f", s_acctBal);
+			data += String.format("%1$-25c", s_name.toCharArray());
+			data += String.format("%1$-15c", n_name.toCharArray());
+			data += String.format("%1$-11d", p_partkey);
+			data += String.format("%1$-15c", p_mfgr.toCharArray());			
+			data += String.format("%1$-50c", s_address.toCharArray());
+			data += String.format("%1$-30c", s_phone.toCharArray());			
+			data += String.format("%1$-20c", s_comment.toCharArray());
+			data += String.format("%1$-22f", ps_supplycost);
+						
+			return data;
+		}
+	}
+	
+	public class QCFinal_Page extends Page<QCFinal_Record>
+	{
+		public QCFinal_Record[] CreateArray(int n){ return new QCFinal_Record[n]; }
+		public QCFinal_Record   CreateElement(){ return new QCFinal_Record(); }
 	}
 }

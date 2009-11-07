@@ -40,9 +40,10 @@ public class Query_B {
 		p        = 0;
 		custPage = null;
 		
-		do
+		//do
+		//{
+		while( (custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p++ )) != null )
 		{
-			custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p++ );
 			CustomerRecord[] customers = custPage.m_records;
 			
 			// Iterate through the records in the page
@@ -56,8 +57,7 @@ public class Query_B {
 			}
 			
 			MemoryManager.getInstance().freePage( custPage );
-		} while( !custPage.isEmpty() );
-		
+		}		
 	}
 	
 	private boolean InList( String str, String[] list )

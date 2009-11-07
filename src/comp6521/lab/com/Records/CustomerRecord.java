@@ -1,7 +1,12 @@
 package comp6521.lab.com.Records;
 
 public class CustomerRecord extends Record {
-	public int    c_custkey;   // Primary key
+	public CustomerRecord()
+	{
+		AddElement( "c_custKey", new IntegerRecordElement() );
+		AddElement( "c_name",    new StringRecordElement(25));
+	}
+	/*public int    c_custkey;   // Primary key
 	public String c_name;           // 25 chars
 	public String c_address;        // 50 chars
 	public int    c_nationKey; // Foreign key in the Nation table
@@ -31,5 +36,5 @@ public class CustomerRecord extends Record {
 	{
 		String data = "";
 		return data;
-	}
+	}*/
 }

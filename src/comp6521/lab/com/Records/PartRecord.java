@@ -1,7 +1,7 @@
 package comp6521.lab.com.Records;
 
 public class PartRecord extends Record {
-	PartRecord()
+	public PartRecord()
 	{
 		AddElement( "p_partKey", new IntegerRecordElement() ); // PK
 		AddElement( "p_name",    new StringRecordElement(60));

@@ -1,7 +1,7 @@
 package comp6521.lab.com.Records;
 
 public class LineItemRecord extends Record {
-	LineItemRecord()
+	public LineItemRecord()
 	{
 		AddElement( "l_orderkey",      new IntegerRecordElement()  ); // PK, FK(orders)
 		AddElement( "l_partKey",       new IntegerRecordElement()  ); // FK (part)

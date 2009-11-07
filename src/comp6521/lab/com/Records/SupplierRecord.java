@@ -1,7 +1,7 @@
 package comp6521.lab.com.Records;
 
 public class SupplierRecord extends Record {
-	SupplierRecord()
+	public SupplierRecord()
 	{
 		AddElement( "s_suppKey",   new IntegerRecordElement()   );
 		AddElement( "s_name",      new StringRecordElement(25)  );

@@ -1,7 +1,7 @@
 package comp6521.lab.com.Records;
 
 public class PartSuppRecord extends Record {
-	PartSuppRecord()
+	public PartSuppRecord()
 	{
 		AddElement( "ps_partKey",    new IntegerRecordElement()  ); // PK , FK part
 		AddElement( "ps_suppKey",    new IntegerRecordElement()  ); // PK , FK supplier

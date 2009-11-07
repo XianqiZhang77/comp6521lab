@@ -1,7 +1,7 @@
 package comp6521.lab.com.Records;
 
 public class OrdersRecord extends Record {
-	OrdersRecord()
+	public OrdersRecord()
 	{
 		AddElement( "o_orderKey", new IntegerRecordElement() ); // PK
 		AddElement( "l_custKey",  new IntegerRecordElement() ); // FK customer

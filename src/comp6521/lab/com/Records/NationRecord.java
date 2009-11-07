@@ -1,7 +1,7 @@
 package comp6521.lab.com.Records;
 
 public class NationRecord extends Record {
-	NationRecord()
+	public NationRecord()
 	{
 		AddElement( "n_nationKey", new IntegerRecordElement()  ); // PK
 		AddElement( "n_name",      new StringRecordElement(15) );

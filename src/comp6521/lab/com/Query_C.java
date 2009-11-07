@@ -13,11 +13,14 @@ public class Query_C {
 		// Memory notes:
 		// 1 region page + 1 nation page + 1 supplier page + 
 		// 1 page of type1 + 1 page of type2 == 1830 + 1980 + 2170 + 2730 + 1300 < 10240
+		QCSN_Record qcsn_dummy = new QCSN_Record();
+		QCSK_Record qcsk_dummy = new QCSK_Record();
+		QCFinal_Record qcf_dummy = new QCFinal_Record();
 		
 		// Add the custom pages to the memory manager
-		MemoryManager.getInstance().AddPageType( QCSN_Page.class.getName(), 2750, "qc_t1.txt" ); // 275 * 10
-		MemoryManager.getInstance().AddPageType( QCSK_Page.class.getName(), 1300, "qc_t2.txt" ); // 13 * 100
-		MemoryManager.getInstance().AddPageType( QCFinal_Page.class.getName(), 3120, "qc_final.txt" ); // 312 * 10
+		MemoryManager.getInstance().AddPageType( QCSN_Page.class.getName(), qcsn_dummy.GetRecordSize(), "qc_t1.txt" ); // 275 * 10
+		MemoryManager.getInstance().AddPageType( QCSK_Page.class.getName(), qcsk_dummy.GetRecordSize(), "qc_t2.txt" ); // 13 * 100
+		MemoryManager.getInstance().AddPageType( QCFinal_Page.class.getName(), qcf_dummy.GetRecordSize(), "qc_final.txt" ); // 312 * 10
 		
 		// Phase I
 		// Find all regions with one or the other name.

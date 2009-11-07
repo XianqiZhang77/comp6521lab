@@ -18,9 +18,9 @@ public class Query_C {
 		QCFinal_Record qcf_dummy = new QCFinal_Record();
 		
 		// Add the custom pages to the memory manager
-		MemoryManager.getInstance().AddPageType( QCSN_Page.class.getName(), qcsn_dummy.GetRecordSize(), "qc_t1.txt" ); // 275 * 10
-		MemoryManager.getInstance().AddPageType( QCSK_Page.class.getName(), qcsk_dummy.GetRecordSize(), "qc_t2.txt" ); // 13 * 100
-		MemoryManager.getInstance().AddPageType( QCFinal_Page.class.getName(), qcf_dummy.GetRecordSize(), "qc_final.txt" ); // 312 * 10
+		MemoryManager.getInstance().AddPageType( QCSN_Page.class.getName(), qcsn_dummy.GetRecordSize() * 10, "qc_t1.txt" ); // 275 * 10
+		MemoryManager.getInstance().AddPageType( QCSK_Page.class.getName(), qcsk_dummy.GetRecordSize() * 100, "qc_t2.txt" ); // 13 * 100
+		MemoryManager.getInstance().AddPageType( QCFinal_Page.class.getName(), qcf_dummy.GetRecordSize() * 10, "qc_final.txt" ); // 312 * 10
 		
 		// Phase I
 		// Find all regions with one or the other name.

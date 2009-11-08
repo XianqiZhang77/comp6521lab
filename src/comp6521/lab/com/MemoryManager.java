@@ -224,7 +224,7 @@ public class MemoryManager
     		return;
     	
     	int i = getPageIndex( page.getClass() );   	
-    	PageManagerSingleton.getInstance().writePage( m_records.get(i).m_filename, page.GetRawData(), page.m_pageNumber);    	
+    	PageManagerSingleton.getInstance().writePage( m_records.get(i).m_filename, page.GetRawData());    	
     }
     
     public void ReportMemoryUse()

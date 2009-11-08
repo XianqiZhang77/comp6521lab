@@ -3,7 +3,12 @@ package comp6521.lab.com.Records;
 import java.util.Hashtable;
 
 public abstract class Record {
-	public Record() { m_OrderKey = 0; }
+	public Record() 
+	{
+		m_recordElements = new Hashtable<String, RecordElement>();
+		m_recordElementsOrder = new Hashtable<Integer, RecordElement>();
+		m_OrderKey = 0; 
+	}
 		
 	Integer m_OrderKey;
 	Hashtable<Integer, RecordElement> m_recordElementsOrder;
@@ -23,7 +28,6 @@ public abstract class Record {
 		int len = 0;
 		for( int i = 0; i < m_OrderKey.intValue(); i++ )
 		{
-			
 			len = m_recordElementsOrder.get( Integer.valueOf(i) ).Size();
 			m_recordElementsOrder.get( Integer.valueOf(i) ).Parse( data.substring(pos, pos + len - 1));
 			pos += len;
@@ -43,6 +47,6 @@ public abstract class Record {
 		int len = 0;
 		for( int i = 0; i < m_OrderKey.intValue(); i++ )
 			len += m_recordElementsOrder.get( Integer.valueOf(i) ).Size();
-		return len + 2; // for the CF+LN	
+		return len + 2; // for the CR+LN	
 	}
 }

@@ -34,10 +34,8 @@ public class Query_Z {
 		// Zeroeth phase:
 		// Initialization
 		////////////////////////////////////////////////////////////////////
-		OrdersSubsetRecord os_dummy = new OrdersSubsetRecord();
-		
-		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class.getName(), os_dummy.GetRecordSize() * 10, "qz_os.txt");
-		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class.getName(), os_dummy.GetRecordSize() * 10, "qz_os.txt");
+		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class, "qz_os.txt");
+		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class, "qz_os.txt");
 		////////////////////////////////////////////////////////////////////
 		// First phase:
 		// Select orders subset that satisfy the year condition and

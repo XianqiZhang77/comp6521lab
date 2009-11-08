@@ -41,25 +41,16 @@ public class MemoryManager
 		m_MaxMemory = 10240; // 10k = 10 * 2^10 in bytes
 		m_createdPagesIndex = -1;
 		
-		CustomerRecord cs = new CustomerRecord();
-		LineItemRecord li = new LineItemRecord();
-		NationRecord n = new NationRecord();
-		OrdersRecord o = new OrdersRecord();
-		PartRecord p = new PartRecord();
-		PartSuppRecord ps = new PartSuppRecord();
-		RegionRecord r = new RegionRecord();
-		SupplierRecord s = new SupplierRecord();
-		
 		m_records = new ArrayList<RecordKeeper>();
-		// fill in some data... like the size of the records
-		m_records.add(new RecordKeeper( CustomerPage.class.getName(), cs.GetRecordSize()* CustomerPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( LineItemPage.class.getName(), li.GetRecordSize()* LineItemPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( NationPage.class.getName(),   n.GetRecordSize() *   NationPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( OrdersPage.class.getName(),   o.GetRecordSize() *   OrdersPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( PartPage.class.getName(),     p.GetRecordSize() *     PartPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( PartSuppPage.class.getName(), ps.GetRecordSize()* PartSuppPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( RegionPage.class.getName(),   r.GetRecordSize() *   RegionPage.GetNumberRecordsPerPage() ) );
-		m_records.add(new RecordKeeper( SupplierPage.class.getName(), s.GetRecordSize() * SupplierPage.GetNumberRecordsPerPage() ) );
+		
+		AddPageType( CustomerPage.class, "");
+		AddPageType( LineItemPage.class, "");
+		AddPageType( NationPage.class,   "");
+		AddPageType( OrdersPage.class,   "");
+		AddPageType( PartPage.class,     "");
+		AddPageType( PartSuppPage.class, "");
+		AddPageType( RegionPage.class,   "");
+		AddPageType( SupplierPage.class, "");
 	}
 	
 	// Singleton
@@ -144,11 +135,18 @@ public class MemoryManager
     	return -1;    
     }
     
-    public void AddPageType(String type, int pageSize, String filename)
+    public <T extends Page<?> > void AddPageType( Class<T> c, String filename )
     {
+    	String type = c.getName();
     	// Make sure the page type doesn't exist.
 		if( getPageIndex(type) != -1 )
 			return;
+		
+		// Compute page size
+		T dummyPage = CreateEmptyPage( c );
+		Record dummyRecord = dummyPage.CreateElement();
+		
+		int pageSize = dummyPage.GetNumberRecordsPerPage() * dummyRecord.GetRecordSize();
     	
     	m_records.add(new RecordKeeper(type, pageSize));
     	m_records.get(m_records.size()-1).m_filename = filename;

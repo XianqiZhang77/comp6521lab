@@ -16,13 +16,22 @@ import comp6521.lab.com.Records.Record;
 public abstract class Page<T extends Record> {
 	public T[] m_records;
 	public int m_pageNumber;
-	public int m_insertionIndex = -1;
+	public int m_insertionIndex;
+	public int m_nbRecordsPerPage;
+	
+	public Page()
+	{
+		m_records = null;
+		m_pageNumber = -1;
+		m_insertionIndex = -1;
+		m_nbRecordsPerPage = 10; // default value
+	}
 	
 	// To be overriden by custom page classes
-	public static int GetNumberRecordsPerPage() { return 10; }
+	public int GetNumberRecordsPerPage() { return m_nbRecordsPerPage; }
 	
-	protected abstract T[] CreateArray(int n);
-	protected abstract T CreateElement();
+	public /*abstract*/ T[] CreateArray(int n) {return null;}
+	public /*abstract*/ T CreateElement() {return null;}
 	
 	public void Construct( char[] rawData )
 	{
@@ -100,59 +109,4 @@ public abstract class Page<T extends Record> {
 	{
 		MemoryManager.getInstance().writePage( this );
 	}
-	
-	/*public void readFile(String filePath){
-		
-		try{
-		    // Open the file that is the first 
-		    // command line parameter
-
-		FileInputStream fstream = new FileInputStream(filePath);
-	    // Get the object of DataInputStream
-	    DataInputStream inputStream = new DataInputStream(fstream);
-	        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(inputStream));
-	    String strLine;
-	    //Read File Line By Line
-	    while ((strLine = bufferReader.readLine()) != null)   {
-	      // Print the content on the console
-	      System.out.println (strLine);
-	    }
-	    //Close the input stream
-	    inputStream.close();
-	    }catch (Exception e){//Catch exception if any
-	      System.err.println("Error: " + e.getMessage());
-	    }	
-	}
-	public static void addRecord(String filePath, String rawDataRecord){
-		
-		File file = new File(filePath);
-		PrintWriter o = null;
-		try {
-			file.createNewFile();
-			FileOutputStream out = new FileOutputStream(file, true);
-            			
-			OutputStreamWriter os = new OutputStreamWriter(out, "UTF8");
-			
-			BufferedWriter br = new BufferedWriter(os);
-			o = new PrintWriter(br);
-			o.println();
-			o.print(rawDataRecord);
-			
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			if (o != null){
-			 o.close();
-			}
-		}
-
-		//reConstructIndex()
-		
-	}
-	public int getNumberOfRecords(){
-		return m_records.length;
-	}*/
-
 }

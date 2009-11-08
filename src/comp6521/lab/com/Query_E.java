@@ -16,18 +16,15 @@ public class Query_E {
 	{
 		// Zeroeth pass:
 		// Initialise custom pages
-		QE_Record qe_dummy = new QE_Record();
-		NationSubsetRecord ns_dummy = new NationSubsetRecord();
-		SupplierSubsetRecord ss_dummy = new SupplierSubsetRecord();
 		
 		// Non grouped results
-		MemoryManager.getInstance().AddPageType( QE_Page.class.getName(), qe_dummy.GetRecordSize() * 100, "qe_f.txt" );
+		MemoryManager.getInstance().AddPageType( QE_Page.class, "qe_f.txt" );
 		// Grouped results
-		MemoryManager.getInstance().AddPageType( QEGroups_Page.class.getName(), qe_dummy.GetRecordSize() * 100, "qeg_f.txt" );
+		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeg_f.txt" );
 		// Kept nations keys
-		MemoryManager.getInstance().AddPageType( NationSubsetPage.class.getName(), ns_dummy.GetRecordSize() * 100,  "qe_ns.txt");
+		MemoryManager.getInstance().AddPageType( NationSubsetPage.class,  "qe_ns.txt");
 		// Kept supplier keys
-		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class.getName(), ss_dummy.GetRecordSize() * 100, "qe_ss.txt");
+		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_ss.txt");
 				
 		// Info for the "having" clause:
 		float totalValue = 0;
@@ -230,12 +227,22 @@ public class Query_E {
 	
 	public class QE_Page extends Page<QE_Record>
 	{
+		public QE_Page()
+		{
+			super();
+			m_nbRecordsPerPage = 100;
+		}
 		public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
 		public QE_Record   CreateElement(){ return new QE_Record(); }
 	}
 	
 	public class QEGroups_Page extends Page<QE_Record>
 	{
+		public QEGroups_Page()
+		{
+			super();
+			m_nbRecordsPerPage = 100;
+		}
 		public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
 		public QE_Record   CreateElement(){ return new QE_Record(); }		
 	}
@@ -251,6 +258,11 @@ public class Query_E {
 	
 	public class NationSubsetPage extends Page<NationSubsetRecord>
 	{
+		public NationSubsetPage()
+		{
+			super();
+			m_nbRecordsPerPage = 100;
+		}
 		public NationSubsetRecord[] CreateArray(int n){ return new NationSubsetRecord[n]; }
 		public NationSubsetRecord   CreateElement(){ return new NationSubsetRecord(); }
 	}
@@ -265,6 +277,11 @@ public class Query_E {
 	
 	public class SupplierSubsetPage extends Page<SupplierSubsetRecord>
 	{
+		public SupplierSubsetPage()
+		{
+			super();
+			m_nbRecordsPerPage = 100;
+		}
 		public SupplierSubsetRecord[] CreateArray(int n){ return new SupplierSubsetRecord[n]; }
 		public SupplierSubsetRecord   CreateElement(){ return new SupplierSubsetRecord(); }	
 	}

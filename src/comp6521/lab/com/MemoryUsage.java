@@ -1,4 +1,4 @@
-package comp6521.lab.com;
+/*package comp6521.lab.com;
 
 public class MemoryUsage
 {
@@ -70,4 +70,4 @@ public class MemoryUsage
     }
     
     private static final Runtime s_runtime = Runtime.getRuntime ();
-} // End of class
+} // End of class*/

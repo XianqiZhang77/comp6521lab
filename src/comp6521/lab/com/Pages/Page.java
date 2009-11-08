@@ -1,5 +1,5 @@
 package comp6521.lab.com.Pages;
-import java.io.BufferedReader;
+/*import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.PrintWriter;*/
 
 import comp6521.lab.com.MemoryManager;
 import comp6521.lab.com.Records.Record;
@@ -101,7 +101,7 @@ public abstract class Page<T extends Record> {
 		MemoryManager.getInstance().writePage( this );
 	}
 	
-	public void readFile(String filePath){
+	/*public void readFile(String filePath){
 		
 		try{
 		    // Open the file that is the first 
@@ -153,6 +153,6 @@ public abstract class Page<T extends Record> {
 	}
 	public int getNumberOfRecords(){
 		return m_records.length;
-	}
+	}*/
 
 }

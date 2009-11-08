@@ -5,6 +5,9 @@ import comp6521.lab.com.Pages.OrdersPage;
 import comp6521.lab.com.Pages.Page;
 import comp6521.lab.com.Query_E.QE_Record;
 import comp6521.lab.com.Records.CustomerRecord;
+import comp6521.lab.com.Records.DateRecordElement;
+import comp6521.lab.com.Records.FloatRecordElement;
+import comp6521.lab.com.Records.IntegerRecordElement;
 import comp6521.lab.com.Records.OrdersRecord;
 import comp6521.lab.com.Records.Record;
 
@@ -32,10 +35,8 @@ public class Query_Z {
 		// Zeroeth phase:
 		// Initialization
 		////////////////////////////////////////////////////////////////////
-		QZ_Record qz_dummy = new QZ_Record();
 		OrdersSubsetRecord os_dummy = new OrdersSubsetRecord();
 		
-		MemoryManager.getInstance().AddPageType( QZ_Page.class.getName(), qz_dummy.GetRecordSize() * 10, "qz_f.txt");
 		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class.getName(), os_dummy.GetRecordSize() * 10, "qz_os.txt");
 		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class.getName(), os_dummy.GetRecordSize() * 10, "qz_os.txt");
 		////////////////////////////////////////////////////////////////////
@@ -220,25 +221,13 @@ public class Query_Z {
 	////////////////////////////////////////////////////////////////////
 	// Sub-results classes
 	////////////////////////////////////////////////////////////////////
-	public class QZ_Record extends Record
-	{
-		public QZ_Record()
-		{
-			
-		}
-	}
-	
-	public class QZ_Page extends Page<QZ_Record>
-	{
-		public QZ_Record[] CreateArray(int n){ return new QZ_Record[n]; }
-		public QZ_Record   CreateElement(){ return new QZ_Record(); }		
-	}
-	
 	public class OrdersSubsetRecord extends Record
 	{
 		public OrdersSubsetRecord()
 		{
-			
+			AddElement( "o_custKey",    new IntegerRecordElement());
+			AddElement( "o_totalPrice", new FloatRecordElement()  );
+			AddElement( "o_orderDate",  new DateRecordElement()   );
 		}
 	}
 	

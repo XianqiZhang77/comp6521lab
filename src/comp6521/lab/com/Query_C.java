@@ -199,8 +199,8 @@ public class Query_C {
 								QCFinal_Record qf = new QCFinal_Record();
 								qf.copyFromQCSN( qcsn[keptProductsSupp.get(j)]);
 								
-								qf.get("ps_supplycost").setFloat( keptProductsCost.get(j).floatValue() );								
-								qf.get("p_partkey").set( pRecords[i].get("p_partKey") );
+								qf.get("ps_supplyCost").setFloat( keptProductsCost.get(j).floatValue() );								
+								qf.get("p_partKey").set( pRecords[i].get("p_partKey") );
 								qf.get("p_mfgr").set( pRecords[i].get("p_mfgr") );	
 								// Save record
 								qf_page.AddRecord( qf );
@@ -252,9 +252,9 @@ public class Query_C {
 								// Check part key match (our product - part supp part key )
 								//                      (min sel supp key - part supp supp key )
 								//                      ( price check )
-								if( psRecords[k].get("ps_partKey").getInt() == qf[i].get("p_partkey").getInt() && 
+								if( psRecords[k].get("ps_partKey").getInt() == qf[i].get("p_partKey").getInt() && 
 									psRecords[k].get("ps_suppKey").getInt() == qcsk[j].get("s_suppKey").getInt() &&
-									psRecords[k].get("ps_supplyCost").getFloat() < qf[i].get("ps_supplycost").getFloat() )
+									psRecords[k].get("ps_supplyCost").getFloat() < qf[i].get("ps_supplyCost").getFloat() )
 								{
 									OutputRecord = false;
 								}
@@ -340,7 +340,7 @@ public class Query_C {
 			AddElement( "s_address",     new StringRecordElement(50));
 			AddElement( "s_phone",       new StringRecordElement(30));
 			AddElement( "s_comment",     new StringRecordElement(120));
-			AddElement( "ps_supplycost", new FloatRecordElement());
+			AddElement( "ps_supplyCost", new FloatRecordElement());
 		}
 		
 		public void copyFromQCSN(QCSN_Record other)

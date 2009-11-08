@@ -10,14 +10,23 @@ public class DateRecordElement extends RecordElement {
 	
 	public void Parse(String data)
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat formatter2 = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+
 		try
 		{
-			m_value = (Date)formatter.parse(data);
+			m_value = (Date)formatter1.parse(data);
 		}
-		catch(ParseException pe)
+		catch(ParseException pe1)
 		{
-			System.err.println(pe.toString());
+			try
+			{
+				m_value = (Date)formatter2.parse(data);
+			}
+			catch(ParseException pe2)
+			{
+				System.err.println(pe2.toString());
+			}
 		}
 	}
 	public String Write()

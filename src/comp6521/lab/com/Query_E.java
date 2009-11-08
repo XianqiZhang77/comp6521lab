@@ -166,6 +166,7 @@ public class Query_E {
 				if( qeRecords[i].get("ps_partKey").getInt() == previousKey )
 				{
 					assert(group != null);
+					// Update total value of the group
 					group.get("value").setFloat( group.get("value").getFloat() + qeRecords[i].get("value").getFloat() );
 				}
 				else
@@ -176,7 +177,9 @@ public class Query_E {
 					
 					group = new QE_Record();
 					group.get("ps_partKey").set( qeRecords[i].get("ps_partKey") );
-					previousKey = qeRecords[i].get("ps_partKey").getInt();					
+					group.get("value").set( qeRecords[i].get("value" ) );
+					
+					previousKey = qeRecords[i].get("ps_partKey").getInt();	
 				}
 			}			
 			

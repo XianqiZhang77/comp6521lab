@@ -3,7 +3,6 @@ package comp6521.lab.com;
 import comp6521.lab.com.Pages.CustomerPage;
 import comp6521.lab.com.Pages.OrdersPage;
 import comp6521.lab.com.Pages.Page;
-import comp6521.lab.com.Query_E.QE_Record;
 import comp6521.lab.com.Records.CustomerRecord;
 import comp6521.lab.com.Records.DateRecordElement;
 import comp6521.lab.com.Records.FloatRecordElement;

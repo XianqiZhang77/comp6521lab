@@ -10,18 +10,15 @@ package comp6521.lab.com;
  *
  */
 
-import java.io.FileReader;		
+import java.io.FileReader;	
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class PageManagerSingleton 
 {	
-	// TODO: method to return size of cbuf array	
-	// TODO: file writer methods (i.e. write pages) 
+	// TODO: method to return size of cbuf array	 
 	// TODO: get file information (i.e. File class)?
-	// TODO: record classes getter and setter methods
-	// TODO: add toString override to record classes
-	// TODO: add record size constant to records
-	// TODO: handle case where page is out of bound. (i.e. progam should not crash)
+	// TODO: handle case where page is out of bound. (i.e. program should not crash)
 	
 	private static final PageManagerSingleton INSTANCE = new PageManagerSingleton(); 	// page manager singleton
 	
@@ -82,8 +79,17 @@ public class PageManagerSingleton
 	}
 	
 	// write page to disk
-	public void writePage(String filename, char[] cbuf, int pageNumber)
+	public void writePage(String filename, char[] cbuf)
 	{
-		// TODO	
+		try
+		{
+			FileWriter file = new FileWriter(path+filename, true);	// append cbuf[]to end of file 
+			file.write(cbuf);
+			file.close();
+		}
+		catch(IOException ioException)
+		{
+			ioException.printStackTrace();
+		}
 	}
 }

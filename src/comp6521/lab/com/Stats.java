@@ -180,7 +180,7 @@ public class Stats {
 		
 		for( int att = 0; att < attributeList.length; att++ )
 		{
-			System.out.println("Stats for attribute: " + attributeList[att]);
+			System.out.println("Stats for attribute: " + attributeList[att] + " " + statsObjects[att].StatType());
 			statsObjects[att].PrintStats();
 		}
 	}	
@@ -225,30 +225,30 @@ public class Stats {
 			
 			System.out.println("Number of distinct values: " + values.length);
 			System.out.println("Minimum number of occurrences of a value: " + min);
-			System.out.println("Maximum number of occurrences of a values: " + max);
+			System.out.println("Maximum number of occurrences of a value: " + max);
 		}
+		
+		public String StatType(){ return new String(""); }
 	}
 		
 	public class KeyStatsObject extends StatsObject<Integer>
 	{
 		public KeyStatsObject()	{ m_stats = new Hashtable<Integer, Integer>(); }
 		protected Integer GetKeyFromElement( RecordElement el ) { return new Integer( el.getInt() ); }
-				
 	}
 	
 	public class PhoneSubsetStatsObject extends StatsObject<String>
 	{
 		public PhoneSubsetStatsObject() { m_stats = new Hashtable<String, Integer>(); }
 		protected String GetKeyFromElement( RecordElement el ) { return new String( el.getString().substring(0, 2) ); }
+		public String StatType(){ return new String("(First two digits)"); }
 	}
 	
 	public class DateYearStatsObject extends StatsObject<Integer>
 	{
 		public DateYearStatsObject() { m_stats = new Hashtable<Integer, Integer>(); }
-		protected Integer GetKeyFromElement( RecordElement el ) 
-		{ 
-			return new Integer( el.getDate().getYear() ); 
-		}
+		protected Integer GetKeyFromElement( RecordElement el ) { return new Integer( el.getDate().getYear() ); }
+		public String StatType() { return new String("(grouped by year)"); }
 	}
 	
 	

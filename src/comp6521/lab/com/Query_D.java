@@ -27,7 +27,7 @@ public class Query_D
 	public void ProcessQuery(String r_name)
 	{
 		// initialise memory manager tracking for custom pages		
-		MemoryManager.getInstance().AddPageType(RegionSubsetPage.class.getName(), (new RegionSubsetRecord()).GetRecordSize() * 100, "r_subset.txt");
+		MemoryManager.getInstance().AddPageType(RegionSubsetPage.class, "r_subset.txt");
 	
 		// get empty region subset page
 		RegionSubsetPage rSubsetPage = MemoryManager.getInstance().getEmptyPage(RegionSubsetPage.class);
@@ -35,6 +35,8 @@ public class Query_D
 		// select * from Region where r_name = ? 
 		int r_page =  0;																								// region page counter
 		RegionPage regionPage = null;																					// region page
+		String path = "E:\\Dimitri\\Concordia\\Comp6521_AdvancedDatabaseSystemsAndTheory\\Lab\\ShortData\\";
+		PageManagerSingleton.getInstance().setPath(path);	
 		while ( (regionPage = MemoryManager.getInstance().getPage(RegionPage.class, r_page++)) != null )				// get region page
 		{
 			// process page records
@@ -52,23 +54,10 @@ public class Query_D
 				}
 			}
 			
+			rSubsetPage.WritePageToFile();
+			
 			// free current region page
 			MemoryManager.getInstance().freePage(regionPage);
 		}	
-	}
-	
-	// Phase I Records
-	private class RegionSubsetRecord extends Record																		// region subset record
-	{
-		public RegionSubsetRecord()
-		{
-			AddElement( "r_regionKey", new IntegerRecordElement() );
-		}
-	}
-	
-	private class RegionSubsetPage extends Page<RegionSubsetRecord>														// region subset page
-	{
-		public RegionSubsetRecord[] CreateArray(int n){ return new RegionSubsetRecord[n]; }
-		public RegionSubsetRecord   CreateElement(){ return new RegionSubsetRecord(); }
 	}
 }

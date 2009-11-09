@@ -214,29 +214,29 @@ public class Query_Z {
 		
 		System.out.println(result);
 	}
-		
-	////////////////////////////////////////////////////////////////////
-	// Sub-results classes
-	////////////////////////////////////////////////////////////////////
-	public class OrdersSubsetRecord extends Record
+}
+
+////////////////////////////////////////////////////////////////////
+// Sub-results classes
+////////////////////////////////////////////////////////////////////
+class OrdersSubsetRecord extends Record
+{
+	public OrdersSubsetRecord()
 	{
-		public OrdersSubsetRecord()
-		{
-			AddElement( "o_custKey",    new IntegerRecordElement());
-			AddElement( "o_totalPrice", new FloatRecordElement()  );
-			AddElement( "o_orderDate",  new DateRecordElement()   );
-		}
+		AddElement( "o_custKey",    new IntegerRecordElement());
+		AddElement( "o_totalPrice", new FloatRecordElement()  );
+		AddElement( "o_orderDate",  new DateRecordElement()   );
 	}
-	
-	public class OrdersSubsetPage extends Page<OrdersSubsetRecord>
-	{
-		public OrdersSubsetRecord[] CreateArray(int n){ return new OrdersSubsetRecord[n]; }
-		public OrdersSubsetRecord   CreateElement(){ return new OrdersSubsetRecord(); }	
-	}
-	
-	public class OrdersGroupsPage extends Page<OrdersSubsetRecord>
-	{
-		public OrdersSubsetRecord[] CreateArray(int n){ return new OrdersSubsetRecord[n]; }
-		public OrdersSubsetRecord   CreateElement(){ return new OrdersSubsetRecord(); }		
-	}
+}
+
+class OrdersSubsetPage extends Page<OrdersSubsetRecord>
+{
+	public OrdersSubsetRecord[] CreateArray(int n){ return new OrdersSubsetRecord[n]; }
+	public OrdersSubsetRecord   CreateElement(){ return new OrdersSubsetRecord(); }	
+}
+
+class OrdersGroupsPage extends Page<OrdersSubsetRecord>
+{
+	public OrdersSubsetRecord[] CreateArray(int n){ return new OrdersSubsetRecord[n]; }
+	public OrdersSubsetRecord   CreateElement(){ return new OrdersSubsetRecord(); }		
 }

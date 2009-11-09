@@ -285,82 +285,86 @@ public class Query_C {
 		}		
 	}
 	
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	// Sub classes implementation                                                                //
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	public class QCSN_Record extends Record
+
+	
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Sub classes implementation                                                                //
+///////////////////////////////////////////////////////////////////////////////////////////////
+class QCSN_Record extends Record
+{
+	public QCSN_Record()
 	{
-		public QCSN_Record()
-		{
-			AddElement( "s_suppKey", new IntegerRecordElement()   );
-			AddElement( "s_acctBal", new FloatRecordElement()     );
-			AddElement( "s_name",    new StringRecordElement(25)  );
-			AddElement( "n_name",    new StringRecordElement(15)  );
-			AddElement( "s_address", new StringRecordElement(50)  );
-			AddElement( "s_phone",   new StringRecordElement(30)  );
-			AddElement( "s_comment", new StringRecordElement(120) );
-		}
+		AddElement( "s_suppKey", new IntegerRecordElement()   );
+		AddElement( "s_acctBal", new FloatRecordElement()     );
+		AddElement( "s_name",    new StringRecordElement(25)  );
+		AddElement( "n_name",    new StringRecordElement(15)  );
+		AddElement( "s_address", new StringRecordElement(50)  );
+		AddElement( "s_phone",   new StringRecordElement(30)  );
+		AddElement( "s_comment", new StringRecordElement(120) );
+	}
+}
+
+class QCSN_Page extends Page<QCSN_Record>
+{
+	//public static int GetNumberRecordsPerPage() { return 10; }
+	public QCSN_Record[] CreateArray(int n){ return new QCSN_Record[n]; }
+	public QCSN_Record   CreateElement(){ return new QCSN_Record(); }
+}
+
+class QCSK_Record extends Record
+{
+	public QCSK_Record()
+	{
+		AddElement( "s_suppKey", new IntegerRecordElement() );
+	}
+}
+
+class QCSK_Page extends Page<QCSK_Record>
+{
+	public QCSK_Page()
+	{
+		super();
+		m_nbRecordsPerPage = 100;
+	}
+	public QCSK_Record[] CreateArray(int n){ return new QCSK_Record[n]; }
+	public QCSK_Record   CreateElement(){ return new QCSK_Record(); }
+}
+
+class QCFinal_Record extends Record
+{
+	public QCFinal_Record()
+	{
+		AddElement( "s_acctBal",     new FloatRecordElement() );
+		AddElement( "s_name",        new StringRecordElement(25));
+		AddElement( "n_name",        new StringRecordElement(15));
+		AddElement( "p_partKey",     new IntegerRecordElement());
+		AddElement( "p_mfgr",        new StringRecordElement(15));
+		AddElement( "s_address",     new StringRecordElement(50));
+		AddElement( "s_phone",       new StringRecordElement(30));
+		AddElement( "s_comment",     new StringRecordElement(120));
+		AddElement( "ps_supplyCost", new FloatRecordElement());
 	}
 	
-	public class QCSN_Page extends Page<QCSN_Record>
+	public void copyFromQCSN(QCSN_Record other)
 	{
-		//public static int GetNumberRecordsPerPage() { return 10; }
-		public QCSN_Record[] CreateArray(int n){ return new QCSN_Record[n]; }
-		public QCSN_Record   CreateElement(){ return new QCSN_Record(); }
+		//s_suppKey = other.s_suppKey; // not needed
+		get("s_acctBal").set( other.get("s_acctBal") );
+		get("s_name").set(    other.get("s_name"));
+		//p_partkey = 0;
+		//p_mfgr    = "";
+		get("n_name").set(     other.get("n_name"));
+		get("s_address").set(  other.get("s_address"));
+		get("s_phone").set(    other.get("s_phone"));
+		get("s_comment").set(  other.get("s_comment"));
 	}
 	
-	public class QCSK_Record extends Record
-	{
-		public QCSK_Record()
-		{
-			AddElement( "s_suppKey", new IntegerRecordElement() );
-		}
-	}
-	
-	public class QCSK_Page extends Page<QCSK_Record>
-	{
-		public QCSK_Page()
-		{
-			super();
-			m_nbRecordsPerPage = 100;
-		}
-		public QCSK_Record[] CreateArray(int n){ return new QCSK_Record[n]; }
-		public QCSK_Record   CreateElement(){ return new QCSK_Record(); }
-	}
-	
-	public class QCFinal_Record extends Record
-	{
-		public QCFinal_Record()
-		{
-			AddElement( "s_acctBal",     new FloatRecordElement() );
-			AddElement( "s_name",        new StringRecordElement(25));
-			AddElement( "n_name",        new StringRecordElement(15));
-			AddElement( "p_partKey",     new IntegerRecordElement());
-			AddElement( "p_mfgr",        new StringRecordElement(15));
-			AddElement( "s_address",     new StringRecordElement(50));
-			AddElement( "s_phone",       new StringRecordElement(30));
-			AddElement( "s_comment",     new StringRecordElement(120));
-			AddElement( "ps_supplyCost", new FloatRecordElement());
-		}
-		
-		public void copyFromQCSN(QCSN_Record other)
-		{
-			//s_suppKey = other.s_suppKey; // not needed
-			get("s_acctBal").set( other.get("s_acctBal") );
-			get("s_name").set(    other.get("s_name"));
-			//p_partkey = 0;
-			//p_mfgr    = "";
-			get("n_name").set(     other.get("n_name"));
-			get("s_address").set(  other.get("s_address"));
-			get("s_phone").set(    other.get("s_phone"));
-			get("s_comment").set(  other.get("s_comment"));
-		}
-		
-	}
-	
-	public class QCFinal_Page extends Page<QCFinal_Record>
-	{
-		public QCFinal_Record[] CreateArray(int n){ return new QCFinal_Record[n]; }
-		public QCFinal_Record   CreateElement(){ return new QCFinal_Record(); }
-	}
+}
+
+class QCFinal_Page extends Page<QCFinal_Record>
+{
+	public QCFinal_Record[] CreateArray(int n){ return new QCFinal_Record[n]; }
+	public QCFinal_Record   CreateElement(){ return new QCFinal_Record(); }
 }

@@ -214,75 +214,77 @@ public class Query_E {
 			MemoryManager.getInstance().freePage(qeg);
 		}
 	}
-	
-	// Final results & intermediary results
-	public class QE_Record extends Record
+}
+
+///////////////////////////////
+// Subclasses implementation //
+///////////////////////////////
+class QE_Record extends Record
+{
+	public QE_Record()
 	{
-		public QE_Record()
-		{
-			AddElement( "ps_partKey", new IntegerRecordElement() );
-			AddElement( "value",      new FloatRecordElement()   );
-		}
+		AddElement( "ps_partKey", new IntegerRecordElement() );
+		AddElement( "value",      new FloatRecordElement()   );
 	}
-	
-	public class QE_Page extends Page<QE_Record>
+}
+
+class QE_Page extends Page<QE_Record>
+{
+	public QE_Page()
 	{
-		public QE_Page()
-		{
-			super();
-			m_nbRecordsPerPage = 100;
-		}
-		public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
-		public QE_Record   CreateElement(){ return new QE_Record(); }
+		super();
+		m_nbRecordsPerPage = 100;
 	}
-	
-	public class QEGroups_Page extends Page<QE_Record>
+	public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
+	public QE_Record   CreateElement(){ return new QE_Record(); }
+}
+
+class QEGroups_Page extends Page<QE_Record>
+{
+	public QEGroups_Page()
 	{
-		public QEGroups_Page()
-		{
-			super();
-			m_nbRecordsPerPage = 100;
-		}
-		public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
-		public QE_Record   CreateElement(){ return new QE_Record(); }		
+		super();
+		m_nbRecordsPerPage = 100;
 	}
-	
-	// First phase records
-	public class NationSubsetRecord extends Record
+	public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
+	public QE_Record   CreateElement(){ return new QE_Record(); }		
+}
+
+// First phase records
+class NationSubsetRecord extends Record
+{
+	public NationSubsetRecord()
 	{
-		public NationSubsetRecord()
-		{
-			AddElement( "n_nationKey", new IntegerRecordElement() );
-		}
+		AddElement( "n_nationKey", new IntegerRecordElement() );
 	}
-	
-	public class NationSubsetPage extends Page<NationSubsetRecord>
+}
+
+class NationSubsetPage extends Page<NationSubsetRecord>
+{
+	public NationSubsetPage()
 	{
-		public NationSubsetPage()
-		{
-			super();
-			m_nbRecordsPerPage = 100;
-		}
-		public NationSubsetRecord[] CreateArray(int n){ return new NationSubsetRecord[n]; }
-		public NationSubsetRecord   CreateElement(){ return new NationSubsetRecord(); }
+		super();
+		m_nbRecordsPerPage = 100;
 	}
-	
-	public class SupplierSubsetRecord extends Record
+	public NationSubsetRecord[] CreateArray(int n){ return new NationSubsetRecord[n]; }
+	public NationSubsetRecord   CreateElement(){ return new NationSubsetRecord(); }
+}
+
+class SupplierSubsetRecord extends Record
+{
+	public SupplierSubsetRecord()
 	{
-		public SupplierSubsetRecord()
-		{
-			AddElement( "s_suppKey" , new IntegerRecordElement() );
-		}
+		AddElement( "s_suppKey" , new IntegerRecordElement() );
 	}
-	
-	public class SupplierSubsetPage extends Page<SupplierSubsetRecord>
+}
+
+class SupplierSubsetPage extends Page<SupplierSubsetRecord>
+{
+	public SupplierSubsetPage()
 	{
-		public SupplierSubsetPage()
-		{
-			super();
-			m_nbRecordsPerPage = 100;
-		}
-		public SupplierSubsetRecord[] CreateArray(int n){ return new SupplierSubsetRecord[n]; }
-		public SupplierSubsetRecord   CreateElement(){ return new SupplierSubsetRecord(); }	
+		super();
+		m_nbRecordsPerPage = 100;
 	}
+	public SupplierSubsetRecord[] CreateArray(int n){ return new SupplierSubsetRecord[n]; }
+	public SupplierSubsetRecord   CreateElement(){ return new SupplierSubsetRecord(); }	
 }

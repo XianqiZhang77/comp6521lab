@@ -8,6 +8,11 @@ import java.util.Date;
 public class DateRecordElement extends RecordElement {
 	protected Date m_value;
 	
+	public DateRecordElement()
+	{
+		m_value = new Date();
+	}
+	
 	public void Parse(String data)
 	{
 		SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -31,7 +36,9 @@ public class DateRecordElement extends RecordElement {
 	}
 	public String Write()
 	{
-		return DateFormat.getInstance().format(m_value);
+		//return DateFormat.getInstance().format(m_value);
+		SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		return formatter1.format(m_value);
 	}
 	
 	public int Size() { return 19; }

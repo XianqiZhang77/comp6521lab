@@ -50,7 +50,7 @@ public class Query_Z {
 			OrdersRecord[] orders = orderPage.m_records;
 			for(int i = 0; i < orders.length; i++)
 			{
-				if( orders[i].get("o_orderDate").getDate().getYear() == year )
+				if( orders[i].get("o_orderDate").getDate().getYear() + 1900 == year )
 				{
 					// We'll keep that order
 					OrdersSubsetRecord os = new OrdersSubsetRecord();
@@ -156,7 +156,7 @@ public class Query_Z {
 					for( int j = 0; j < customers.length; j++ )
 					{
 						// Key match
-						if( customers[j].get("c_custKey").getInt() == customers[i].get("o_custKey").getInt() )
+						if( customers[j].get("c_custKey").getInt() == osgRecords[i].get("o_custKey").getInt() )
 						{
 							// Check for min name
 							if( customers[j].get("c_name").getString().compareTo( minName ) < 0 )

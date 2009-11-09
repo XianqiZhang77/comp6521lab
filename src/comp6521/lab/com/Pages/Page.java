@@ -67,7 +67,7 @@ public abstract class Page<T extends Record> {
 		String stringData = "";
 		for( int i = 0; i < m_insertionIndex; i++ )
 		{
-			stringData += m_records[i].Write();
+			stringData += m_records[i].Write() + "\r\n";
 		}
 		return stringData.toCharArray();
 	}

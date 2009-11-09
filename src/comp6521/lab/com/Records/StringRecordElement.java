@@ -8,7 +8,7 @@ public class StringRecordElement extends RecordElement {
 	public StringRecordElement( int size ) { m_size = size; }
 	
 	public void Parse(String data) { m_value = data.trim(); }
-	public String Write()          { String custformat= "%1$-" + m_size + "c"; return String.format(custformat, m_value.toCharArray()); }
+	public String Write()          { String custformat= "%1$-" + m_size + "s"; 	return String.format(custformat, m_value); }
 	public int Size()              { return m_size; }
 	
 	public String getString() { return m_value; }

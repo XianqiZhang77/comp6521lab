@@ -181,6 +181,12 @@ public class Query_Z {
 		// Output results
 		////////////////////////////////////////////////////////////////////
 		// Output header
+		if(minIndex < 0 )
+		{
+			System.out.println("No results found");
+			return;
+		}
+		
 		System.out.println("customerName\tJAN\tFEB\tMAR\tAPR\tMAY\tJUN\tJUL\tAUG\tSEP\tOCT\tNOV\tDEC");
 		
 		String result = minName + "\t";

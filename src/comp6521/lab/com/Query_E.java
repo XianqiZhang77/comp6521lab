@@ -119,8 +119,8 @@ public class Query_E {
 						{
 							// We found a partsupp entry for a supplier in the united states.
 							QE_Record qer = new QE_Record();
-							qer.get("ps_partKey").set( psRecords[i].get("ps_partKey") );
-							float value = psRecords[i].get("ps_supplyCost").getFloat() * psRecords[i].get("ps_availQty").getInt();
+							qer.get("ps_partKey").set( psRecords[j].get("ps_partKey") );
+							float value = psRecords[j].get("ps_supplyCost").getFloat() * psRecords[j].get("ps_availQty").getInt();
 							qer.get("value").setFloat( value );
 							
 							qe.AddRecord( qer );

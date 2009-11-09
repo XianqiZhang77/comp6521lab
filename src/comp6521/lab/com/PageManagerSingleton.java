@@ -71,7 +71,8 @@ public class PageManagerSingleton
 		catch(IOException io)
 		{
 			// print error stack trace
-			io.printStackTrace(System.err);
+			//io.printStackTrace(System.err);
+			cbuf = null;
 		}
 		
 		// return character buffer 

@@ -185,6 +185,9 @@ public class MemoryManager
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		}
+		
+		if( page != null )
+			page.CreateEmptyPage();
     
 		return page;
     }

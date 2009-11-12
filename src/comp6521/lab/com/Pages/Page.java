@@ -16,6 +16,7 @@ import comp6521.lab.com.Records.Record;
 public abstract class Page<T extends Record> {
 	public T[] m_records;
 	public int m_pageNumber;
+	public String m_filename; // the file this page comes from
 	public int m_insertionIndex;
 	public int m_nbRecordsPerPage;
 	
@@ -23,6 +24,7 @@ public abstract class Page<T extends Record> {
 	{
 		m_records = null;
 		m_pageNumber = -1;
+		m_filename = "";
 		m_insertionIndex = -1;
 		m_nbRecordsPerPage = 10; // default value
 	}

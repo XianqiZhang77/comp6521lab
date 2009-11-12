@@ -35,7 +35,7 @@ public class Query_Z {
 		// Initialization
 		////////////////////////////////////////////////////////////////////
 		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class, "qz_os.txt");
-		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class, "qz_os.txt");
+		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class, "qzg_os.txt");
 		////////////////////////////////////////////////////////////////////
 		// First phase:
 		// Select orders subset that satisfy the year condition and

@@ -32,7 +32,6 @@ public class MemoryManager
 	}
 	
 	// Members
-	ArrayList<RecordKeeper> m_defaultRecords;
 	ArrayList<RecordKeeper> m_records;
 	static int m_createdPagesIndex;
 	
@@ -43,7 +42,6 @@ public class MemoryManager
 		m_MaxMemory = 10240; // 10k = 10 * 2^10 in bytes
 		m_createdPagesIndex = -1;
 		
-		m_defaultRecords = new ArrayList<RecordKeeper>();
 		m_records = new ArrayList<RecordKeeper>();
 		
 		AddPageType( CustomerPage.class, "" );
@@ -67,13 +65,15 @@ public class MemoryManager
     // Simpler interface
     public <T extends Page<?> > T getPage( Class<T> c, int pageNumber )
     {
-    	int i = getDefaultPageIndex( c );    	
-    	return getPage( c, m_defaultRecords.get(i), pageNumber );
+    	int i = getPageIndex( c ); 
+    	assert(i >= 0);
+    	return getPage( c, m_records.get(i), pageNumber );
     }
     
     public <T extends Page<?> > T getPage( Class<T> c, int pageNumber, String filename)
     {
     	int i = getPageIndex( c, filename );
+    	assert(i >= 0);
     	return getPage( c, m_records.get(i), pageNumber );
     }
         
@@ -123,13 +123,15 @@ public class MemoryManager
     
     public <T extends Page<?> > T getEmptyPage( Class<T> c )
     {
-    	int i = getDefaultPageIndex( c );
-    	return getEmptyPage( c, m_defaultRecords.get(i) );
+    	int i = getPageIndex( c );
+    	assert(i >= 0);
+    	return getEmptyPage( c, m_records.get(i) );
     }
     
     public <T extends Page<?> > T getEmptyPage( Class<T> c, String filename )
     {
     	int i = getPageIndex( c, filename );
+    	assert(i >= 0);
     	return getEmptyPage( c, m_records.get(i) );
     }
     
@@ -155,40 +157,29 @@ public class MemoryManager
     	}
     }
     
-    private <T> int getDefaultPageIndex( Class<T> c ) { return getDefaultPageIndex( c.getName() ); }
-    private int getDefaultPageIndex( String type )
+    private <T> int getPageIndex( Class<T> c )                  { return getPageIndex(c, "", false); }
+    private <T> int getPageIndex( Class<T> c, String filename ) { return getPageIndex(c, filename, true); }
+    private <T> int getPageIndex( Class<T> c, String filename, boolean CheckFilename )
     {
-    	for( int i = 0; i < m_defaultRecords.size(); i++ )
-    		if( m_defaultRecords.get(i).m_type.compareTo(type) == 0)
-    			return i;
-    	return -1;    
-    }
-    
-    private <T> int getPageIndex( Class<T> c, String filename ) { return getPageIndex( c.getName(), filename ); }
-    private int getPageIndex( String type, String filename )
-    {
+    	String type = c.getName();
     	for( int i = 0; i < m_records.size(); i++ )
-    		if( m_records.get(i).m_type.compareTo(type) == 0         && 
-    			m_records.get(i).m_filename.compareTo(filename) == 0   )
-    			return i;
-    	return -1;    
+    		if( m_records.get(i).m_type.compareTo(type) == 0 && 
+    		    (!CheckFilename || m_records.get(i).m_filename.compareTo(filename) == 0) )
+    				return i;
+    	return -1;
     }
     
     private RecordKeeper getRecordKeeperFromPage( Page<?> p )
     {
-    	int i = getDefaultPageIndex( p.getClass() );
-    	if( i >= 0 && m_defaultRecords.get(i).m_filename.compareTo(p.m_filename)== 0 )
-    		return m_defaultRecords.get(i);
-
-    	i = getPageIndex( p.getClass(), p.m_filename );
+    	int i = getPageIndex( p.getClass(), p.m_filename );
+    	assert(i >= 0);
     	return m_records.get(i);    		
     }
     
     public <T extends Page<?> > void AddPageType( Class<T> c, String filename )
     {
-    	String type = c.getName();
     	// Make sure the page type doesn't exist.
-		if( getPageIndex(type, filename) != -1 )
+		if( getPageIndex(c, filename) != -1 )
 			return;
 		
 		// Compute page size
@@ -197,12 +188,8 @@ public class MemoryManager
 		
 		int pageSize = dummyPage.GetNumberRecordsPerPage() * dummyRecord.GetRecordSize();
     	
-		RecordKeeper rk = new RecordKeeper(type, pageSize, filename);
-		// If it's the first page of that type we're adding, we'll consider it the "default"
-		if( getDefaultPageIndex( type ) == -1 )
-	    	m_defaultRecords.add(rk);
-		else
-	    	m_records.add(rk);
+		RecordKeeper rk = new RecordKeeper(c.getName(), pageSize, filename);
+		m_records.add(rk);
     }
     
     private <T extends Page<?> > T CreatePage( Class<T> c, char[] rawData )
@@ -299,5 +286,5 @@ public class MemoryManager
     	System.out.println("------------------");    	
     }
 	
-	public <T extends Page<?> > void SetPageFile( Class<T> c, String filename ) { m_defaultRecords.get(getDefaultPageIndex(c)).m_filename = filename; }
+	public <T extends Page<?> > void SetPageFile( Class<T> c, String filename ) { m_records.get(getPageIndex(c)).m_filename = filename; }
 }

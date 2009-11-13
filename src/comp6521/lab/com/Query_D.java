@@ -29,6 +29,7 @@ public class Query_D
 		// initialise memory manager tracking for custom pages		
 		MemoryManager.getInstance().AddPageType(RegionSubsetPage.class, "r_subset.txt");
 		MemoryManager.getInstance().AddPageType(QDNationSubsetPage.class, "n_subset.txt");
+		MemoryManager.getInstance().AddPageType(QD_Page.class, "qd_resultset.txt");
 		
 		// get empty region subset page
 		RegionSubsetPage rSubsetPage = MemoryManager.getInstance().getEmptyPage(RegionSubsetPage.class);
@@ -78,7 +79,7 @@ public class Query_D
 				// iterate through nation pages
 				int n_page = 0;
 				NationPage nationPage = null;
-				while ( (nationPage = MemoryManager.getInstance().getPage(NationPage.class, n_page++)) != null )				// get region subset page
+				while ( (nationPage = MemoryManager.getInstance().getPage(NationPage.class, n_page++)) != null )				// get nation page
 				{
 					NationRecord[] nationRecords = nationPage.m_records;														// get records array
 				
@@ -89,10 +90,10 @@ public class Query_D
 						if (nRec.get("n_regionKey").getInt() == rRec.get("r_regionKey").getInt())
 						{
 							// create nation subset record
-							QDNationSubsetRecord nSubsetRecord = new QDNationSubsetRecord();
-							nSubsetRecord.AddElement("n_regionKet", nRec.get("n_regionKey"));									// select n_regionKey
-							nSubsetRecord.AddElement("n_name", nRec.get("n_name"));												// select n_name
-							
+							QDNationSubsetRecord nSubsetRecord = new QDNationSubsetRecord();									// select n_nationKey
+							nSubsetRecord.get("n_nationKey").set(nRec.get("n_nationKey"));										// select n_name
+							nSubsetRecord.get("n_name").set(nRec.get("n_name"));
+														
 							// add record to page
 							nSubsetPage.AddRecord(nSubsetRecord);
 						}
@@ -109,11 +110,63 @@ public class Query_D
 		
 		// write out selected nation subset page
 		MemoryManager.getInstance().freePage(nSubsetPage);
+		nSubsetPage = null;
+	
+		// get empty query d result set page for result set
+		QD_Page qDResultSetPage = MemoryManager.getInstance().getEmptyPage(QD_Page.class);
+		
+		// select s_acctbal, s_name, n_name, s_address, s_phone, s_comment 
+		// from nation, supplier
+		// where s_nationKey = n_nationKey
+		int n_page = 0;																											// nation page counter
+		while ( (nSubsetPage = MemoryManager.getInstance().getPage(QDNationSubsetPage.class, n_page++)) != null )				// get nation subset page
+		{
+			QDNationSubsetRecord[] nSubsetRecords = nSubsetPage.m_records;														// get records array
+			
+			// compare each region subset record against nation pages
+			for (QDNationSubsetRecord nRec: nSubsetRecords)
+			{
+				// iterate through supplier pages
+				int s_page = 0;
+				SupplierPage supplierPage = null;
+				while ( (supplierPage = MemoryManager.getInstance().getPage(SupplierPage.class, s_page++)) != null )				// get supplier subset page
+				{
+					SupplierRecord[] supplierRecords = supplierPage.m_records;														// get records array
+					
+					// compare nation subset tuples to supplier tuples
+					for (SupplierRecord sRec: supplierRecords)
+					{
+						// if match found, add to query d result set page
+						if (sRec.get("s_nationKey").getInt() == nRec.get("n_nationKey").getInt())
+						{
+							// create query d result set record
+							QD_Record qDRecord = new QD_Record();
+							qDRecord.get("s_acctBal").set(sRec.get("s_acctBal"));											// add attributes to record
+							qDRecord.get("s_name").set(sRec.get("s_name"));
+							qDRecord.get("n_name").set(nRec.get("n_name"));
+							qDRecord.get("s_address").set(sRec.get("s_address"));
+							qDRecord.get("s_phone").set(sRec.get("s_phone"));
+							qDRecord.get("s_comment").set(sRec.get("s_comment"));
+
+							// add record to page
+							qDResultSetPage.AddRecord(qDRecord);
+						}
+					}
+					
+					// free current supplier page
+					MemoryManager.getInstance().freePage(supplierPage);	
+				}
+			}
+			
+			// free nation subset page
+			MemoryManager.getInstance().freePage(nSubsetPage);
+		}
+	
+		// write out query d result set page
+		MemoryManager.getInstance().freePage(qDResultSetPage);
+		
 	}
 	
-	//
-/*	
-*/
 }
 
 //private RegionSubsetRecord inner class stores temporary region 
@@ -122,7 +175,7 @@ class QDNationSubsetRecord extends Record
 	public QDNationSubsetRecord()
 	{
 		// elements we need to keep
-		AddElement( "n_regionKey", new IntegerRecordElement() );
+		AddElement( "n_nationKey", new IntegerRecordElement() );
 		AddElement( "n_name", new StringRecordElement(15) ); 
 	}
 }
@@ -133,9 +186,33 @@ class QDNationSubsetPage extends Page<QDNationSubsetRecord>
 	public QDNationSubsetPage()
 	{
 		super();
-		super.m_records = super.CreateArray(100);
+		super.m_records = CreateArray(100);
 	}
 	
 	public QDNationSubsetRecord[] CreateArray(int n){ return new QDNationSubsetRecord[n]; }
 	public QDNationSubsetRecord   CreateElement(){ return new QDNationSubsetRecord(); }
+}
+
+class QD_Record extends Record
+{
+	public QD_Record()
+	{
+		AddElement("s_acctBal", new FloatRecordElement());											// add attributes to record
+		AddElement("s_name", new StringRecordElement(25));
+		AddElement("n_name", new StringRecordElement(15));
+		AddElement("s_address", new StringRecordElement(50));
+		AddElement("s_phone", new StringRecordElement(30));
+		AddElement("s_comment", new StringRecordElement(120));
+	}
+}
+
+class QD_Page extends Page<QD_Record>
+{
+	public QD_Page()
+	{
+		super();
+		super.m_records = CreateArray(100);
+	}
+	public QD_Record[] CreateArray(int n){ return new QD_Record[n]; }
+	public QD_Record   CreateElement(){ return new QD_Record(); }
 }

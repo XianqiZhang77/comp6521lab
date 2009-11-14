@@ -111,4 +111,11 @@ public abstract class Page<T extends Record> {
 	{
 		MemoryManager.getInstance().writePage( this );
 	}
+	
+	@SuppressWarnings("unchecked")
+	public void setRecord( int i, Record rec )
+	{
+		assert( m_records[i].getClass() == rec.getClass() );
+		m_records[i] = (T)rec;
+	}
 }

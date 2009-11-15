@@ -19,6 +19,7 @@ public abstract class Page<T extends Record> {
 	public String m_filename; // the file this page comes from
 	public int m_insertionIndex;
 	public int m_nbRecordsPerPage;
+	public boolean m_cleanupToDo;
 	
 	public Page()
 	{
@@ -27,6 +28,7 @@ public abstract class Page<T extends Record> {
 		m_filename = "";
 		m_insertionIndex = -1;
 		m_nbRecordsPerPage = 10; // default value
+		m_cleanupToDo = false;
 	}
 	
 	// To be overriden by custom page classes
@@ -64,14 +66,17 @@ public abstract class Page<T extends Record> {
 		}
 	}
 	
-	public char[] GetRawData()
+	public String GetRawData()
 	{
 		String stringData = "";
-		for( int i = 0; i < m_insertionIndex; i++ )
+		for( int i = 0; i < m_records.length; i++ )
 		{
-			stringData += m_records[i].Write() + "\r\n";
+			if( m_records[i] != null )
+				stringData += m_records[i].Write() + "\r\n"; 
+			else
+				stringData += "\r\n"; 
 		}
-		return stringData.toCharArray();
+		return stringData;
 	}
 	
 	public void CreateEmptyPage()
@@ -96,14 +101,17 @@ public abstract class Page<T extends Record> {
 			WritePageToFile();
 			m_insertionIndex = 0;
 		}
+		
+		m_cleanupToDo = true;
 	}
 	
 	public void Cleanup()
 	{
-		if( m_insertionIndex > 0 ) // not -1 (not an empty page) , not 0 (no records added)
+		if( m_cleanupToDo ) // not -1 (not an empty page) , not 0 (no records added)
 		{
 			// Write the page to the file.
 			WritePageToFile();
+			m_cleanupToDo = false;
 		}
 	}
 	
@@ -115,7 +123,21 @@ public abstract class Page<T extends Record> {
 	@SuppressWarnings("unchecked")
 	public void setRecord( int i, Record rec )
 	{
+		assert( i >=0 && i < m_nbRecordsPerPage );
 		assert( m_records[i].getClass() == rec.getClass() );
+		
+		// Reallocate the array if we didn't parse it fully.
+		if( i >= m_records.length && i < m_nbRecordsPerPage )
+		{
+			T[] recs = CreateArray(i + 1);
+			for( int k = 0; k < m_records.length; k++ )
+				recs[k] = m_records[k];
+			for( int l = m_records.length; l < i; l++ )
+				recs[l] = null;
+			m_records = recs;
+		}
+		
 		m_records[i] = (T)rec;
+		m_cleanupToDo = true;
 	}
 }

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import comp6521.lab.com.Hashing.HashFunction;
 import comp6521.lab.com.Pages.Page;
 import comp6521.lab.com.Records.Record;
-import comp6521.lab.com.Records.RecordElement;
 
 public class LinearHashTable< T extends Page<?> > {
 	boolean m_indexCreated;
@@ -36,7 +35,7 @@ public class LinearHashTable< T extends Page<?> > {
 		m_buckets = new ArrayList< HashBucket >();
 		m_threshold = 1.5;
 	}
-	
+		
 	public void CreateHashTable( Class<T> pageClass, String filename, String key, HashFunction hf )
 	{
 		m_pageType = pageClass;
@@ -58,7 +57,10 @@ public class LinearHashTable< T extends Page<?> > {
 		{
 			for(int i = 0; i < page.m_records.length; i++)
 				Insertion( page.m_records[i] );
+			MemoryManager.getInstance().freePage(page);
 		}
+		
+		m_indexCreated = true;
 	}
 	
 	protected void Insertion( Record rec )
@@ -143,22 +145,22 @@ public class LinearHashTable< T extends Page<?> > {
 		{
 			m_pageType = c;
 			m_filename = filename;
-			m_nbRecordsPerPage = 10; // TO CHANGE	
+			m_nbRecordsPerPage = MemoryManager.getInstance().GetPageSize(c);
 			m_pageNumbers = new ArrayList< Integer >();
 		}
 		
-		public <S extends Record> void AddRecord( Record rec )
+		public void AddRecord( Record rec )
 		{
 			// If current page is full, create new page.
-			int nextRecPage = (m_nbRecords + 1) / m_nbRecordsPerPage;
-			int nextRecNb   = (m_nbRecords + 1) % m_nbRecordsPerPage;
+			int nextRecPage = m_nbRecords / m_nbRecordsPerPage;
+			int nextRecNb   = m_nbRecords % m_nbRecordsPerPage;
 			
 			T page = null;
 			
 			// Add a new page if needed
-			if( ( nextRecPage + 1 ) > m_pageNumbers.size() )
+			if( nextRecPage >= m_pageNumbers.size() )
 			{
-				assert( (nextRecPage + 1) == m_pageNumbers.size() + 1 );
+				assert( nextRecPage == m_pageNumbers.size() );
 				// ...
 				page = MemoryManager.getInstance().getEmptyPage( m_pageType , m_filename );
 				m_pageNumbers.add( new Integer(page.m_pageNumber) );
@@ -169,8 +171,12 @@ public class LinearHashTable< T extends Page<?> > {
 				page = MemoryManager.getInstance().getPage( m_pageType, m_pageNumbers.get(nextRecPage).intValue(), m_filename );
 			}
 			
-			page.setRecord( nextRecNb, rec );
-			m_nbRecords++;
+			if( page != null )
+			{
+				page.setRecord( nextRecNb, rec );
+				m_nbRecords++;
+				MemoryManager.getInstance().freePage( page );
+			}
 		}
 		
 		Record GetRecord( int i )
@@ -180,7 +186,9 @@ public class LinearHashTable< T extends Page<?> > {
 			
 			assert( recPage < m_pageNumbers.size() );
 			T page = MemoryManager.getInstance().getPage( m_pageType, m_pageNumbers.get(recPage).intValue(), m_filename );
-			return page.m_records[recIdx];
+			Record rec = page.m_records[recIdx];
+			MemoryManager.getInstance().freePage(page);
+			return rec;
 		}
 	}	
 }

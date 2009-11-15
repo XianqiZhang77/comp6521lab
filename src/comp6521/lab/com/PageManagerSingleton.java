@@ -11,8 +11,8 @@ package comp6521.lab.com;
  */
 
 import java.io.FileReader;	
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public class PageManagerSingleton 
 {	
@@ -80,17 +80,34 @@ public class PageManagerSingleton
 	}
 	
 	// write page to disk
-	public void writePage(String filename, char[] cbuf)
+	public void writePage(String filename, int pageSize, int pageNumber, String cbuf)
 	{
 		try
 		{
-			FileWriter file = new FileWriter(path+filename, true);	// append cbuf[]to end of file 
-			file.write(cbuf);
+			RandomAccessFile file = new RandomAccessFile( path + filename, "rw" );
+			file.seek(pageSize * pageNumber);
+			file.writeBytes(cbuf);
 			file.close();
 		}
 		catch(IOException ioException)
 		{
 			ioException.printStackTrace();
 		}
+	}
+	
+	public long getLength(String filename)
+	{
+		long length = 0;
+		try
+		{
+			RandomAccessFile file = new RandomAccessFile( path + filename, "r" );
+			length = file.length();
+			file.close();
+		}
+		catch(IOException ioException)
+		{
+			// Do nothing, since the file may or may not exist
+		}
+		return length;
 	}
 }

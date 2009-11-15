@@ -21,6 +21,7 @@ public class MemoryManager
 		String m_filename;
 		int m_pageSize;
 		Set< Integer > m_pagesTaken;
+		int m_pageNumber; // Will be used to get page numbers at the end of the file...
 		
 		RecordKeeper( String type, int pageSize, String filename )
 		{
@@ -28,19 +29,18 @@ public class MemoryManager
 			m_filename = filename;
 			m_pageSize = pageSize;
 			m_pagesTaken = new HashSet< Integer >();
+			m_pageNumber = (int)(PageManagerSingleton.getInstance().getLength( filename ) / (long)pageSize);
 		}
 	}
 	
 	// Members
 	ArrayList<RecordKeeper> m_records;
-	static int m_createdPagesIndex;
 	
 	// Constructor
 	private MemoryManager()
 	{
 		m_ActualMemory = 0;
 		m_MaxMemory = 10240; // 10k = 10 * 2^10 in bytes
-		m_createdPagesIndex = -1;
 		
 		m_records = new ArrayList<RecordKeeper>();
 		
@@ -147,11 +147,10 @@ public class MemoryManager
     		T page = CreateEmptyPage( c );
     		if( page != null )
     		{
-    			int pageNumber = m_createdPagesIndex--;
-    			page.m_pageNumber = pageNumber;
+    			page.m_pageNumber = rk.m_pageNumber++;
     			page.m_filename = rk.m_filename;
     			m_ActualMemory += NeededMemory;
-    			rk.m_pagesTaken.add( Integer.valueOf(pageNumber));
+    			rk.m_pagesTaken.add( Integer.valueOf(page.m_pageNumber));
     		}
     		return page;
     	}
@@ -176,19 +175,22 @@ public class MemoryManager
     	return m_records.get(i);    		
     }
     
+    public <T extends Page<?> > int GetPageSize( Class<T> c )
+    {
+		// Compute page size
+		T dummyPage = CreateEmptyPage( c );
+		Record dummyRecord = dummyPage.CreateElement();
+		
+		return dummyPage.GetNumberRecordsPerPage() * dummyRecord.GetRecordSize();
+    }
+    
     public <T extends Page<?> > void AddPageType( Class<T> c, String filename )
     {
     	// Make sure the page type doesn't exist.
 		if( getPageIndex(c, filename) != -1 )
 			return;
-		
-		// Compute page size
-		T dummyPage = CreateEmptyPage( c );
-		Record dummyRecord = dummyPage.CreateElement();
-		
-		int pageSize = dummyPage.GetNumberRecordsPerPage() * dummyRecord.GetRecordSize();
-    	
-		RecordKeeper rk = new RecordKeeper(c.getName(), pageSize, filename);
+		    	
+		RecordKeeper rk = new RecordKeeper(c.getName(), GetPageSize(c), filename);
 		m_records.add(rk);
     }
     
@@ -263,10 +265,13 @@ public class MemoryManager
     public <T extends Page<?> > void writePage( T page )
     {
     	if( page == null )
+    	{
+    		System.out.println("*Warning* trying to write a null page");
     		return;
+    	}
     	
-    	RecordKeeper rk = getRecordKeeperFromPage( page );   	
-    	PageManagerSingleton.getInstance().writePage( rk.m_filename, page.GetRawData());    	
+    	RecordKeeper rk = getRecordKeeperFromPage( page );
+  		PageManagerSingleton.getInstance().writePage( rk.m_filename, rk.m_pageSize, page.m_pageNumber, page.GetRawData() );  	
     }
     
     public void ReportMemoryUse()

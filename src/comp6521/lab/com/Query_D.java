@@ -36,9 +36,7 @@ public class Query_D
 		
 		// select r_regionKey from Region where r_name = ? 
 		int r_page =  0;																								// region page counter
-		RegionPage regionPage = null;																					// region page
-		String path = "Y:\\Dimitri\\Concordia\\Comp6521_AdvancedDatabaseSystemsAndTheory\\Lab\\ShortData\\";
-		PageManagerSingleton.getInstance().setPath(path);	
+		RegionPage regionPage = null;																					// region page	
 		while ( (regionPage = MemoryManager.getInstance().getPage(RegionPage.class, r_page++)) != null )				// get region page
 		{
 			// process page records

@@ -10,6 +10,7 @@ package comp6521.lab.com;
  *
  */
 
+import java.io.FileWriter;
 import java.io.FileReader;	
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -78,8 +79,24 @@ public class PageManagerSingleton
 		// return character buffer 
 		return cbuf;
 	}
+
+	// two argument write page to disk
+	public void writePage(String filename, String cbuf)
+	{
+		try
+		{
+			// append String file
+			FileWriter file = new FileWriter(path + filename, true);
+			file.write(cbuf);
+			file.close();
+		}
+		catch(IOException ioException)
+		{
+			ioException.printStackTrace();
+		}
+	}
 	
-	// write page to disk
+	// four argument write page to disk
 	public void writePage(String filename, int pageSize, int pageNumber, String cbuf)
 	{
 		try

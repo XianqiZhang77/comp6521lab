@@ -286,6 +286,27 @@ public class MemoryManager
   		PageManagerSingleton.getInstance().writePage( filename, rk.m_pageSize, pageNumber, page.GetRawData() );    	
     }
     
+    public <T extends Page<?> > int GetNumberOfPages( Class<T> c, String filename )
+    {
+    	int i = getPageIndex( c, filename );
+    	RecordKeeper rk = m_records.get(i);
+    	
+    	int len = (int)PageManagerSingleton.getInstance().getLength( rk.m_filename );
+    	
+    	return len / rk.m_pageSize;    	
+    }
+    
+    public <T extends Page<?> > int GetNumberOfRecords( Class<T> c, String filename )
+    {
+		// Compute page size
+		T dummyPage = CreateEmptyPage( c );
+		Record dummyRecord = dummyPage.CreateElement();
+    	
+    	int len = (int)PageManagerSingleton.getInstance().getLength( filename );
+    	
+    	return len / dummyRecord.GetRecordSize();   
+    }
+    
     public void ReportMemoryUse()
     {
     	System.out.println("------------------");

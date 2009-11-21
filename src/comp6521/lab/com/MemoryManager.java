@@ -274,6 +274,18 @@ public class MemoryManager
   		PageManagerSingleton.getInstance().writePage( rk.m_filename, rk.m_pageSize, page.m_pageNumber, page.GetRawData() );  	
     }
     
+    public <T extends Page<?> > void writePage( T page, String filename, int pageNumber )
+    {
+    	if( page == null )
+    	{
+    		System.out.println("*Warning* trying to write a null page");
+    		return;
+    	}
+    	
+    	RecordKeeper rk = getRecordKeeperFromPage( page );
+  		PageManagerSingleton.getInstance().writePage( filename, rk.m_pageSize, pageNumber, page.GetRawData() );    	
+    }
+    
     public void ReportMemoryUse()
     {
     	System.out.println("------------------");

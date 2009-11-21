@@ -60,7 +60,33 @@ public class LinearHashTable< T extends Page<?> > {
 			MemoryManager.getInstance().freePage(page);
 		}
 		
+		CleanupIndex();
+		
 		m_indexCreated = true;
+	}
+	
+	public void CleanupIndex()
+	{
+		int b = 0;
+		// Add a new entry to the memory manager
+		String index = "clean_" + m_filename;
+		MemoryManager.getInstance().AddPageType( m_pageType, index );
+		
+		T page = null;
+		
+		for( int i = 0; i < m_buckets.size(); i++ )
+		{
+			for( int p = 0; p < m_buckets.get(i).m_pageNumbers.size(); p++ )
+			{
+				page = MemoryManager.getInstance().getPage( m_pageType, m_buckets.get(i).m_pageNumbers.get(p).intValue(), m_filename );
+				MemoryManager.getInstance().writePage(page, index, b);
+				m_buckets.get(i).m_pageNumbers.set(p, new Integer(b));
+				b++;
+				MemoryManager.getInstance().freePage(page);
+			}
+		}
+		
+		m_filename = index;
 	}
 	
 	protected void Insertion( Record rec )

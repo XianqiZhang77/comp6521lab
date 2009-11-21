@@ -69,13 +69,25 @@ public abstract class Page<T extends Record> {
 	public String GetRawData()
 	{
 		String stringData = "";
+		
+		// Prepare "empty record"
+		int recLength = CreateElement().GetRecordSize() - 2;
+		String emptyFormat = "%1$-" + recLength + "s";
+		String EmptyRecord = String.format(emptyFormat, "");
+		
 		for( int i = 0; i < m_records.length; i++ )
 		{
 			if( m_records[i] != null )
-				stringData += m_records[i].Write() + "\r\n"; 
+				stringData += m_records[i].Write() + "\r\n";
 			else
-				stringData += "\r\n"; 
+				stringData += EmptyRecord + "\r\n";
 		}
+		
+		for( int i = m_records.length; i < m_nbRecordsPerPage; i++ )
+		{
+			stringData += EmptyRecord + "\r\n";
+		}
+		
 		return stringData;
 	}
 	

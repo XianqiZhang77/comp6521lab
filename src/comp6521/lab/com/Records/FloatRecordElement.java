@@ -11,4 +11,16 @@ public class FloatRecordElement extends RecordElement {
 	public void setFloat(float val){ m_value = val; }
 	
 	public void set(RecordElement other) { m_value = other.getFloat(); }
+	
+	public int CompareTo(RecordElement el)
+	{
+		float val = el.getFloat();
+		
+		if( m_value == val )
+			return 0;
+		else if( m_value > val )
+			return 1;
+		else
+			return -1;			
+	}
 }

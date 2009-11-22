@@ -15,4 +15,6 @@ public class StringRecordElement extends RecordElement {
 	public void   setString(String data) { m_value = data; }
 	
 	public void set(RecordElement other) { m_value = other.getString(); }
+	
+	public int CompareTo(RecordElement el) { return m_value.compareTo(el.getString());}
 }

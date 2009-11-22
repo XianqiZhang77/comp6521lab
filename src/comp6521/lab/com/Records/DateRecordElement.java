@@ -1,6 +1,5 @@
 package comp6521.lab.com.Records;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,4 +44,6 @@ public class DateRecordElement extends RecordElement {
 	
 	public Date getDate() { return m_value; }
 	public void setDate(Date val) { m_value = val; }
+	
+	public int CompareTo(RecordElement el) { return m_value.compareTo(el.getDate()); }
 }

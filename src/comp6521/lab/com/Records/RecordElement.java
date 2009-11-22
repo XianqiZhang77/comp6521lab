@@ -19,4 +19,7 @@ public abstract class RecordElement {
 	public void   setDate(Date val)      { assert(false);                    }
 	
 	public void set(RecordElement other) { assert(false);                    }
+	
+	// Comparison operator to be overriden
+	public int   CompareTo(RecordElement other) { assert(false); return 0; }
 }

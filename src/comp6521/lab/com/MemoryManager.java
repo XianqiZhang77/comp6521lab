@@ -125,17 +125,17 @@ public class MemoryManager
     {
     	int i = getPageIndex( c );
     	assert(i >= 0);
-    	return getEmptyPage( c, m_records.get(i) );
+    	return getEmptyPage( c, m_records.get(i), -1 );
     }
     
     public <T extends Page<?> > T getEmptyPage( Class<T> c, String filename )
     {
     	int i = getPageIndex( c, filename );
     	assert(i >= 0);
-    	return getEmptyPage( c, m_records.get(i) );
+    	return getEmptyPage( c, m_records.get(i), -1 );
     }
     
-    public <T extends Page<?> > T getEmptyPage( Class<T> c, RecordKeeper rk )
+    public <T extends Page<?> > T getEmptyPage( Class<T> c, RecordKeeper rk, int pn )
     {
     	// Check if we have enough memory to create the page
     	int NeededMemory = rk.m_pageSize;
@@ -147,13 +147,38 @@ public class MemoryManager
     		T page = CreateEmptyPage( c );
     		if( page != null )
     		{
-    			page.m_pageNumber = rk.m_pageNumber++;
+    			if( pn < 0 )
+    			{
+    				page.m_pageNumber = rk.m_pageNumber++;
+    			}
+    			else
+    			{
+    				page.m_pageNumber = pn;
+    				if( pn >= rk.m_pageNumber )
+    					rk.m_pageNumber = pn + 1;
+    			}
+    			
     			page.m_filename = rk.m_filename;
     			m_ActualMemory += NeededMemory;
     			rk.m_pagesTaken.add( Integer.valueOf(page.m_pageNumber));
     		}
     		return page;
     	}
+    }
+    
+    public <T extends Page<?> > T getRWPage( Class<T> c, int pageNumber, String filename )
+    {
+    	// Get the record keeper
+    	RecordKeeper rk = m_records.get( getPageIndex( c, filename ) );
+    	
+  		if( pageNumber < rk.m_pageNumber )
+   		{
+    		return getPage( c, rk, pageNumber );
+    	}
+    	else
+    	{
+    		return getEmptyPage( c, rk, pageNumber );
+  		}
     }
     
     private <T> int getPageIndex( Class<T> c )                  { return getPageIndex(c, "", false); }

@@ -11,4 +11,16 @@ public class IntegerRecordElement extends RecordElement {
 	public void setInt(int val)    { m_value = val; }
 	
 	public void set(RecordElement other) { m_value = other.getInt(); }
+	
+	public int CompareTo(RecordElement el)
+	{
+		int val = el.getInt();
+		
+		if( m_value == val )
+			return 0;
+		else if( m_value > val )
+			return 1;
+		else
+			return -1;			
+	}
 }

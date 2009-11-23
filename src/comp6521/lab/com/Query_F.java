@@ -6,7 +6,6 @@ package comp6521.lab.com;
 
 import comp6521.lab.com.Records.*;
 import comp6521.lab.com.Pages.*;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,90 +25,191 @@ public class Query_F
 	)
 	values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 	*/
-	public boolean ProcessQuery(String[] args)
+	public boolean ProcessQuery(String[] args)  
 	{ 
 		try 
-		{		
-			// initialise query arguments - local variables
-			int lOrderKey        = Integer.parseInt(args[0]);
-			int lPartKey         = Integer.parseInt(args[1]);
-			int lSuppKey         = Integer.parseInt(args[2]);
-			int lLineNumber      = Integer.parseInt(args[3]);
-			int lQuantity        = Integer.parseInt(args[4]);
-			float lExtendedPrice = Float.parseFloat(args[5]);
-			float lDiscount      = Float.parseFloat(args[6]);;
-			String lReturnFlag   = new String(args[7]);
-			String lLineStatus   = new String(args[8]);
-			String lShipInstruct = new String(args[12]);
-			String lShipMode     = new String(args[13]);
-			String lComment      = new String(args[14]);       
+		{	
+			// TODO: Handle ' ' insertion and null insertion
 			
-			// date formatter
-			SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			// initialise query arguments - local variables	
+			long lOrderKey        = Long.parseLong(args[0]);
+			long lPartKey         = Long.parseLong(args[1]);
+			long lSuppKey         = Long.parseLong(args[2]);
+			long lLineNumber      = Long.parseLong(args[3]);
+			long lQuantity        = Long.parseLong(args[4]);
+			float lExtendedPrice  = Float.parseFloat(args[5]);
+			float lDiscount       = Float.parseFloat(args[6]);
+			String lTax           = new String("0");		// lTax attribute not in schema
+			String lShipDate;
+			String lCommitDate;
+			String lReceiptDate;
+			String lReturnFlag    = new String(args[7]);
+			String lLineStatus    = new String(args[8]);
+			String lShipInstruct  = new String(args[12]);
+			String lShipMode      = new String(args[13]);
+			String lComment       = new String(args[14]);       
 			
-			// initialise query arguments - local variables
+			// parse date attributes and initialise strings
 			try
 			{
+				// date formatter
+				SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+				
 				// parse dates
-				Date lShipDate    = (Date) dateFormatter.parse(args[9]);
-				Date lCommitDate  = (Date) dateFormatter.parse(args[10]);
-				Date lReceiptDate = (Date) dateFormatter.parse(args[11]);
+				Date tmplShipDate    = (Date) dateFormatter.parse(args[9]);
+				Date tmplCommitDate  = (Date) dateFormatter.parse(args[10]);
+				Date tmplReceiptDate = (Date) dateFormatter.parse(args[11]);
+				
+				// set new pattern
+				dateFormatter.applyPattern("yyyy-MM-dd H:mm:ss");
+				
+				// convert dates to string representation
+				lShipDate    = dateFormatter.format(tmplShipDate);
+				lCommitDate  = dateFormatter.format(tmplCommitDate);
+				lReceiptDate = dateFormatter.format(tmplReceiptDate);
 			}
-			catch(ParseException pe)
+			catch(ParseException parseException)
 			{
-				// re-throw exception to outter catch
-				throw pe;
+				// re-throw exception
+				throw parseException;
 			}
 			
-			// insert into lineItem relation 
-			int liItemCounter       =  0;																					// region page counter
-			LineItemPage liItemPage = null;																					// region page	
-			boolean isUnique = true;																						// unique primary key flag	
-			while ( (liItemPage = MemoryManager.getInstance().getPage(LineItemPage.class, liItemCounter++)) != null )		// get region page
+			try
 			{
-				LineItemRecord[] liItemRecords = liItemPage.m_records;	// store line item records
+				// check field size constraint
+				String[] fieldNames = {"l_orderkey", "l_partKey", "l_suppKey", "l_lineNumber", "l_quantity", "l_extendedPrice", "l_discount",
+									   "l_returnFlag", "l_lineStatus", "l_shipDate", "l_commitDate", "l_receiptDate", "l_shipInstruct", 
+									   "l_shipMode", "l_comment"};	// line item field names
+				int[] fieldSizes = {11, 11, 11, 11, 11, 22, 22, 2, 2, 19, 19, 19, 20, 10, 120};		// line item table field sizes 
 				
-				// determine if primary key is unique 
-				for (LineItemRecord rec : liItemRecords)
+				for (int i = 0; i < args.length; i++)
 				{
-					// if primary key exists set isUnique = false
-					if (rec.get("l_orderkey").getInt() == lOrderKey)
+					if (args[i].length() >  fieldSizes[i])	// check field size
 					{
-						isUnique = false;
+						throw new Exception("0 Records Affected. "+ fieldNames[i] + " Field Size Constraint Exceeded.");
 					}
 				}
-				
-				// free page
-				MemoryManager.getInstance().freePage(liItemPage);
+			}
+			catch (Exception e)
+			{
+				// re-throw exception
+				throw e;
 			}
 			
-			// if primary key is unique insert record
-			if (isUnique == true)
+			try
 			{
-				// TODO: build real record
-				//String rec = String.format("", lOrderKey, lPartKey, lSuppKey, lLineNumber, lQuantity, lExtendedPrice, lDiscount, lReturnFlag,
-				//		lLineStatus, lShipDate, lCommitDate, lReceiptDate, lShipInstruct, lShipMode, lComment);
+				// check for unique primary key 
+				int liItemCounter       =  0;																					// region page counter
+				LineItemPage liItemPage = null;																					// region page		
+				while ( (liItemPage = MemoryManager.getInstance().getPage(LineItemPage.class, liItemCounter++)) != null )		// get region page
+				{
+					LineItemRecord[] liItemRecords = liItemPage.m_records;	// store line item records
+					
+					// determine if primary key is unique 
+					for (LineItemRecord rec : liItemRecords)
+					{
+						// if primary key exists set isUnique = false
+						if ( (rec.get("l_orderkey").getInt() == lOrderKey) && (rec.get("l_lineNumber").getInt() == lLineNumber)	)
+						{							
+							// throw exception
+							throw new Exception("0 Records Affected. Primary Key Is Not Unique.");
+						}
+					}
+					
+					// free page
+					MemoryManager.getInstance().freePage(liItemPage);
+				}
+			}
+			catch(Exception e)
+			{
+				// re-throw exception
+				throw e;
+			}
 			
-				String rec = String.format("%d11\r\n", lOrderKey);		// build record
-				PageManagerSingleton.getInstance().writePage("LineItem.txt", rec);		// write page
+			try
+			{
+				// check for referential integrity constraints against Part table
+				int partCounter   =  0;																						// part page counter
+				PartPage partPage = null;																					// part page		
+				boolean pFKExists = false;																					// part FK flag		
+				while ( (partPage = MemoryManager.getInstance().getPage(PartPage.class, partCounter++)) != null )			// get part page
+				{
+					PartRecord[] partRecords = partPage.m_records;	// store part records
+					
+					// determine if foreign key exists 
+					for (PartRecord rec : partRecords)
+					{
+						// if foreign key exists set fkExists = true
+						if ( (rec.get("p_partKey").getInt() == lPartKey) )
+						{
+							pFKExists = true;
+						}
+					}
+					
+					// free page
+					MemoryManager.getInstance().freePage(partPage);
+				}
 				
-				// log message
-				String logMsg = String.format("%s\r\n", "1 Record Affected");
+				if ( pFKExists == false )
+					throw new Exception("0 Records Affected. Failed l_partKey FK Contraint.");
+			}
+			catch(Exception e)
+			{
+				// re-throw exception
+				throw e;
+			}
+			
+			try
+			{
+				// check for referential integrity constraints against Orders table
+				int ordersCounter   =  0;																						// orders page counter
+				OrdersPage ordersPage = null;																					// orders page		
+				boolean oFKExists = false;																						// order FK flag
+				while ( (ordersPage = MemoryManager.getInstance().getPage(OrdersPage.class, ordersCounter++)) != null )			// get orders page
+				{
+					OrdersRecord[] ordersRecords = ordersPage.m_records;	// store orders records
+					
+					// determine if foreign key exists 
+					for (OrdersRecord rec : ordersRecords)
+					{
+						// if foreign key exists set fkExists = true
+						if ( (rec.get("o_orderKey").getInt() == lOrderKey) )
+						{
+							oFKExists = true;
+						}
+					}
+					
+					// free page
+					MemoryManager.getInstance().freePage(ordersPage);
+				}
+				
+				if (oFKExists == false) 
+					throw new Exception("0 Records Affected. Failed l_orderKey FK Constraint.");
+			}
+			catch(Exception e)
+			{
+				// re-throw exception
+				throw e;
+			}
+			
+			// build record
+			String rec = String.format("%-11d%-11d%-11d%-11d%-11d%-22.2f%-22.2f%-22s%-2s%-2s%-19s%-19s%-19s%-20s%-10s%-120s\r\n", 
+									   lOrderKey, lPartKey, lSuppKey, lLineNumber, lQuantity, 
+									   lExtendedPrice, lDiscount, lTax, lReturnFlag, lLineStatus, 
+									   lShipDate, lCommitDate, lReceiptDate, lShipInstruct, lShipMode, lComment);
+			
+			//String rec = String.format("%-11d\r\n", lOrderKey);					// build test record
+			PageManagerSingleton.getInstance().writePage("LineItem.txt", rec);		// write page
+				
+			// log message
+			String logMsg = String.format("%s\r\n", "1 Record Affected.");
 				 
-				// output log message to f.out
-				PageManagerSingleton.getInstance().writePage("f.out", logMsg);
-			}
-			else
-			{
-				// log message
-				String logMsg = String.format("%s: %s\r\n", "0 Records Affected", "primary key not unique.");
-						
-				// output log message to f.out
-				PageManagerSingleton.getInstance().writePage("f.out", logMsg);		
-			}
+			// output log message to f.out
+			PageManagerSingleton.getInstance().writePage("f.out", logMsg);
 		}
 		catch(Exception e)
 		{	
+			// log message
 			String logMsg = String.format("%s\r\n", e.toString());
 						
 			// output log message to f.out

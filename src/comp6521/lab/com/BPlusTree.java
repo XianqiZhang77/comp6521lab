@@ -406,7 +406,7 @@ class BPlusTreeNode<S extends RecordElement>
 		
 		int p = 0;
 		// Very first, is it a leaf or not?
-		m_isLeaf = (data.substring(0, 1).charAt(0) == 1 );
+		m_isLeaf = (data.substring(0, 1).charAt(0) == '1' );
 		p += 1;
 		// First, parent pointer		
 		m_parent = Integer.parseInt(data.substring(p, p+8), 16);

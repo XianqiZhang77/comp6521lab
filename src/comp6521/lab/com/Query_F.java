@@ -49,7 +49,7 @@ public class Query_F
 			String lShipMode      = new String(args[13]);
 			String lComment       = new String(args[14]);       
 			
-			// parse date attributes and initialise strings
+			// parse date attributes and initialise date strings
 			try
 			{
 				// date formatter
@@ -76,7 +76,7 @@ public class Query_F
 			
 			try
 			{
-				// check field size constraint
+				// check field size constraints
 				String[] fieldNames = {"l_orderkey", "l_partKey", "l_suppKey", "l_lineNumber", "l_quantity", "l_extendedPrice", "l_discount",
 									   "l_returnFlag", "l_lineStatus", "l_shipDate", "l_commitDate", "l_receiptDate", "l_shipInstruct", 
 									   "l_shipMode", "l_comment"};	// line item field names

@@ -15,7 +15,7 @@ public class Query_D
 	// select s_acctbal, s_name, n_name, s_address, s_phone, s_comment
 	// from region, nation, supplier
 	// where s_nationKey = n_nationKey and n_regionKey = r_regionKey and r_name = ?
-	// group by n_name DESC
+	// order by n_name DESC
 	
 	// memory available = 10240
 	// page sizes: 
@@ -163,6 +163,9 @@ public class Query_D
 		// write out query d result set page
 		MemoryManager.getInstance().freePage(qDResultSetPage);
 		
+		// Sort using TPMMS
+		TPMMS<QD_Page> doTPMMS = new TPMMS<QD_Page>(QD_Page.class);
+		doTPMMS.Execute();
 	}
 	
 }
@@ -191,7 +194,7 @@ class QDNationSubsetPage extends Page<QDNationSubsetRecord>
 	public QDNationSubsetRecord   CreateElement(){ return new QDNationSubsetRecord(); }
 }
 
-class QD_Record extends Record
+class QD_Record extends Record implements Comparable<Record>
 {
 	public QD_Record()
 	{
@@ -201,6 +204,12 @@ class QD_Record extends Record
 		AddElement("s_address", new StringRecordElement(50));
 		AddElement("s_phone", new StringRecordElement(30));
 		AddElement("s_comment", new StringRecordElement(120));
+	}
+	
+	// comparator interface compare method implementation
+	public int compareTo(Record rec)
+	{	
+		return (this.get("n_name").getString().compareToIgnoreCase(rec.get("n_name").getString()));
 	}
 }
 

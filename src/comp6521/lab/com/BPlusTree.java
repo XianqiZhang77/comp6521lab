@@ -13,6 +13,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 
 	String   m_key;	
 	int      m_n;
+	int      m_recordElementLength; // Parameter needed when initializing keys (for StringRecordElement)
 
 	public BPlusTree()
 	{
@@ -21,8 +22,14 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 	
 	public void CreateBPlusTree( Class<T> pageClass, Class<S> recordElementClass, String pageFilename, String treeFilename, String key )
 	{
+		CreateBPlusTree( pageClass, recordElementClass, -1, pageFilename, treeFilename, key );
+	}
+	
+	public void CreateBPlusTree( Class<T> pageClass, Class<S> recordElementClass, int recordElementLength, String pageFilename, String treeFilename, String key )
+	{
 		m_pageType = pageClass;
 		m_recordElementClass = recordElementClass;
+		m_recordElementLength = recordElementLength;
 		m_filename = treeFilename;
 		m_key      = key;
 		
@@ -53,8 +60,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		MemoryManager.getInstance().AddPageType( BPlusTreePage.class, m_filename );
 		
 		// Get the root and keep it in memory at this time.
-		m_root = new BPlusTreeNode<S>(m_recordElementClass);
-		m_root.Load(0, m_n, m_filename);
+		m_root = createNode();
+		m_root.Load(0);
 		m_root.m_isLeaf = true;
 		
 		// Parse the whole table
@@ -84,7 +91,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		// Load the root
 		boolean RootLoaded = (m_root.IsLoaded());
 		if( !RootLoaded )
-			m_root.Load(0, m_n, m_filename);
+			m_root.Load(0);
 		
 		// We try to find a place for the new key in the appropriate leaf
 		BPlusTreeNode<S> target = getLeafNode( m_root, pair.el );
@@ -109,8 +116,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			
 			// Start by creating new sorted arrays
 			// Create a new split node
-			BPlusTreeNode<S> splitNode = new BPlusTreeNode<S>(m_recordElementClass);
-			splitNode.Load(-1, m_n, m_filename);
+			BPlusTreeNode<S> splitNode = createNode();
+			splitNode.Load(-1);
 			
 			KeyPointerPair nodeToAdd = SplitNode( node, splitNode, pair );
 					
@@ -118,8 +125,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			{
 				// In the case of the root, the root becomes a leaf or interior node
 				// And we create a new root
-				BPlusTreeNode<S> newroot = new BPlusTreeNode<S>(m_recordElementClass);
-				newroot.Load(-1, m_n, m_filename);
+				BPlusTreeNode<S> newroot = createNode();
+				newroot.Load(-1);
 				
 				// Now, perform a big hack
 				assert(newroot.m_node == newroot.m_page.m_pageNumber);
@@ -180,11 +187,16 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 				node.Clear();
 		}
 	}
+	
+	BPlusTreeNode<S> createNode()
+	{
+		return new BPlusTreeNode<S>(m_recordElementClass, m_recordElementLength, m_n, m_filename);
+	}
 		
 	BPlusTreeNode<S> getNode( int nb )
 	{
-		BPlusTreeNode<S> node = new BPlusTreeNode<S>(m_recordElementClass);
-		node.Load(nb, m_n, m_filename);
+		BPlusTreeNode<S> node = createNode();
+		node.Load(nb);
 		return node;
 	}
 	
@@ -341,18 +353,28 @@ class BPlusTreePage extends Page< BPlusTreeRecord >
 
 class BPlusTreeNode<S extends RecordElement>
 {
+	// --- Runtime generated data ---
 	Class<S>        m_class;
 	boolean         m_loaded;
 	BPlusTreePage   m_page;
-	RecordElement[] m_elements;
-	int[]           m_records;
+	
 	int             m_nbElements;
-	boolean         m_isLeaf;
-	int             m_parent;
+	
 	int             m_node;
 	boolean         m_dirty;
+
+	// --- Data used for simpler calls ---
+	int             m_RecordLength;
+	int             m_n;
+	String          m_filename;
 	
-	BPlusTreeNode(Class<S> classRec)
+	// --- Saved data ---
+	RecordElement[] m_elements;
+	int[]           m_records;
+	boolean         m_isLeaf;
+	int             m_parent;
+	
+	BPlusTreeNode(Class<S> classRec, int RecLength, int n, String filename)
 	{
 		m_class      = classRec;
 		m_dirty      = false;
@@ -364,20 +386,24 @@ class BPlusTreeNode<S extends RecordElement>
 		m_isLeaf     = false;
 		m_parent     = 0;
 		m_node       = -1;
+		
+		m_RecordLength = RecLength;
+		m_n            = n;
+		m_filename     = filename;
 	}
 	
-	public void Load(int node, int n, String filename)
+	public void Load(int node)
 	{
 		if(m_loaded)
 			Clear();
 		
-		m_elements = new RecordElement[n];
-		m_records  = new int[n+1];
+		m_elements = new RecordElement[m_n];
+		m_records  = new int[m_n+1];
 		
 		if( node < 0 )
-			node = MemoryManager.getInstance().GetNumberOfPages( BPlusTreePage.class, filename);
+			node = MemoryManager.getInstance().GetNumberOfPages( BPlusTreePage.class, m_filename);
 		
-		m_page = MemoryManager.getInstance().getRWPage( BPlusTreePage.class, node, filename );
+		m_page = MemoryManager.getInstance().getRWPage( BPlusTreePage.class, node, m_filename );
 		
     	m_node = node;
 		
@@ -401,10 +427,6 @@ class BPlusTreeNode<S extends RecordElement>
 			if(m_dirty)
 			{
 				Write( m_page.m_records[0].get("data") );
-				
-				if( (m_page.m_records[0].get("data").getString().length() - 17) % 19 != 0)
-					System.out.println("Bad write");
-				
 				m_page.m_cleanupToDo = true;
 			}
 			
@@ -460,6 +482,7 @@ class BPlusTreeNode<S extends RecordElement>
 	
 	void Write(RecordElement el)
 	{
+		int pointerSize = 8;
 		String data = "";
 		
 		// Very very first, 0 if interior node, 1 if leaf
@@ -476,7 +499,7 @@ class BPlusTreeNode<S extends RecordElement>
 		{
 			String ptrdata = String.format("%1$8s", Integer.toHexString(m_records[i]));
 			
-			if(ptrdata.length() != 8)
+			if(ptrdata.length() != pointerSize)
 				System.out.println("Not supposed to happen either");
 			
 			data += ptrdata;
@@ -494,9 +517,15 @@ class BPlusTreeNode<S extends RecordElement>
 		// Last pointer
 		data += String.format("%1$8s", Integer.toHexString(m_records[m_nbElements]));
 		
-		if( ((data.length() - 17) % 19) != 0 )
+		// Size verification
+		if( m_nbElements > 0 )
 		{
-			System.out.println("Bad!!!");
+			int elementSize = m_elements[0].Size();
+			
+			if( ((data.length() - (1 + 2 * pointerSize)) % (pointerSize + elementSize)) != 0 )
+			{
+				System.out.println("Bad write!!!");
+			}
 		}
 		
 		el.setString(data);
@@ -559,12 +588,15 @@ class BPlusTreeNode<S extends RecordElement>
 		try {
 			el = m_class.newInstance();
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		// Set size if needed
+		if( m_RecordLength > 0 && el != null)
+			el.setSize(m_RecordLength);		
+		
 		return el;
 	}
 }

@@ -22,4 +22,7 @@ public abstract class RecordElement {
 	
 	// Comparison operator to be overriden
 	public int   CompareTo(RecordElement other) { assert(false); return 0; }
+	
+	// Size change method (used only in rare cases)
+	public void   setSize(int size)      { assert(false);                    }
 }

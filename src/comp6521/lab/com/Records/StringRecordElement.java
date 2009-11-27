@@ -9,6 +9,8 @@ public class StringRecordElement extends RecordElement {
 	
 	public void Parse(String data) { m_value = data.trim(); }
 	public String Write()          { String custformat= "%1$-" + m_size + "s"; 	return String.format(custformat, m_value); }
+	
+
 	public int Size()              { return m_size; }
 	
 	public String getString() { return m_value; }
@@ -17,4 +19,8 @@ public class StringRecordElement extends RecordElement {
 	public void set(RecordElement other) { m_value = other.getString(); }
 	
 	public int CompareTo(RecordElement el) { return m_value.compareTo(el.getString());}
+	
+	// --- Special methods used to instantiate template objects ---
+	public StringRecordElement( ) { m_size = -1; } // USE THIS AT YOUR OWN RISK
+	public void setSize( int size ) { m_size = size; }
 }

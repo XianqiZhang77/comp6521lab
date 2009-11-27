@@ -61,7 +61,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		int p = 0;
 
 		T page = null;
-		while ( (page = MemoryManager.getInstance().getPage( m_pageType , p++, pageFilename)) != null )
+		while ( (page = MemoryManager.getInstance().getPage( m_pageType , p, pageFilename)) != null )
 		{
 			for(int i = 0; i < page.m_records.length; i++)
 			{
@@ -69,6 +69,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			}
 			
 			MemoryManager.getInstance().freePage(page);
+			p++;
 		}
 		
 		m_treeCreated = true;
@@ -95,6 +96,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 	public void Insert( BPlusTreeNode<S> node, KeyPointerPair pair)
 	{
 		assert(node.IsLoaded());
+		
+		boolean isRootAndIsLoaded = (node == m_root && m_root.IsLoaded());
 		
 		if( node.m_nbElements == m_n )
 		{
@@ -137,6 +140,10 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 				m_root.m_records[1] = splitNode.m_node;
 				m_root.m_nbElements = 1;
 				m_root.m_dirty = true;
+				m_root.m_isLeaf = false;
+				
+				splitNode.m_isLeaf = true;
+				node.m_isLeaf = true;
 				
 				m_root.Clear();				
 				splitNode.Clear();
@@ -160,7 +167,9 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		else
 		{
 			node.Insert( pair );
-			node.Clear();
+			
+			if( !isRootAndIsLoaded )
+				node.Clear();
 		}
 	}
 		
@@ -209,7 +218,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		int e = 0;
 		for( int i = 0; i < m_n+1; i++ )
 		{
-			if( inserted || node.m_elements[e].CompareTo(keyAdded.el) < 0 )
+			if( inserted || ( e < m_n && node.m_elements[e].CompareTo(keyAdded.el) < 0 ) )
 			{
 				els[i]  = node.m_elements[e];
 				ptrs[i] = node.m_records[e];
@@ -225,6 +234,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		
 		node.m_dirty = true;
 		splitNode.m_dirty = true;
+		
+		splitNode.m_isLeaf = node.m_isLeaf;
 		
 		if( node.IsLeaf() )
 		{
@@ -342,7 +353,7 @@ class BPlusTreeNode<S extends RecordElement>
 		m_loaded     = false;
 		m_nbElements = 0;
 		m_isLeaf     = false;
-		m_parent     = -1;
+		m_parent     = 0;
 		m_node       = -1;
 	}
 	
@@ -354,12 +365,12 @@ class BPlusTreeNode<S extends RecordElement>
 		m_elements = new RecordElement[n];
 		m_records  = new int[n+1];
 		
+		if( node < 0 )
+			node = MemoryManager.getInstance().GetNumberOfPages( BPlusTreePage.class, filename);
+		
 		m_page = MemoryManager.getInstance().getRWPage( BPlusTreePage.class, node, filename );
 		
-		if( node < 0 )
-			m_node = m_page.m_pageNumber;
-		else
-			m_node = node;
+    	m_node = node;
 		
 		if( m_page.m_records[0] == null )
 		{
@@ -381,10 +392,15 @@ class BPlusTreeNode<S extends RecordElement>
 			if(m_dirty)
 			{
 				Write( m_page.m_records[0].get("data") );
+				
+				if( (m_page.m_records[0].get("data").getString().length() - 17) % 19 != 0)
+					System.out.println("Bad write");
+				
 				m_page.m_cleanupToDo = true;
 			}
 			
 			MemoryManager.getInstance().freePage( m_page );
+			m_page = null;
 		}
 		
 		m_elements = null;
@@ -392,7 +408,7 @@ class BPlusTreeNode<S extends RecordElement>
 		m_loaded   = false;
 		
 		m_dirty  = false;
-		m_parent = -1;
+		m_parent = 0;
 		m_node   = -1;
 	}
 	
@@ -401,7 +417,11 @@ class BPlusTreeNode<S extends RecordElement>
 		int elementSize = CreateRecordElement().Size();
 		int pointerSize = 8;
 		
-		assert( (data.length() - 2 * pointerSize - 1) % (elementSize + pointerSize) == 0);
+		if( ((data.length() - 2 * pointerSize - 1) % (elementSize + pointerSize)) != 0 )
+			System.out.println("Bad data string");
+		
+		// String is :
+		// [0|1] + parent ptr + {n els, n+1 ptrs}
 		m_nbElements = (data.length() - 2 * pointerSize - 1) / (elementSize + pointerSize);
 		
 		int p = 0;
@@ -409,7 +429,7 @@ class BPlusTreeNode<S extends RecordElement>
 		m_isLeaf = (data.substring(0, 1).charAt(0) == '1' );
 		p += 1;
 		// First, parent pointer		
-		m_parent = Integer.parseInt(data.substring(p, p+8), 16);
+		m_parent = Integer.parseInt(data.substring(p, p+8).trim(), 16);
 		p += 8;
 		
 		int lel = CreateRecordElement().Size();
@@ -417,7 +437,7 @@ class BPlusTreeNode<S extends RecordElement>
 		for( int i = 0; i < m_nbElements; i++ )
 		{
 			// Pointer first
-			m_records[i] = Integer.parseInt(data.substring(p, p+8), 16);
+			m_records[i] = Integer.parseInt(data.substring(p, p+8).trim(), 16);
 			p += 8;
 			// element second
 			m_elements[i] = CreateRecordElement();
@@ -426,7 +446,7 @@ class BPlusTreeNode<S extends RecordElement>
 		}
 		
 		// Last pointer (possibly to another leaf or to another child)
-		m_records[m_nbElements] = Integer.parseInt(data.substring(p, p+8), 16);
+		m_records[m_nbElements] = Integer.parseInt(data.substring(p).trim(), 16);
 	}
 	
 	void Write(RecordElement el)
@@ -440,17 +460,35 @@ class BPlusTreeNode<S extends RecordElement>
 			data += "0";
 		
 		// First, parent pointer
-		data += String.format("%1$-8s", Integer.toHexString(m_parent));
+		data += String.format("%1$8s", Integer.toHexString(m_parent));
 		
 		// Pointer/Key pairs
 		for( int i = 0; i < m_nbElements; i++ )
 		{
-			data += String.format("%1$-8s", Integer.toHexString(m_records[i]));
-			data += m_elements[i].Write();
+			String ptrdata = String.format("%1$8s", Integer.toHexString(m_records[i]));
+			
+			if(ptrdata.length() != 8)
+				System.out.println("Not supposed to happen either");
+			
+			data += ptrdata;
+			
+			if( m_elements[i] == null )
+				System.out.println("Bad pointer?");
+			
+			String eldata = m_elements[i].Write();
+			if(eldata.length() != m_elements[i].Size())
+				System.out.println("not supposed to happen");
+			
+			data += eldata;
 		}
 		
 		// Last pointer
-		data += String.format("%1$-8s", Integer.toHexString(m_records[m_nbElements]));
+		data += String.format("%1$8s", Integer.toHexString(m_records[m_nbElements]));
+		
+		if( ((data.length() - 17) % 19) != 0 )
+		{
+			System.out.println("Bad!!!");
+		}
 		
 		el.setString(data);
 	}
@@ -469,23 +507,36 @@ class BPlusTreeNode<S extends RecordElement>
 			insertionIdx = m_nbElements;
 		
 		m_nbElements++;
-
-		RecordElement keyValue = pair.el;
-		RecordElement keyTemp  = null;
-		int ptrValue = pair.ptr;
-		int ptrTemp  = 0;
 		
-		for(int i = insertionIdx; i < m_nbElements; i++ )
+		// Insertion is slightly different depending on whether this is a leaf or not;
+		// If we're in a leaf, the last pointer will ALWAYS move to the last position, since it points to the next block
+		// In an interior node, we don't have that
+		
+		if( IsLeaf() )
 		{
-			keyTemp = m_elements[i];
-			ptrTemp = m_records[i];
+			m_records[m_nbElements] = m_records[m_nbElements-1];
+				
+			for(int i = m_nbElements - 1; i > insertionIdx; i-- )
+			{
+				m_elements[i] = m_elements[i-1];
+				m_records[i]  = m_records[i-1];
+			}
 			
-			m_elements[i] = keyValue;
-			m_records[i]  = ptrValue;
+			m_elements[insertionIdx] = pair.el;
+			m_records[insertionIdx]  = pair.ptr;
+		}
+		else
+		{
+			// The inserted pair [key, ptr] will be in positions [n, n+1], whatever the key is
+			for( int i = m_nbElements - 1; i > insertionIdx; i-- )
+			{
+				m_elements[i]  = m_elements[i-1];
+				m_records[i+1] = m_records[i];
+			}
 			
-			keyValue = keyTemp;
-			ptrValue = ptrTemp;
-		}		
+			m_elements[insertionIdx]  = pair.el;
+			m_records[insertionIdx+1] = pair.ptr;
+		}
 		
 		m_dirty = true;
 	}

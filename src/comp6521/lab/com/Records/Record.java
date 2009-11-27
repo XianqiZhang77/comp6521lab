@@ -29,7 +29,7 @@ public abstract class Record {
 		for( int i = 0; i < m_OrderKey.intValue(); i++ )
 		{
 			len = m_recordElementsOrder.get( Integer.valueOf(i) ).Size();
-			m_recordElementsOrder.get( Integer.valueOf(i) ).Parse( data.substring(pos, pos + len - 1));
+			m_recordElementsOrder.get( Integer.valueOf(i) ).Parse( data.substring(pos, pos + len));
 			pos += len;
 		}
 	}

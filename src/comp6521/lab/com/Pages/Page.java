@@ -40,7 +40,7 @@ public abstract class Page<T extends Record> {
 	public void Construct( char[] rawData )
 	{
 		String rawPageString    = String.valueOf(rawData);
-		String[] rawRecords     = rawPageString.split("\n");
+		String[] rawRecords     = rawPageString.split("\r\n");
 		
 		// Count nb. of non-null raw records
 		int n = 0;

@@ -72,6 +72,9 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			p++;
 		}
 		
+		// Free root
+		m_root.Clear();
+		
 		m_treeCreated = true;
 	}
 	
@@ -158,7 +161,12 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 				int parentptr = node.m_parent;
 				node.Clear();
 				
-				BPlusTreeNode<S> parent = getNode(parentptr);
+				BPlusTreeNode<S> parent = null;
+				
+				if( parentptr == 0 )
+					parent = m_root;
+				else
+					parent = getNode(parentptr);
 
 				// parent is cleared inside the Insert.
 				Insert( parent, nodeToAdd );
@@ -240,9 +248,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		if( node.IsLeaf() )
 		{
 			// Last pointer points to split node..
-			splitNode.m_records[m_n] = node.m_records[m_n];
-			node.m_records[m_n] = splitNode.m_node;				
-			
+			int rightPointer = node.m_records[m_n];
+		
 			// If we're splitting a leaf node:
 			// The first ceil( (n+1)/2 ) key-pointer pairs stay with N
 			// The remaining move to M.
@@ -253,14 +260,16 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 				node.m_elements[i] = els[i];
 				node.m_records[i]  = ptrs[i];
 			}
+			node.m_records[kept] = splitNode.m_node;
 			node.m_nbElements = kept;
-			
+						
 			for( int i = kept; i < m_n+1; i++)
 			{
 				splitNode.m_elements[i-kept] = els[i];
 				splitNode.m_records[i-kept] = ptrs[i];
 			}		
 			splitNode.m_nbElements = m_n+1 - kept;
+			splitNode.m_records[splitNode.m_nbElements] = rightPointer;
 			
 			// Insert new key-pointer pair into the parent.
 			return new KeyPointerPair(splitNode.m_elements[0], splitNode.m_node);

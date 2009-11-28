@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import comp6521.lab.com.Hashing.HashFunction;
 import comp6521.lab.com.Pages.Page;
 import comp6521.lab.com.Records.Record;
+import comp6521.lab.com.Records.RecordElement;
 
 public class LinearHashTable< T extends Page<?> > {
 	boolean m_indexCreated;
@@ -65,31 +66,7 @@ public class LinearHashTable< T extends Page<?> > {
 		m_indexCreated = true;
 	}
 	
-	public void CleanupIndex()
-	{
-		int b = 0;
-		// Add a new entry to the memory manager
-		String index = "clean_" + m_filename;
-		MemoryManager.getInstance().AddPageType( m_pageType, index );
-		
-		T page = null;
-		
-		for( int i = 0; i < m_buckets.size(); i++ )
-		{
-			for( int p = 0; p < m_buckets.get(i).m_pageNumbers.size(); p++ )
-			{
-				page = MemoryManager.getInstance().getPage( m_pageType, m_buckets.get(i).m_pageNumbers.get(p).intValue(), m_filename );
-				MemoryManager.getInstance().writePage(page, index, b);
-				m_buckets.get(i).m_pageNumbers.set(p, new Integer(b));
-				b++;
-				MemoryManager.getInstance().freePage(page);
-			}
-		}
-		
-		m_filename = index;
-	}
-	
-	protected void Insertion( Record rec )
+	public void Insertion( Record rec )
 	{
 		// Compute h(K)
 		int hk = m_hf.Hash( rec.get(m_key) );
@@ -154,6 +131,53 @@ public class LinearHashTable< T extends Page<?> > {
 			m_i++;
 			m_p2i *= 2;
 		}		
+	}
+	
+	public int[] getPageList( RecordElement el )
+	{
+		int hk = m_hf.Hash( el );
+		
+		int m = hk % m_p2i; // hash
+		int b = 0;          // bucket number
+		
+		if( m < m_n )
+			b = m;               // The bucket exists
+		else if( m < m_p2i )
+			b = m - (m_p2i / 2); // The bucket does not yet exist, so we select the corresponding one
+		else
+			assert(false); // Not supposed to happen
+		
+		ArrayList<Integer> pageList = m_buckets.get(b).m_pageNumbers;
+		int[] list = new int[pageList.size()];
+		
+		for( int i = 0; i < list.length; i++ )
+			list[i] = pageList.get(i).intValue();
+		
+		return list;		
+	}
+	// ----- Implementation details -----
+	public void CleanupIndex()
+	{
+		int b = 0;
+		// Add a new entry to the memory manager
+		String index = "clean_" + m_filename;
+		MemoryManager.getInstance().AddPageType( m_pageType, index );
+		
+		T page = null;
+		
+		for( int i = 0; i < m_buckets.size(); i++ )
+		{
+			for( int p = 0; p < m_buckets.get(i).m_pageNumbers.size(); p++ )
+			{
+				page = MemoryManager.getInstance().getPage( m_pageType, m_buckets.get(i).m_pageNumbers.get(p).intValue(), m_filename );
+				MemoryManager.getInstance().writePage(page, index, b);
+				m_buckets.get(i).m_pageNumbers.set(p, new Integer(b));
+				b++;
+				MemoryManager.getInstance().freePage(page);
+			}
+		}
+		
+		m_filename = index;
 	}
 	
 	////////////////

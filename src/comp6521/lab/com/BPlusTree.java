@@ -1,5 +1,7 @@
 package comp6521.lab.com;
 
+import java.util.ArrayList;
+
 import comp6521.lab.com.Pages.Page;
 import comp6521.lab.com.Records.*;
 
@@ -51,7 +53,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		int nbRecords = MemoryManager.getInstance().GetNumberOfRecords( pageClass, pageFilename );
 		int nbLevels = 1 + (int)(Math.log((double)nbRecords) / Math.log((double)m_n));
 		
-		// Temporarily
+		// TODO: remove this, since this is temporary
 		System.out.println("Nb records: " + nbRecords);
 		System.out.println("Nb levels needed: " + nbLevels);
 		System.out.println("n : " + m_n );
@@ -187,6 +189,65 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 				node.Clear();
 		}
 	}
+	
+	public int[] Get( RecordElement el ) { return null; }
+	
+	// Use this for range queries
+	public ArrayList<Integer> GetList( RecordElement sel, RecordElement eel )
+	{
+		ArrayList<Integer> recs = new ArrayList<Integer>();
+		boolean wasRootLoaded = m_root.IsLoaded();
+		
+		if(!wasRootLoaded)
+			m_root.Load(0);
+		
+		// Get first leaf where we have a value <= to our start element
+		BPlusTreeNode<S> leaf = getLeafNode( m_root, sel );
+		
+		if(!wasRootLoaded)
+			m_root.Clear();
+		
+		boolean wasMatched = true;
+		
+		while( wasMatched )
+		{
+			for( int i = 0; i < leaf.m_nbElements; i++ )
+			{
+				wasMatched = false;
+				
+				if( leaf.m_elements[i].CompareTo( sel ) >= 0 && 
+					leaf.m_elements[i].CompareTo( eel ) <= 0    )
+				{
+					wasMatched = true;
+					recs.add(new Integer(leaf.m_records[i]));
+				}
+			}
+			
+			// If the last element was matched, we have to look in the next leaf
+			if( wasMatched )
+			{
+				int nextLeaf = leaf.getNextLeafPtr();
+				leaf.Clear();
+				leaf.Load(nextLeaf);
+			}
+		}
+		
+		leaf.Clear();		
+		return recs;
+	}
+	
+	public int[] Get( RecordElement sel, RecordElement eel )
+	{
+		ArrayList<Integer> list = GetList( sel, eel );
+		
+		int[] array = new int[list.size()];
+		for( int i = 0; i < array.length; i++ )
+			array[i] = list.get(i).intValue();
+		
+		return array;
+	}
+	
+	// ---- Implementation methods ----
 	
 	BPlusTreeNode<S> createNode()
 	{
@@ -581,6 +642,8 @@ class BPlusTreeNode<S extends RecordElement>
 	
 	boolean IsLoaded() { return m_loaded; }
 	boolean IsLeaf()   { return m_isLeaf; }
+	
+	int getNextLeafPtr() { if(!IsLeaf()) return -1; else return m_records[m_nbElements]; }
 	
 	private S CreateRecordElement()
 	{

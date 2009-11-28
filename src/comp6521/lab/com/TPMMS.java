@@ -37,10 +37,10 @@ public class TPMMS <T extends Page<?>>
 	private boolean DoPhaseI()
 	{
 		// get m pages
-		int currMemSize   = MemoryManager.getInstance().RemainingMemory();	// get available memory
-		int pageSize      = MemoryManager.getInstance().GetPageSize(myPageType);	// get page size
-		int numberOfPages = MemoryManager.getInstance().GetNumberOfPages(myPageType, "qd_resultset.txt");	// get number of r pages
-		int numMemPages = (currMemSize/pageSize);	// number of pages we can fit in m
+		int currMemSize    = MemoryManager.getInstance().RemainingMemory();	// get available memory
+		int pageSize       = MemoryManager.getInstance().GetPageSize(myPageType);	// get page size		// TODO: this .txt file is HARDCODED..change
+		int numberOfPages  = MemoryManager.getInstance().GetNumberOfPages(myPageType, "qd_resultset.txt");	// get number of r pages
+		int numMemPages    = (currMemSize/pageSize);	// number of pages we can fit in m
 		
 		// TODO: remove line 
 		System.out.printf("Current Memory Size: %s\nPage Size: %s\nNumber of Pages (R): %s\n", currMemSize, pageSize, numberOfPages);
@@ -49,13 +49,15 @@ public class TPMMS <T extends Page<?>>
 		System.out.printf("#Pages That Fit in M: %s\n", numMemPages);
 		
 		T currPage = null;	// current page
-		ArrayList<Record> memRecords = new ArrayList<Record>();
+		ArrayList<Record> memRecords = new ArrayList<Record>();		// memory records array for quick-sort
 		for ( int pageCount = 0; pageCount <= (numberOfPages-1); pageCount++ )	// while there are pages to be read
 		{
 			currPage = MemoryManager.getInstance().getPage(myPageType, pageCount);	// get page
 			
 			if (currPage != null)	// ensure currPage is not null
-			{ 
+			{	
+				int numPageRecords = currPage.m_nbRecordsPerPage;	// number of records per page
+				
 				for (Record rec : currPage.m_records)	// add array contents to master array-list
 				{
 					memRecords.add(rec);
@@ -69,18 +71,27 @@ public class TPMMS <T extends Page<?>>
 					// TODO: remove line 
 					System.out.printf("%s\n", "Perform QuickSort()!");
 					
-					// TODO: implement quick-sort
 					// perform quick-sort on memory contents
 					Object[] recObjectArray = memRecords.toArray();
 					Arrays.sort(recObjectArray);
-					
-					// TODO: remove testing code block
-					for (Object o : recObjectArray)
+										
+					// TODO: test this to make sure it works correctly 
+					// build output string
+					StringBuffer strBuffer = new StringBuffer();	// buffer for output string
+					for (int recordCount = 0; recordCount <= ((numMemPages * numPageRecords) - 1); recordCount++)	
 					{
-						Record r = (Record) o;
-						
-						System.out.println(r.get("n_name").getString());
-					}		
+						if (recordCount < recObjectArray.length)	// append to string all records in memory
+						{
+							strBuffer.append(recObjectArray[recordCount].toString());	// add record string
+						}
+						else
+						{
+							strBuffer.append("\r\n");	// add blank records to complete pages (e.g. 4 exact pages)							
+						}	
+					}
+					
+					// output record string
+					PageManagerSingleton.getInstance().writePage("phase1.txt", strBuffer.toString());
 					
 					// empty array list
 					memRecords.clear();
@@ -97,8 +108,7 @@ public class TPMMS <T extends Page<?>>
 	
 	// perform phase 2
 	private boolean DoPhaseII()
-	{
-		
+	{		
 		return true;
 	}
 }

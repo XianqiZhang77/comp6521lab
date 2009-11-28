@@ -199,10 +199,10 @@ class QD_Record extends Record implements Comparable<Record>
 	public QD_Record()
 	{
 		AddElement("s_acctBal", new FloatRecordElement());											// add attributes to record
-		AddElement("s_name", new StringRecordElement(25));
-		AddElement("n_name", new StringRecordElement(15));
+		AddElement("s_name",    new StringRecordElement(25));
+		AddElement("n_name",    new StringRecordElement(15));
 		AddElement("s_address", new StringRecordElement(50));
-		AddElement("s_phone", new StringRecordElement(30));
+		AddElement("s_phone",   new StringRecordElement(30));
 		AddElement("s_comment", new StringRecordElement(120));
 	}
 	
@@ -210,6 +210,20 @@ class QD_Record extends Record implements Comparable<Record>
 	public int compareTo(Record rec)
 	{	
 		return (this.get("n_name").getString().compareToIgnoreCase(rec.get("n_name").getString()));
+	}
+	
+	// return string representation of record
+	public String toString() 
+	{
+		// return record string
+		return String.format("%-22.2f%-25s%-15s%-50s%-30s%-120s\r\n", 
+								this.get("s_acctBal").getFloat(), 
+								this.get("s_name").getString(), 
+								this.get("n_name").getString(), 
+								this.get("s_address").getString(),
+								this.get("s_phone").getString(), 
+								this.get("s_comment").getString()
+							 );
 	}
 }
 

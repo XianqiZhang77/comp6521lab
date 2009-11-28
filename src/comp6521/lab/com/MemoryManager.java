@@ -318,7 +318,17 @@ public class MemoryManager
     	
     	int len = (int)PageManagerSingleton.getInstance().getLength( rk.m_filename );
     	
-    	return len / rk.m_pageSize;    	
+    	double result = (double) len % (double) rk.m_pageSize;
+    	if (result != 0)
+    	{
+    		result = ((double) len / (double) rk.m_pageSize) + 1;
+    	}
+    	else
+    	{
+    		result = (double) len / (double) rk.m_pageSize;
+    	}
+    	
+    	return (int) result;
     }
     
     public <T extends Page<?> > int GetNumberOfRecords( Class<T> c, String filename )

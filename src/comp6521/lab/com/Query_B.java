@@ -40,8 +40,6 @@ public class Query_B {
 		p        = 0;
 		custPage = null;
 		
-		//do
-		//{
 		while( (custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p++ )) != null )
 		{
 			CustomerRecord[] customers = custPage.m_records;
@@ -60,7 +58,7 @@ public class Query_B {
 		}		
 	}
 	
-	private boolean InList( String str, String[] list )
+	protected boolean InList( String str, String[] list )
 	{
 		for( int s = 0; s < list.length; s++ )
 		{

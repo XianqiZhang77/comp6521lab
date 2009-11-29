@@ -195,7 +195,7 @@ public class LinearHashTable< T extends Page<?> > {
 		{
 			m_pageType = c;
 			m_filename = filename;
-			m_nbRecordsPerPage = MemoryManager.getInstance().GetPageSize(c);
+			m_nbRecordsPerPage = MemoryManager.getInstance().GetNumberOfRecordsPerPage(c);
 			m_pageNumbers = new ArrayList< Integer >();
 		}
 		

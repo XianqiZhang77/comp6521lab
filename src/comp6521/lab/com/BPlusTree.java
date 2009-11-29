@@ -190,7 +190,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		}
 	}
 	
-	public int[] Get( RecordElement el ) { return null; }
+	public ArrayList<Integer> GetList( RecordElement el ){ return GetList(el, el);	}
+	public int[] Get( RecordElement el ) { return Get(el, el); }
 	
 	// Use this for range queries
 	public ArrayList<Integer> GetList( RecordElement sel, RecordElement eel )
@@ -204,7 +205,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		// Get first leaf where we have a value <= to our start element
 		BPlusTreeNode<S> leaf = getLeafNode( m_root, sel );
 		
-		if(!wasRootLoaded)
+		if(!wasRootLoaded && leaf != m_root)
 			m_root.Clear();
 		
 		boolean wasMatched = true;
@@ -227,12 +228,23 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			if( wasMatched )
 			{
 				int nextLeaf = leaf.getNextLeafPtr();
-				leaf.Clear();
-				leaf.Load(nextLeaf);
+				
+				if( nextLeaf == 0 )
+				{
+					// We're done
+					wasMatched = false;
+				}
+				else
+				{				
+					if( leaf != m_root || !wasRootLoaded )
+						leaf.Clear();
+					leaf.Load(nextLeaf);
+				}
 			}
 		}
 		
-		leaf.Clear();		
+		if( leaf != m_root || !wasRootLoaded )
+			leaf.Clear();		
 		return recs;
 	}
 	

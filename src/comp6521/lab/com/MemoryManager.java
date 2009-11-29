@@ -200,6 +200,12 @@ public class MemoryManager
     	return m_records.get(i);    		
     }
     
+    public <T extends Page<?> > int GetNumberOfRecordsPerPage( Class<T> c )
+    {
+		T dummyPage = CreateEmptyPage( c );    	
+		return dummyPage.GetNumberRecordsPerPage();
+    }
+    
     public <T extends Page<?> > int GetPageSize( Class<T> c )
     {
 		// Compute page size

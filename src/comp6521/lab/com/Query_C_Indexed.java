@@ -23,36 +23,37 @@ public class Query_C_Indexed extends Query_C
 		// n_regionKey in Nation      [b-tree]
 		BPlusTree< NationPage, IntegerRecordElement > NationFKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
 		NationFKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_FK_tree.txt", "n_regionKey");
+		
+		// n_nationKey in Nation      [b-tree]
+		BPlusTree< NationPage, IntegerRecordElement > NationPKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
+		NationFKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_PK_tree.txt", "n_nationKey");		
 
 		// s_nationKey in Supplier    [b-tree]
 		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = new BPlusTree< SupplierPage, IntegerRecordElement >();
 		SupplierFKIndex.CreateBPlusTree( SupplierPage.class, IntegerRecordElement.class, "Supplier.txt", "Supplier_FK_tree.txt", "s_nationKey");
 		
 		// ps_partKey in PartSupp     [b-tree]
-		//int partsuppPageSize = MemoryManager.getInstance().GetPageSize( PartSuppPage.class );
-		//BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppFKIndex = new BPlusTree< PartSuppPage, IntegerRecordElement >();
-		//PartSuppFKIndex.CreateBPlusTree( PartSuppPage.class, IntegerRecordElement.class, "PartSupp.txt", "PartSupp_FK_tree.txt", "ps_partKey");
+		BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppFKIndex = new BPlusTree< PartSuppPage, IntegerRecordElement >();
+		PartSuppFKIndex.CreateBPlusTree( PartSuppPage.class, IntegerRecordElement.class, "PartSupp.txt", "PartSupp_FK_tree.txt", "ps_partKey");
 		
 		// p_size in Part             [b-tree] for no obvious reason
 		BPlusTree< PartPage, IntegerRecordElement > PartSizeIndex = new BPlusTree< PartPage, IntegerRecordElement >();
 		PartSizeIndex.CreateBPlusTree( PartPage.class, IntegerRecordElement.class, "Part.txt", "Part_Size_tree.txt", "p_size");
 		
+		///////////////////////////////////////////////////////////////////////
+		// Init :
+		// Add custom page types
+		MemoryManager.getInstance().AddPageType( qci_page.class, "qci_supp.txt" );
+		MemoryManager.getInstance().AddPageType( qci_page.class, "qci_supp_min.txt" );
+				
+		///////////////////////////////////////////////////////////////////////
 		// FIRST: 
-		//  sel(size[PART]) X sel(good supps(ps))
-		
-		// Find list of selected suppliers
-		// Region(s) with selName, -> nation(s) -> supplier list
-		//String selSupps = "qc_i_selSupps.txt";
-		//MemoryManager.getInstance().AddPageType(qci_SupplierPage.class, selSupps);
-		//qci_SupplierPage selSuppliers = MemoryManager.getInstance().getEmptyPage(qci_SupplierPage.class);
-		
-		int[] regions   = null;
-		
+		// Find list of selected suppliers (region -> nation -> suppliers )
 		// Find region(s)
 		StringRecordElement RS = new StringRecordElement(50);
 		RS.setString(regionNameSel);
 		
-		regions = RegionNameIndex.Get(RS);
+		int[] regions = RegionNameIndex.Get(RS);
 		Arrays.sort(regions);
 		
 		RegionToNationPF RtNpf = new RegionToNationPF( regions, NationFKIndex, "r_regionKey" );
@@ -63,20 +64,16 @@ public class Query_C_Indexed extends Query_C
 		NationToSupplierPF NtSpf = new NationToSupplierPF( nations, SupplierFKIndex, "n_nationKey");
 		// Get all record numbers from the suppliers that matched a nation found & sort them
 		int[] suppliers = DB.ProcessingLoop(NtSpf);
+		
+		// Suppliers record number -> s_suppKey
+		qci_page suppKeys = MemoryManager.getInstance().getEmptyPage( qci_page.class, "qci_supp.txt");
+		SupplierToSupplierKeyPF StSKpf = new SupplierToSupplierKeyPF( suppliers, suppKeys );
+		DB.ProcessingLoop(StSKpf);
+		// ATTN :: suppKeys is not freed
 
-		// Find all products that match the size requirement
-		IntegerRecordElement partEL = new IntegerRecordElement();
-		partEL.setInt( partSize );
-		
-		int[] parts = PartSizeIndex.Get(partEL);
-		Arrays.sort(parts);
-		
-		//  Take the parts & the approved suppliers, and restrict that using partsupp..
-		
-		
-		
-		// SECOND:
-		// find min supplycost of that product from the other list of suppliers
+		///////////////////////////////////////////////////////////////////////
+    	// SECOND:
+		// find suppliers from which we'll check the minimum cost
 		RS.setString(regionNameMin);
 		int[] min_regions = RegionNameIndex.Get(RS);
 		Arrays.sort(min_regions);
@@ -90,21 +87,29 @@ public class Query_C_Indexed extends Query_C
 		// Get all record numbers from the suppliers that matched a nation found & sort them
 		int[] min_suppliers = DB.ProcessingLoop(min_NtSpf);
 		
+		// Suppliers record number -> s_suppKey
+		qci_page min_suppKeys = MemoryManager.getInstance().getEmptyPage( qci_page.class, "qci_supp_min.txt");
+		SupplierToSupplierKeyPF min_StSKpf = new SupplierToSupplierKeyPF( suppliers, suppKeys );
+		DB.ProcessingLoop(min_StSKpf);
+		// ATTN :: min_suppKeys is not freed
 		
+		// THIRD:
+		// Find all products that match the size requirement
+		IntegerRecordElement partEL = new IntegerRecordElement();
+		partEL.setInt( partSize );
 		
+		int[] parts = PartSizeIndex.Get(partEL);
+		Arrays.sort(parts);
 		
-		
+		// FOURTH:
+		// For each part we have, lookup in the partsupp table.
+		// -- From that, we can check the prices
+		// 
+		// Intersect ps_suppKey with the ones we found ..
 		
 		
 	
-		// Step 1 : Find region(s) with name regionNameSel -> R(S) {save only r_regionKey}
-		//          Find region(s) with name regionNameMin -> R(M) {save only r_regionKey}
-		// Step 2 : Find nation(s) with n_regionKey in R(S) -> N(S) {save n_name, n_nationKey}
-		//          Find nation(s) with n_regionKey in R(M) -> N(M) {save n_nationKey}
-		// Step 3 : Find supplier(s) with s_nationKey in N(S) -> S(S) {save s_suppKey, s_acctbal, s_name, s_address, s_phone, s_comment}
-		//          Find supplier(s) with s_nationKey in N(M) -> S(M) {save s_suppKey}
-		// Step 4 : Find partsupp(s) with ps_suppKey in S(S) and p_size in condition ..
-		//          Find partsupp(s) with that p_partKey
+
 		 
 	}
 }
@@ -126,9 +131,46 @@ class NationToSupplierPF extends ProcessingFunction<NationPage, IntegerRecordEle
 	}
 }
 
+class SupplierToSupplierKeyPF extends ProcessingFunction<SupplierPage, IntegerRecordElement>
+{
+	qci_page suppKeys;
+	
+	public SupplierToSupplierKeyPF( int[] input , qci_page _suppKeys )
+	{
+		super( input, SupplierPage.class );
+		suppKeys = _suppKeys;
+	}
+	
+	public void Process( Record r )
+	{
+		qci_supp supp = new qci_supp();
+		supp.get("s_suppKey").set( r.get("s_suppKey") );
+		suppKeys.AddRecord( supp );
+	}
+	
+	public int[] EndProcess()
+	{
+		return null;
+	}
+}
 
 
-class qci_Supplier extends Record
+
+class qci_supp extends Record
+{
+	public qci_supp() { AddElement( "s_suppKey", new IntegerRecordElement() ); }
+}
+
+class qci_page extends Page<qci_supp>
+{
+	public qci_page() { super(); m_nbRecordsPerPage = 100; }
+	public qci_supp[] CreateArray(int n){ return new qci_supp[n]; }
+	public qci_supp   CreateElement()   { return new qci_supp();  }
+}
+
+
+
+/*class qci_Supplier extends Record
 {
 	public qci_Supplier()
 	{
@@ -148,7 +190,7 @@ class qci_SupplierPage extends Page<qci_Supplier>
 	public qci_Supplier   CreateElement(){ return new qci_Supplier(); }
 }
 
-/*class QC_RS extends Record
+class QC_RS extends Record
 { 
 	public QC_RS(){ AddElement( "r_regionKey", new IntegerRecordElement() ); } 
 }

@@ -37,8 +37,11 @@ public class RecordNumberToKeyPF<T extends Page<?> > extends ProcessingFunction<
 		return null;
 	}
 	
-	public void Clear()
+	public void Clear(boolean savePage)
 	{
+		if( !savePage )
+			keys.m_cleanupToDo = false;
+		
 		MemoryManager.getInstance().freePage(keys);
 		keys = null;
 	}

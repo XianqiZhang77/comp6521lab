@@ -50,13 +50,13 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		m_n = (1024 - 2 * pointerSize - 1) / (keySize + pointerSize);
 		
 		// Consider number of levels we'll need.
-		int nbRecords = MemoryManager.getInstance().GetNumberOfRecords( pageClass, pageFilename );
-		int nbLevels = 1 + (int)(Math.log((double)nbRecords) / Math.log((double)m_n));
+		//int nbRecords = MemoryManager.getInstance().GetNumberOfRecords( pageClass, pageFilename );
+		//int nbLevels = 1 + (int)(Math.log((double)nbRecords) / Math.log((double)m_n));
 		
 		// TODO: remove this, since this is temporary
-		System.out.println("Nb records: " + nbRecords);
-		System.out.println("Nb levels needed: " + nbLevels);
-		System.out.println("n : " + m_n );
+		//System.out.println("Nb records: " + nbRecords);
+		//System.out.println("Nb levels needed: " + nbLevels);
+		//System.out.println("n : " + m_n );
 		
 		// Add a custom page type
 		MemoryManager.getInstance().AddPageType( BPlusTreePage.class, m_filename );
@@ -96,7 +96,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			m_root.Load(0);
 		
 		// We try to find a place for the new key in the appropriate leaf
-		BPlusTreeNode<S> target = getLeafNode( m_root, pair.el );
+		BPlusTreeNode<S> target = getLeafNode( m_root, pair.el, false );
 
 		Insert( target, pair );		
 		
@@ -110,6 +110,17 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		assert(node.IsLoaded());
 		
 		boolean isRootAndIsLoaded = (node == m_root && m_root.IsLoaded());
+		
+		// Special case for "null" nodes .. we must find the appropriate node first
+		if( node.m_IsNullNode )
+		{
+			while( node.m_elements[node.m_nbElements-1].CompareTo( pair.el ) < 0 && node.m_IsNullNode )
+			{
+				int nextLeaf = node.m_records[node.m_nbElements];
+				node.Clear();
+				node.Load(nextLeaf);
+			}
+		}
 		
 		if( node.m_nbElements == m_n )
 		{
@@ -203,36 +214,32 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			m_root.Load(0);
 		
 		// Get first leaf where we have a value <= to our start element
-		BPlusTreeNode<S> leaf = getLeafNode( m_root, sel );
+		BPlusTreeNode<S> leaf = getLeafNode( m_root, sel, !wasRootLoaded );
 		
-		if(!wasRootLoaded && leaf != m_root)
-			m_root.Clear();
+		boolean ContinueToNextLeaf = true;
 		
-		boolean wasMatched = true;
-		
-		while( wasMatched )
+		while( ContinueToNextLeaf )
 		{
 			for( int i = 0; i < leaf.m_nbElements; i++ )
 			{
-				wasMatched = false;
-				
 				if( leaf.m_elements[i].CompareTo( sel ) >= 0 && 
 					leaf.m_elements[i].CompareTo( eel ) <= 0    )
 				{
-					wasMatched = true;
 					recs.add(new Integer(leaf.m_records[i]));
 				}
 			}
 			
+			ContinueToNextLeaf = ( leaf.m_elements[leaf.m_nbElements-1].CompareTo(eel) <= 0 );
+			
 			// If the last element was matched, we have to look in the next leaf
-			if( wasMatched )
+			if( ContinueToNextLeaf )
 			{
 				int nextLeaf = leaf.getNextLeafPtr();
 				
 				if( nextLeaf == 0 )
 				{
 					// We're done
-					wasMatched = false;
+					ContinueToNextLeaf = false;
 				}
 				else
 				{				
@@ -273,30 +280,64 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		return node;
 	}
 	
-	BPlusTreeNode<S> getLeafNode( BPlusTreeNode<S> parent, RecordElement el )
+	BPlusTreeNode<S> getLeafNode( BPlusTreeNode<S> parent, RecordElement el, boolean freeRoot )
 	{
 		if( parent.IsLeaf() )
 			return parent;
 		
+		int firstNull = -1;
+		
 		for( int i = 0; i <= parent.m_nbElements; i++ )
 		{
-			if( (i == parent.m_nbElements) ||                 // Last element
-				(el.CompareTo( parent.m_elements[i] ) < 0) )  // Standard comparison
+			int childnode = -1;
+			
+			// First condition: we're at the end
+			if( i == parent.m_nbElements )
 			{
-				int parentnode = parent.m_node;
-				int childnode  = parent.m_records[i];
+				// Either we select the last pointer, or the first pointer that was null -
+				if( firstNull >= 0 )
+					childnode = firstNull;
+				else
+					childnode = parent.m_records[i];
+			}
+			else if( parent.m_elements[i] == null )
+			{
+				// Set the first null only if it isn't set yet
+				if( firstNull == -1 )
+					firstNull = parent.m_records[i];
+			}
+			else
+			{
+				// We have an element, then we must compare with it.
+				if( el.CompareTo( parent.m_elements[i] ) < 0 )
+				{
+					// In the case we had previously seen nulls, we must branch there
+					if( firstNull >= 0 )
+						childnode = firstNull;
+					else
+						childnode = parent.m_records[i];						
+				}
 				
-				// for the moment, free the parent				
-				if( parent != m_root )
+				// Reset the last null seen
+				if( childnode < 0 )
+					firstNull = -1;
+			}
+			
+			// If we can branch to a child in this iteration
+			if( childnode >= 0 )
+			{
+				if( parent != m_root || freeRoot )
 					parent.Clear();
 				
-				// Recurse down one level
 				BPlusTreeNode<S> child = getNode( childnode );
-				child.m_parent = parentnode;
 				
-				return getLeafNode( child, el );
-			}
+				if( childnode == firstNull )
+					child.m_IsNullNode = true;
+				
+				return getLeafNode( child, el, freeRoot );
+			}				
 		}
+
 		// Not supposed to get here
 		assert(false);
 		return null;
@@ -356,9 +397,32 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			splitNode.m_nbElements = m_n+1 - kept;
 			splitNode.m_records[splitNode.m_nbElements] = rightPointer;
 			
+			// Find the first "different" element that will be used as the representing value
+			RecordElement rel = null;
+			int k = kept;
+			while( k < m_n+1 )
+			{
+				if( els[k].CompareTo(els[k-1]) != 0)
+				{
+					rel = els[k];
+					break;
+				}
+				k++;				
+			}
+			
+			boolean isNull = false;
+			if( rel == null )
+			{
+				rel = els[m_n];
+				isNull = true;
+			}
+			
+			KeyPointerPair kp = new KeyPointerPair(rel, splitNode.m_node);
+			kp.isNull = isNull;			
+			splitNode.m_IsNullNode = isNull;
+			
 			// Insert new key-pointer pair into the parent.
-			return new KeyPointerPair(splitNode.m_elements[0], splitNode.m_node);
-
+			return kp;
 		}
 		else
 		{
@@ -435,6 +499,9 @@ class BPlusTreeNode<S extends RecordElement>
 	
 	int             m_node;
 	boolean         m_dirty;
+	
+	// --- Flag for "null" type nodes ---
+	boolean         m_IsNullNode;
 
 	// --- Data used for simpler calls ---
 	int             m_RecordLength;
@@ -463,6 +530,8 @@ class BPlusTreeNode<S extends RecordElement>
 		m_RecordLength = RecLength;
 		m_n            = n;
 		m_filename     = filename;
+		
+		m_IsNullNode  = false;
 	}
 	
 	public void Load(int node)
@@ -530,7 +599,8 @@ class BPlusTreeNode<S extends RecordElement>
 		
 		int p = 0;
 		// Very first, is it a leaf or not?
-		m_isLeaf = (data.substring(0, 1).charAt(0) == '1' );
+		m_isLeaf = (data.substring(0, 1).charAt(0) == '1' || data.substring(0, 1).charAt(0) == '2' );
+		m_IsNullNode = ( data.substring(0, 1).charAt(0) == '2' );
 		p += 1;
 		// First, parent pointer		
 		m_parent = Integer.parseInt(data.substring(p, p+8).trim(), 16);
@@ -559,7 +629,9 @@ class BPlusTreeNode<S extends RecordElement>
 		String data = "";
 		
 		// Very very first, 0 if interior node, 1 if leaf
-		if( m_isLeaf )
+		if( m_isLeaf && m_IsNullNode )
+			data += "2";
+		else if( m_isLeaf )
 			data += "1";
 		else
 			data += "0";
@@ -633,7 +705,10 @@ class BPlusTreeNode<S extends RecordElement>
 				m_records[i]  = m_records[i-1];
 			}
 			
-			m_elements[insertionIdx] = pair.el;
+			if(pair.isNull)
+				m_elements[insertionIdx] = null;
+			else
+				m_elements[insertionIdx] = pair.el;
 			m_records[insertionIdx]  = pair.ptr;
 		}
 		else
@@ -645,7 +720,10 @@ class BPlusTreeNode<S extends RecordElement>
 				m_records[i+1] = m_records[i];
 			}
 			
-			m_elements[insertionIdx]  = pair.el;
+			if(pair.isNull)
+				m_elements[insertionIdx] = null;
+			else
+				m_elements[insertionIdx]  = pair.el;
 			m_records[insertionIdx+1] = pair.ptr;
 		}
 		
@@ -680,11 +758,13 @@ class KeyPointerPair
 {
 	RecordElement el;
 	int           ptr;
+	public boolean isNull;
 	
 	KeyPointerPair()
 	{
 		el = null;
 		ptr = 0;
+		isNull = false;
 	}
 	
 	KeyPointerPair(RecordElement rel, int pointer)

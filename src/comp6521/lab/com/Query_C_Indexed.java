@@ -28,7 +28,7 @@ public class Query_C_Indexed extends Query_C
 		
 		// n_nationKey in Nation      [b-tree]
 		BPlusTree< NationPage, IntegerRecordElement > NationPKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
-		NationFKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_PK_tree.txt", "n_nationKey");		
+		NationPKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_PK_tree.txt", "n_nationKey");		
 
 		// s_nationKey in Supplier    [b-tree]
 		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = new BPlusTree< SupplierPage, IntegerRecordElement >();
@@ -125,10 +125,11 @@ public class Query_C_Indexed extends Query_C
 		ArrayList<Integer> psMinSuppliersRN = DB.ReverseProcessingLoopAI( min_StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
 		
 		// Once we have the matching record numbers, we can free the pages we were taking
-		PRtPKpf.Clear();
-		StSKpf.Clear();
-		min_StSKpf.Clear();
-	
+		// false here is to make sure we don't write the last page.. it's not needed anyways
+		PRtPKpf.Clear(false);
+		StSKpf.Clear(false);
+		min_StSKpf.Clear(false);
+		
 		// Use an object that'll keep track of taken pages correctly, in order to minimize IO if possible
 		SupplierToOutputPF StOpf = new SupplierToOutputPF( PartPKIndex, SupplierPKIndex, NationPKIndex);
 		
@@ -141,13 +142,16 @@ public class Query_C_Indexed extends Query_C
 			ArrayList<Integer> PartsSuppliers = DB.Intersect( psPartsRN.get(i), psSuppliersRN );
 			ArrayList<Integer> PartsMinSuppliers = DB.Intersect( psPartsRN.get(i), psMinSuppliersRN);
 			
-			// We now have the exact record numbers we need to look at
-			MinSuppliersToMinPricePF MStMPpf = new MinSuppliersToMinPricePF(PartsMinSuppliers);
-			DB.ProcessingLoop(MStMPpf);			
-			float minPrice = MStMPpf.minPrice;
-			
-			StOpf.Reset( PartsSuppliers, minPrice );
-			DB.ProcessingLoop(StOpf);
+			if(PartsSuppliers.size() > 0 && PartsMinSuppliers.size() > 0)
+			{				
+				// We now have the exact record numbers we need to look at
+				MinSuppliersToMinPricePF MStMPpf = new MinSuppliersToMinPricePF(PartsMinSuppliers);
+				DB.ProcessingLoop(MStMPpf);			
+				float minPrice = MStMPpf.minPrice;
+				
+				StOpf.Reset( PartsSuppliers, minPrice );
+				DB.ProcessingLoop(StOpf);
+			}
 		}
 		
 		StOpf.Clear();

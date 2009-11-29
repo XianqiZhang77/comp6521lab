@@ -112,9 +112,12 @@ public abstract class Page<T extends Record> {
 		{
 			WritePageToFile();
 			m_insertionIndex = 0;
+			m_cleanupToDo = false;
 		}
-		
-		m_cleanupToDo = true;
+		else
+		{		
+			m_cleanupToDo = true;
+		}
 	}
 	
 	public void Cleanup()

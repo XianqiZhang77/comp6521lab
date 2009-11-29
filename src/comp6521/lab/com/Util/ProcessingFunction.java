@@ -21,6 +21,21 @@ public abstract class ProcessingFunction<T extends Page<?>, S extends RecordElem
 	String key;
 	Class<S> REClass;
 	
+	// Minimal interface
+	public ProcessingFunction(){}
+	
+	public ProcessingFunction( int[] input, Class<T> c )
+	{
+		Init(input, c);
+	}
+	
+	public void Init( int[] input, Class<T> c )
+	{
+		array = input;
+		pageSize = MemoryManager.getInstance().GetNumberOfRecordsPerPage(c);
+		pageClass = c;	}
+	
+	// Common interface
 	public ProcessingFunction( int[] input, Class<T> c, BPlusTree<?,?> idx, Class<S> rc, String _key)
 	{
 		array = input;
@@ -33,6 +48,7 @@ public abstract class ProcessingFunction<T extends Page<?>, S extends RecordElem
 		records = new ArrayList<Integer>();
 	}
 	
+	// Used in the processing loop
 	public void Process( Record r )
 	{
 		RecordElement rel = CreateRecordElement();
@@ -42,8 +58,12 @@ public abstract class ProcessingFunction<T extends Page<?>, S extends RecordElem
 		records.addAll(sublist);
 	}
 	
+	// Final call of the processing loop
 	public int[] EndProcess()
 	{
+		if( records == null )
+			return null;
+		
 		int[] outputArray = new int[records.size()];
 		
 		for(int i = 0; i < outputArray.length; i++)
@@ -53,6 +73,11 @@ public abstract class ProcessingFunction<T extends Page<?>, S extends RecordElem
 		
 		return outputArray;
 	}	
+	
+	public void ProcessStart()
+	{
+		
+	}
 	
 	private RecordElement CreateRecordElement()
 	{

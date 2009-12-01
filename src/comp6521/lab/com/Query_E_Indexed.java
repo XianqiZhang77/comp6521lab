@@ -54,109 +54,68 @@ public class Query_E_Indexed extends Query_E
 		DB.ProcessingLoop(StSKpf);
 		// ATTN:: StSKpf is not free yet
 		// supplier keys -> ps record numbers
-		ArrayList<ArrayList<Integer> > psSuppliersRN = DB.ReverseProcessingLoopAAI( StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
+		int[] psRN = DB.ReverseProcessingLoop( StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
+		Arrays.sort(psRN);
 		
 		// Once we have the matching record numbers, we can free the pages we were taking.
 		NtNKpf.Clear(false);
 		StSKpf.Clear(false);
 		
-		// Third : Pre-compute the total value
-		// -> Collapse the array<array<int>> we got previously and sort to minimize I/O.
-		int[] psRN = DB.CollapseAAI( psSuppliersRN );
-		Arrays.sort(psRN);
-		
+		// Third : Pre-compute the total value && write kept values --> qei_f.txt
 		PartSuppToTotalPrice PStTPpf = new PartSuppToTotalPrice( psRN );
 		DB.ProcessingLoop( PStTPpf );
 		
 		float totalValue = PStTPpf.totalValue;
-		
-		// Fourth: Create groups & cull them if needed (under the total sum value)
-		PartSuppToGroup PSGpf = new PartSuppToGroup( totalValue );
-		for( int i = 0; i < psSuppliersRN.size(); i++ )
-		{
-			PSGpf.Reset(psSuppliersRN.get(i));
-			DB.ProcessingLoop(PSGpf);
-		}
-		
-		// Write page to file .. or sort in memory if we're taking less than a page.
-		// TODO !! 
-		PSGpf.Clear();
-		
+
 		/////////////////
 		// Perform sort//
 		// ... TODO ...//
 		/////////////////
+		// Sort file qei_f
+		//
 		
-		// And then output the results ....
-		System.out.println("ps_partKey\tvalue");
-		// ...
+		// Perform third pass
+		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeig_f.txt" );
+		ThirdPass( totalValue, "qei_f.txt", "qeig_f.txt" );
+		
+		// Fourth pass: sort groups by value, descending order
+		// ... TODO ...
+		
+		
+		// Last : output results
+		OutputResults( "qeig_f.txt" );
 	}
 }
 
 class PartSuppToTotalPrice extends ProcessingFunction<PartSuppPage, FloatRecordElement>
 {
+	QE_Page page;
 	public float totalValue;
 	
-	public PartSuppToTotalPrice( int[] input ) { super( input, PartSuppPage.class ); }	
-	public void  ProcessStart()      { totalValue = 0; }
-	public void  Process( Record r ) { totalValue += r.get("ps_supplyCost").getFloat() * r.get("ps_availQty").getFloat(); }
-	public int[] EndProcess()        { return null; }	
-}
-
-class PartSuppToGroup extends ProcessingFunction<PartSuppPage, FloatRecordElement>
-{
-	QE_Page page;
-	int partKey;
-	float value;
-	float totalvalue;
-	
-	public PartSuppToGroup( float totalValue )
-	{
-		super();
-		
-		totalvalue = totalValue;
-		
+	public PartSuppToTotalPrice( int[] input ) 
+	{ 
+		super( input, PartSuppPage.class ); 
 		// Create new page type, create an empty page.
 		MemoryManager.getInstance().AddPageType( QE_Page.class, "qei_f.txt" );
 		page = MemoryManager.getInstance().getEmptyPage( QE_Page.class, "qei_f.txt");
-	}
+	}	
 	
-	public void Reset( ArrayList<Integer> inputArray )
-	{
-		int[] input = new int[inputArray.size()];
-		for(int i = 0; i < input.length; i++)
-			input[i] = inputArray.get(i).intValue();
+	public void  ProcessStart()      { totalValue = 0; }
+	public void  Process( Record r ) 
+	{ 
+		float value = r.get("ps_supplyCost").getFloat() * r.get("ps_availQty").getFloat();
 		
-		Init( input, PartSuppPage.class );	
+		// Create new record
+		QE_Record qe = new QE_Record();
+		qe.get("ps_partKey").set( r.get("ps_partKey"));
+		qe.get("value").setFloat(value);
+		page.AddRecord(qe);
+		
+		totalValue +=  value;
 	}
-	
-	public void ProcessStart()
-	{
-		partKey = 0;
-		value = 0;
-	}
-	
-	public void Process( Record r )
-	{
-		partKey = r.get("ps_partKey").getInt();
-		value   = r.get("ps_supplyCost").getFloat() * r.get("ps_availQty").getFloat();
-	}
-	
-	public int[] EndProcess()
-	{
-		// Add a result
-		if( value > totalvalue * 0.0001 )
-		{
-			QE_Record qe = new QE_Record();
-			qe.get("ps_partKey").setInt(partKey);
-			qe.get("value").setFloat(value);
-			page.AddRecord(qe);
-		}
-		return null;
-	}
-	
-	public void Clear()
-	{
+	public int[] EndProcess()        
+	{ 
 		MemoryManager.getInstance().freePage(page);
-	}
+		return null; 
+	}	
 }

@@ -146,16 +146,31 @@ public class Query_E {
 		// TODO !
 		// ...
 		
+		ThirdPass(totalValue, "qe_f.txt", "qeg_f.txt");
+		
+		// Fourth pass 
+		// Sort the groups by value in descending order
+		// ...
+		// TODO !!
+		// ...
+		
+		// Last: output results
+		OutputResults( "qeg_f.txt" );
+	}
+	
+	public void ThirdPass(float totalValue, String qeFile, String groupsFile)
+	{
 		// Third pass:
 		// Creating the groups and applying the having clause
 		// We now assume that the results in the QE table are sorted
-		QEGroups_Page qeg = MemoryManager.getInstance().getEmptyPage( QEGroups_Page.class );
+		QEGroups_Page qeg = MemoryManager.getInstance().getEmptyPage( QEGroups_Page.class, groupsFile );
+		QE_Page qe = null;
 				
 		int previousKey = -1;
 		QE_Record group = null;
 		
 		int qe_p = 0;
-		while( (qe = MemoryManager.getInstance().getPage( QE_Page.class, qe_p++)) != null )
+		while( (qe = MemoryManager.getInstance().getPage( QE_Page.class, qe_p++, qeFile)) != null )
 		{
 			QE_Record[] qeRecords = qe.m_records;
 			for( int i = 0; i < qeRecords.length; i++ )
@@ -191,19 +206,17 @@ public class Query_E {
 		// Write back page.
 		MemoryManager.getInstance().freePage(qeg);
 		qeg = null;
-		
-		// Fourth pass 
-		// Sort the groups by value in descending order
-		// ...
-		// TODO !!
-		// ...
-		
+	}
+	
+	public void OutputResults(String groupsFile)
+	{
+		QEGroups_Page qeg = null;
 		// Finally,
 		// Write the results
 		System.out.println("ps_partKey\tvalue");
 		// Here we assume the groups are sorted.
 		int qeg_p = 0;
-		while( (qeg = MemoryManager.getInstance().getPage( QEGroups_Page.class, qeg_p++)) != null )
+		while( (qeg = MemoryManager.getInstance().getPage( QEGroups_Page.class, qeg_p++, groupsFile)) != null )
 		{
 			QE_Record[] qegRecords = qeg.m_records;
 			for(int i = 0; i < qegRecords.length; i++)

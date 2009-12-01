@@ -84,7 +84,12 @@ public class DB
 			reclist.addAll(AAI.get(i));
 				
 		return reclist;
-	}	
+	}
+	
+	public static <T extends Page<?> > int[] ReverseProcessingLoop( Page<?> page, Class<T> pc, BPlusTree<?,?> bt, String key)
+	{
+		return CollapseAAI(ReverseProcessingLoopAAI(page, pc, bt, key));
+	}
 	
 	public static ArrayList<Integer> Intersect( ArrayList<Integer> a, ArrayList<Integer> b )
 	{
@@ -103,5 +108,20 @@ public class DB
 			}
 		}
 		return intersection;
+	}
+	
+	public static int[] CollapseAAI( ArrayList<ArrayList<Integer>> AAI )
+	{
+		int size = 0;
+		for(int i = 0; i < AAI.size(); i++)
+			size += AAI.get(i).size();
+		
+		int[] output = new int[size];
+		
+		int k = 0;
+		for(int i = 0; i < AAI.size(); i++)
+			for(int j = 0; j < AAI.get(i).size(); j++)
+				output[k++] = AAI.get(i).get(j).intValue();
+		return output;
 	}
 }

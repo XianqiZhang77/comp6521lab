@@ -164,20 +164,26 @@ public class Query_D
 		MemoryManager.getInstance().freePage(qDResultSetPage);
 		
 		// Sort using TPMMS
-		TPMMS<QD_Page> doTPMMS = new TPMMS<QD_Page>(QD_Page.class);
+		TPMMS<QD_Page> doTPMMS = new TPMMS<QD_Page>(QD_Page.class, qDResultSetPage.m_filename);
 		doTPMMS.Execute();
 	}
 	
 }
 
 //private RegionSubsetRecord inner class stores temporary region 
-class QDNationSubsetRecord extends Record
+class QDNationSubsetRecord extends Record implements Comparable<Record>
 {
 	public QDNationSubsetRecord()
 	{
 		// elements we need to keep
 		AddElement( "n_nationKey", new IntegerRecordElement() );
 		AddElement( "n_name", new StringRecordElement(15) ); 
+	}
+	
+	public int compareTo(Record r)
+	{
+		// TODO: insert compare code
+		return 1;
 	}
 }
 
@@ -194,7 +200,7 @@ class QDNationSubsetPage extends Page<QDNationSubsetRecord>
 	public QDNationSubsetRecord   CreateElement(){ return new QDNationSubsetRecord(); }
 }
 
-class QD_Record extends Record implements Comparable<Record>
+class QD_Record extends Record
 {
 	public QD_Record()
 	{

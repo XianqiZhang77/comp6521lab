@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import comp6521.lab.com.Pages.Page;
 import comp6521.lab.com.Records.*;
 
+// Generic B+ tree implementation, for great justice!
 public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 	boolean m_treeCreated;
 	BPlusTreeNode<S> m_root;

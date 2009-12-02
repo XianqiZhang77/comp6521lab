@@ -123,11 +123,11 @@ public class TPMMS <T extends Page<?>>
 		System.out.printf("B(R) = %s\n", numberOfPages);
 		System.out.printf("#Input Buffers = %s\n", numInputBuffers);
 		
-		// add phase1.txt pages to memory manager for tracking
-		MemoryManager.getInstance().AddPageType(myPageType, "phase1.txt");
+		String inFilename  =  "phase1.txt";	// input file
+		String outFilename =  "pass1.txt";  // output file
 		
-		// set input filename
-		filename =  "phase1.txt";	// phase 1 output
+		// add input pages to memory manager for tracking
+		MemoryManager.getInstance().AddPageType(myPageType, inFilename);
 		
 		// determine number of sublists
 		int numOfSubLists = (int) Math.ceil( ((double) numberOfPages / (double) numMemPages) );
@@ -138,8 +138,12 @@ public class TPMMS <T extends Page<?>>
 		// for each phase 2 pass
 		for (int passCount = 1; passCount <= numOfPasses; passCount++)
 		{
+			// add output filename to page manager for tracking get empty pages.
+			MemoryManager.getInstance().AddPageType(myPageType, outFilename);
+			T outPage = MemoryManager.getInstance().getEmptyPage(myPageType, outFilename);	// get empty page (i.e. output buffer)
+			
 			// for each group of m-1 sublists
-			for (int groupCount = 0; groupCount < (Math.ceil(numOfSubLists/numInputBuffers)); groupCount++)
+			for (int groupCount = 0; groupCount <= (Math.ceil(numOfSubLists/numInputBuffers)); groupCount++)	// TODO: added = to test
 			{
 				int startList = groupCount * numInputBuffers;		// starting list of group in file
 				int endList   = startList + (numInputBuffers - 1);	// end list of group in file
@@ -148,17 +152,18 @@ public class TPMMS <T extends Page<?>>
 				ArrayList<T> buffers = new ArrayList<T>();	// page buffers
 				for (int sortedList = startList; sortedList <= endList; sortedList++)
 				{
-					int blockNumber = (sortedList * numMemPages);	// block number to retrieve (i.e. head of each list)
-					T currPage = MemoryManager.getInstance().getPage(myPageType, blockNumber, filename);	// get block from disk
+					int blockNumber = (sortedList * numMemPages * ((int) Math.pow(2, (passCount - 1))));	// block number to retrieve (i.e. head of each list)
+					T currPage = MemoryManager.getInstance().getPage(myPageType, blockNumber, inFilename);	// get block from disk
 					
-					buffers.add(currPage);	// add page to memory buffer
+					if (currPage != null)
+					{
+						buffers.add(currPage);	// add page to memory buffer
+					}
 				}
 				
 				// merge buffers
 				while (buffers.size() > 0)	// while buffers have blocks in them											
 				{							
-					// TODO: if buffers.size = 1 we just output because only one sublist remains
-					
 					ArrayList<Record> records = new ArrayList<Record>();	// records to compare --at heads of arrays
 					for (int inBuffer = 0; inBuffer < buffers.size(); inBuffer++)	// for each page/buffer get record at head of array
 					{
@@ -193,22 +198,25 @@ public class TPMMS <T extends Page<?>>
 						buffers.get(myRecListNumber).m_records = new Record[0];	// remove last record
 					}
 						
-					// add to output buffer
+					// add to output buffer	TODO: remove test line to system.out
 					System.out.printf("Lowest Record: %s\n", myRecord.toString());
+					outPage.AddRecord(myRecord);	// add record to output page
 					
+					// TODO: there is a bug in MemoryManager.freepage: pages are overwritten due to pageNum never changing
+					if (outPage.m_insertionIndex == 0 )	// we just wrote a page
+					{
+						outPage.m_pageNumber++; // increment page number to avoid overwriting page
+					}
+							
 					// determine if we need to load next block
 					if (buffers.get(myRecListNumber).m_records.length == 0)	// if buffer is exhausted
 					{
 						// get next page of sublist
-						if ( ((buffers.get(myRecListNumber).m_pageNumber + 1) % numMemPages) != 0 )	// are there remaining pages in this 
-						{																		// sublist?	
+						if ( ((buffers.get(myRecListNumber).m_pageNumber + 1) % (numMemPages * ((int) Math.pow(2, (passCount - 1)))) ) != 0 )	// are there remaining pages in this 
+						{																														// sublist?	
 							// get next page
-							// TODO: will need to update filename depending on pass.txt file being used
 							MemoryManager.getInstance().freePage(buffers.get(myRecListNumber));	// free page from memory
-							T nextPage = MemoryManager.getInstance().getPage(myPageType, buffers.get(myRecListNumber).m_pageNumber + 1, filename);
-							
-							//Test
-							System.out.printf("Lowest Record: %s\n", nextPage.toString());
+							T nextPage = MemoryManager.getInstance().getPage(myPageType, buffers.get(myRecListNumber).m_pageNumber + 1, inFilename);
 							
 							buffers.remove(myRecListNumber);	// remove exhausted page
 							buffers.add(nextPage);		// add next page
@@ -221,10 +229,20 @@ public class TPMMS <T extends Page<?>>
 					}
 				}
 			}
-	
-			// determine number of sublists for pass_X.txt
+			
+			// TODO: do we free outpage again? set it to null?
+			if ( outPage.m_insertionIndex > 0)
+			{
+				MemoryManager.getInstance().freePage(outPage);
+			}
+			
+			// set next input and output files
+			inFilename  = "pass" + passCount + ".txt";
+			outFilename = "pass" + (passCount + 1) + ".txt";
+			
+			// determine number of sublists for next pass
+			numOfSubLists = (int) Math.ceil((double) numOfSubLists / (double) (2)) ;
 		}
-	
 		
 		return true;
 	}

@@ -12,7 +12,7 @@ import comp6521.lab.com.Records.Record;
 import comp6521.lab.com.Records.SupplierRecord;
 
 public class Query_E {
-	public void ProcessQuery()
+	public void ProcessQuery(String innerName, String outerName)
 	{
 		// Zeroeth pass:
 		// Initialise custom pages
@@ -23,8 +23,10 @@ public class Query_E {
 		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeg_f.txt" );
 		// Kept nations keys
 		MemoryManager.getInstance().AddPageType( NationSubsetPage.class,  "qe_ns.txt");
+		MemoryManager.getInstance().AddPageType( NationSubsetPage.class, "qe_inner_ns.txt");
 		// Kept supplier keys
 		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_ss.txt");
+		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_inner_ss.txt");
 				
 		// Info for the "having" clause:
 		float totalValue = 0;
@@ -33,6 +35,7 @@ public class Query_E {
 		// Construct the (ps_suppkey, value) records, without any aggregation, sorting or anything.
 		//   -> 1- Find nation(s) with name 'UNITED STATES' .. likely to be only one
 		NationSubsetPage snPage = MemoryManager.getInstance().getEmptyPage( NationSubsetPage.class );
+		NationSubsetPage sniPage = MemoryManager.getInstance().getEmptyPage( NationSubsetPage.class, "qe_inner_ns.txt" );
 		
 		NationPage nationPage = null;
 		int n_p = 0;
@@ -41,12 +44,18 @@ public class Query_E {
 			NationRecord[] nationRecords = nationPage.m_records;
 			for( int i = 0; i < nationRecords.length; i++ )
 			{
-				if( nationRecords[i].get("n_name").getString().compareToIgnoreCase("UNITED STATES") == 0)
+				if( nationRecords[i].get("n_name").getString().compareToIgnoreCase(outerName) == 0)
 				{
 					NationSubsetRecord ns = new NationSubsetRecord();
 					ns.get("n_nationKey").set( nationRecords[i].get("n_nationKey"));
-					
 					snPage.AddRecord( ns );
+				}
+				
+				if( nationRecords[i].get("n_name").getString().compareToIgnoreCase(innerName) == 0)
+				{
+					NationSubsetRecord nsi = new NationSubsetRecord();
+					nsi.get("n_nationKey").set( nationRecords[i].get("n_nationKey"));
+					sniPage.AddRecord(nsi);
 				}
 			}
 			
@@ -56,8 +65,12 @@ public class Query_E {
 		MemoryManager.getInstance().freePage( snPage );
 		snPage = null;
 		
+		MemoryManager.getInstance().freePage( sniPage );
+		sniPage = null;
+		
 		//   -> 2- Find suppliers with matching s_nationkey.
 		SupplierSubsetPage ssPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class );
+		SupplierSubsetPage ssiPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class, "qe_inner_ss.txt");
 		
 		// Loop on all subset nations
 		int sn_p = 0;
@@ -65,7 +78,7 @@ public class Query_E {
 		{
 			NationSubsetRecord[] nsRecords = snPage.m_records;
 
-			// Note: instead of looping for nations, we'll loop for regions first.. will be much less I/Os.
+			// Note: instead of looping for nations, we'll loop for regions first.. should be much less I/Os.
 			SupplierPage suppPage = null;
 			int s_p = 0;
 			while( (suppPage = MemoryManager.getInstance().getPage( SupplierPage.class, s_p++)) != null )
@@ -91,10 +104,47 @@ public class Query_E {
 			
 			MemoryManager.getInstance().freePage(snPage);
 		}
+		
 		// Write back the kept suppliers
 		MemoryManager.getInstance().freePage( ssPage );
 		ssPage = null;
 		
+		sn_p = 0;
+		while( (sniPage = MemoryManager.getInstance().getPage( NationSubsetPage.class, sn_p++, "qe_inner_ns.txt")) != null )
+		{
+			NationSubsetRecord[] nsRecords = sniPage.m_records;
+
+			// Note: instead of looping for nations, we'll loop for regions first.. should be much less I/Os.
+			SupplierPage suppPage = null;
+			int s_p = 0;
+			while( (suppPage = MemoryManager.getInstance().getPage( SupplierPage.class, s_p++)) != null )
+			{
+				SupplierRecord[] suppRecords = suppPage.m_records;
+				for(int i = 0; i < nsRecords.length; i++ )
+				{
+					for( int j = 0; j < suppRecords.length; j++ )
+					{
+						if( suppRecords[j].get("s_nationKey").getInt() == nsRecords[i].get("n_nationKey").getInt() )
+						{
+							// We found a good supplier
+							SupplierSubsetRecord ss = new SupplierSubsetRecord();
+							ss.get("s_suppKey").set( suppRecords[j].get("s_suppKey"));
+							
+							ssiPage.AddRecord(ss);
+						}
+					}
+				}
+				
+				MemoryManager.getInstance().freePage( suppPage );
+			}
+			
+			MemoryManager.getInstance().freePage(sniPage);
+		}
+		
+		// Write back the kept suppliers
+		MemoryManager.getInstance().freePage( ssiPage );
+		ssiPage = null;
+
 		//   -> 3- Write all results from PartSupp with the ps_suppKey matching one found
 		QE_Page qe = MemoryManager.getInstance().getEmptyPage( QE_Page.class );
 		
@@ -120,13 +170,10 @@ public class Query_E {
 							// We found a partsupp entry for a supplier in the united states.
 							QE_Record qer = new QE_Record();
 							qer.get("ps_partKey").set( psRecords[j].get("ps_partKey") );
-							float value = psRecords[j].get("ps_supplyCost").getFloat() * psRecords[j].get("ps_availQty").getInt();
+							float value = psRecords[j].get("ps_supplyCost").getFloat() * (float)(psRecords[j].get("ps_availQty").getInt());
 							qer.get("value").setFloat( value );
 							
 							qe.AddRecord( qer );
-							
-							// Keep track of total also, will be used for the "having" clause
-							totalValue += value;
 						}
 					}
 				}
@@ -139,6 +186,37 @@ public class Query_E {
 		// Write back the kept qe results
 		MemoryManager.getInstance().freePage(qe);
 		qe = null;
+		
+		// Compute the total value now :
+		while( (ssiPage = MemoryManager.getInstance().getPage( SupplierSubsetPage.class, ss_p++, "qe_inner_ss.txt")) != null )
+		{
+			SupplierSubsetRecord[] ssRecords = ssiPage.m_records;
+			
+			// Note: instead of looping on the subset suppliers now, we'll loop on the partsupp's.
+			PartSuppPage psPage = null;
+			int psp = 0;
+			while( (psPage = MemoryManager.getInstance().getPage( PartSuppPage.class, psp++)) != null )
+			{
+				PartSuppRecord[] psRecords = psPage.m_records;
+				
+				for(int i = 0; i < ssRecords.length; i++)
+				{
+					for(int j = 0; j < psRecords.length; j++)
+					{
+						if( psRecords[j].get("ps_suppKey").getInt() == ssRecords[i].get("s_suppKey").getInt() )
+						{
+							// Keep track of total , will be used for the "having" clause
+							float value = psRecords[j].get("ps_supplyCost").getFloat() * (float)(psRecords[j].get("ps_availQty").getInt());
+							totalValue += value;
+						}
+					}
+				}
+				
+				MemoryManager.getInstance().freePage(psPage);
+			}
+			
+			MemoryManager.getInstance().freePage(ssiPage);
+		}
 		
 		// Second pass:
 		// perform a 2PMMS on the data, sorting on ps_partkey (ascending or descending)

@@ -56,7 +56,7 @@ public class Query_A_Indexed extends Query_A
 			sum_qty        += page.m_records[r].get("l_quantity").getInt();
 			sum_base_price += page.m_records[r].get("l_extendedPrice").getFloat();
 			sum_disc_price += page.m_records[r].get("l_extendedPrice").getFloat() * (1 - page.m_records[r].get("l_discount").getFloat());
-			sum_charge     += page.m_records[r].get("l_extendedPrice").getFloat() * (1 - page.m_records[r].get("l_discount").getFloat()) * (1 + page.m_records[r].get("l_tax").getFloat());
+			sum_charge     += page.m_records[r].get("l_extendedPrice").getFloat() * (1 - page.m_records[r].get("l_discount").getFloat())/* * (1 + page.m_records[r].get("l_tax").getFloat())*/;
 			count++;
 		}
 		

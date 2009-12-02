@@ -58,7 +58,7 @@ public class Query_A {
 					sum_qty        += LineItems[r].get("l_quantity").getInt();
 					sum_base_price += LineItems[r].get("l_extendedPrice").getFloat();
 					sum_disc_price += LineItems[r].get("l_extendedPrice").getFloat() * (1 - LineItems[r].get("l_discount").getFloat());
-					sum_charge     += LineItems[r].get("l_extendedPrice").getFloat() * (1 - LineItems[r].get("l_discount").getFloat()) * (1 + LineItems[r].get("l_tax").getFloat());
+					sum_charge     += LineItems[r].get("l_extendedPrice").getFloat() * (1 - LineItems[r].get("l_discount").getFloat())/* * (1 + LineItems[r].get("l_tax").getFloat())*/;
 					count++;
 				}
 			}

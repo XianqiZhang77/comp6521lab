@@ -31,7 +31,7 @@ public class Query_B_Indexed extends Query_B
 			
 			for( int p = 0; p < pageList.length; p++ )
 			{
-				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p] );
+				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p], "customer_cntrycode.txt" );
 				CustomerRecord[] customers = page.m_records;
 
 				for( int r = 0; r < customers.length; r++ )
@@ -66,7 +66,7 @@ public class Query_B_Indexed extends Query_B
 			
 			for( int p = 0; p < pageList.length; p++ )
 			{
-				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p] );
+				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p], "customer_cntrycode.txt" );
 				CustomerRecord[] customers = page.m_records;
 
 				for( int r = 0; r < customers.length; r++ )

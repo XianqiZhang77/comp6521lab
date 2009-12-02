@@ -78,15 +78,98 @@ public class Query_Z {
 		// Fourth phase:
 		// Group by o_custKey (sum total price) & month
 		////////////////////////////////////////////////////////////////////
+		FourthPhase("qz_os.txt", "qzg_os.txt");
+		
+		////////////////////////////////////////////////////////////////////
+		// Fifth phase:
+		// Find the name (matching o_cust with c_cust, getting c_name)
+		////////////////////////////////////////////////////////////////////
+		//CustomerPage custPage = null;
+		//int prevCustPage = -1;
+		OrdersGroupsPage osgPage = null;
+		int osg_p = 0;
+		
+		String previousName = "";
+		int previousCustKey = -1;
+		
+		// Print header first
+		System.out.println("customerName\tJAN\tFEB\tMAR\tAPR\tMAY\tJUN\tJUL\tAUG\tSEP\tOCT\tNOV\tDEC");
+		int prevMonth = 0;
+
+		String result = "";
+		
+		while( (osgPage = MemoryManager.getInstance().getPage(OrdersGroupsPage.class, osg_p++, "qzg_os_i.txt")) != null )
+		{
+			OrdersSubsetRecord[] osgRecords = osgPage.m_records;
+			
+			for( int i = 0; i < osgRecords.length; i++ )
+			{
+				int curCustKey = osgRecords[i].get("o_custKey").getInt();
+				
+				// Fetch the name only if it's different
+				if( curCustKey != previousCustKey )
+				{
+					// Output previous result
+					if( result.length() > 0 )
+						System.out.println(result);
+					
+					result = "";	
+					prevMonth = 0;					
+
+					previousCustKey = curCustKey;
+					
+					// Find appropriate page
+					CustomerPage custPage = null;
+					int custPageNb = 0;
+					boolean found = false;
+					while( (custPage = MemoryManager.getInstance().getPage(CustomerPage.class, custPageNb++)) != null && !found )
+					{
+						for( int c = 0; c < custPage.m_records.length; c++ )
+						{
+							if( custPage.m_records[c].get("c_custKey").getInt() == curCustKey )
+							{
+								found = true;
+								previousName = new String(custPage.m_records[c].get("c_name").getString());
+							}
+						}
+						MemoryManager.getInstance().freePage(custPage);
+					}
+					
+					result += previousName;
+					prevMonth = 0;
+				}
+				
+				// Count the number of tabs to add
+				int monthDiff = osgRecords[i].get("o_orderDate").getDate().getMonth() - prevMonth;
+				prevMonth += monthDiff;
+				
+				for(int m = 0; m < monthDiff; m++)
+					result += "\t";
+				
+				// Add result
+				result += osgRecords[i].get("o_totalPrice").getFloat();
+			}			
+			
+			MemoryManager.getInstance().freePage(osgPage);
+		}
+		
+		// Output last result if needed
+		if( result.length() > 0 )
+			System.out.println(result);
+	}
+	
+	public void FourthPhase( String subsetFilename, String groupsFilename )
+	{
 		// Assume orders subset table is sorted
-		OrdersGroupsPage osgPage = MemoryManager.getInstance().getEmptyPage( OrdersGroupsPage.class );
+		OrdersSubsetPage osPage = null;
+		OrdersGroupsPage osgPage = MemoryManager.getInstance().getEmptyPage( OrdersGroupsPage.class, groupsFilename );
 		
 		int previousKey = -1;
 		int previousMonth = -1;
 		OrdersSubsetRecord group = null;
 		
 		int os_p = 0;
-		while( (osPage = MemoryManager.getInstance().getPage( OrdersSubsetPage.class, os_p++)) != null)
+		while( (osPage = MemoryManager.getInstance().getPage( OrdersSubsetPage.class, os_p++, subsetFilename)) != null)
 		{
 			OrdersSubsetRecord[] osRecords = osPage.m_records;
 			for( int i = 0; i < osRecords.length; i++ )
@@ -125,100 +208,6 @@ public class Query_Z {
 		// Write back page
 		MemoryManager.getInstance().freePage(osgPage);
 		osgPage = null;
-		
-		////////////////////////////////////////////////////////////////////
-		// Fifth phase:
-		// Find minimum name (matching o_cust with c_cust, getting c_name)
-		// The trick here is to go through all the orders subset groups, BUT
-		// remember which is the "best" name so far, i.e. with page & index
-		////////////////////////////////////////////////////////////////////
-		// ATTENTION: MAKE SURE WE ALWAYS GET THE REAL FIRST ONE
-		// THIS SHOULD BE TRUE, BUT REVERIFY!!!
-		String minName = "ZZZZZZZZZZZZZZZZZZZZZZZZZ"; // 25 z's
-		int minPage    = -1;
-		int minIndex   = -1;
-		
-		int osg_p = 0;
-		while ( (osgPage = MemoryManager.getInstance().getPage( OrdersGroupsPage.class, osg_p++)) != null )
-		{
-			OrdersSubsetRecord[] osgRecords = osgPage.m_records;
-			
-			// -- Interleave loops --
-			// Match with customers
-			CustomerPage custPage = null;
-			int c_p = 0;
-			while( (custPage = MemoryManager.getInstance().getPage( CustomerPage.class, c_p++)) != null )
-			{
-				CustomerRecord[] customers = custPage.m_records;
-				
-				for(int i = 0; i < osgRecords.length; i++ )
-				{
-					for( int j = 0; j < customers.length; j++ )
-					{
-						// Key match
-						if( customers[j].get("c_custKey").getInt() == osgRecords[i].get("o_custKey").getInt() )
-						{
-							// Check for min name
-							if( customers[j].get("c_name").getString().compareTo( minName ) < 0 )
-							{
-								minName  = customers[j].get("c_name").getString();
-								minPage  = osg_p - 1; // IMPORTANT.. since we pre-increment!
-								minIndex = i;
-							}
-						}
-					}
-				}
-				
-				MemoryManager.getInstance().freePage( custPage );
-			}			
-			
-			// ATTENTION minPage = osg_p - 1 !!!
-			MemoryManager.getInstance().freePage( osgPage );
-		}
-		
-		////////////////////////////////////////////////////////////////////
-		//  AND 
-		// Output results
-		////////////////////////////////////////////////////////////////////
-		// Output header
-		if(minIndex < 0 )
-		{
-			System.out.println("No results found");
-			return;
-		}
-		
-		System.out.println("customerName\tJAN\tFEB\tMAR\tAPR\tMAY\tJUN\tJUL\tAUG\tSEP\tOCT\tNOV\tDEC");
-		
-		String result = minName + "\t";
-		// Important note: it is possible that the results spread on two pages.
-		osgPage = MemoryManager.getInstance().getPage( OrdersGroupsPage.class, minPage );
-		for( int i = 0; i < 12; i++ )
-		{
-			if( osgPage.m_records[minIndex].get("o_orderDate").getDate().getMonth() == i )
-			{
-				// Output this result, increment minIndex
-				result += osgPage.m_records[minIndex].get("o_totalPrice").getFloat() + "\t";
-				
-				minIndex++;
-				
-				if( minIndex >= osgPage.m_records.length && i != 11 )
-				{
-					minIndex = 0;
-					minPage++;
-					MemoryManager.getInstance().freePage(osgPage);
-					osgPage = MemoryManager.getInstance().getPage( OrdersGroupsPage.class, minPage );
-					assert(osgPage != null); // this should always be ok..
-				}
-			}
-			else
-			{
-				// No result, just add a tab
-				result += "\t";
-			}
-		}
-		MemoryManager.getInstance().freePage(osgPage);
-		
-		System.out.println(result);
 	}
 }
 

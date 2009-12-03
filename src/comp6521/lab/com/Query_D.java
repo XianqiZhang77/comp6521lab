@@ -146,6 +146,9 @@ public class Query_D
 							qDRecord.get("s_phone").set(sRec.get("s_phone"));
 							qDRecord.get("s_comment").set(sRec.get("s_comment"));
 
+							// TODO: remove test line
+							System.out.println(qDRecord);
+							
 							// add record to page
 							qDResultSetPage.AddRecord(qDRecord);
 						}

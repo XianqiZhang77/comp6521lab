@@ -141,9 +141,13 @@ public class TPMMS <T extends Page<?>>
 			// add output filename to page manager for tracking get empty pages.
 			MemoryManager.getInstance().AddPageType(myPageType, outFilename);
 			T outPage = MemoryManager.getInstance().getEmptyPage(myPageType, outFilename);	// get empty page (i.e. output buffer)
+		
+			// TODO: Remove Test Line
+			System.out.printf("Get Out Page. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
 			
 			// for each group of m-1 sublists
-			for (int groupCount = 0; groupCount <= (Math.ceil(numOfSubLists/numInputBuffers)); groupCount++)	// TODO: added = to test
+			int numGroups = (int) Math.ceil((double) numOfSubLists / (double) numInputBuffers);
+			for (int groupCount = 0; groupCount < numGroups; groupCount++)
 			{
 				int startList = groupCount * numInputBuffers;		// starting list of group in file
 				int endList   = startList + (numInputBuffers - 1);	// end list of group in file
@@ -152,8 +156,12 @@ public class TPMMS <T extends Page<?>>
 				ArrayList<T> buffers = new ArrayList<T>();	// page buffers
 				for (int sortedList = startList; sortedList <= endList; sortedList++)
 				{
-					int blockNumber = (sortedList * numMemPages * ((int) Math.pow(2, (passCount - 1))));	// block number to retrieve (i.e. head of each list)
+					//int blockNumber = (sortedList * numMemPages * ((int) Math.pow(2, (passCount - 1))));	// block number to retrieve (i.e. head of each list)
+					int blockNumber = (sortedList * numMemPages * ((int) Math.pow(numInputBuffers, (passCount - 1))));	// block number to retrieve (i.e. head of each list)
 					T currPage = MemoryManager.getInstance().getPage(myPageType, blockNumber, inFilename);	// get block from disk
+					
+					// TODO: Remove Test Line
+					System.out.printf("Get Curr Page. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
 					
 					if (currPage != null)
 					{
@@ -203,45 +211,73 @@ public class TPMMS <T extends Page<?>>
 					outPage.AddRecord(myRecord);	// add record to output page
 					
 					// TODO: there is a bug in MemoryManager.freepage: pages are overwritten due to pageNum never changing
-					if (outPage.m_insertionIndex == 0 )	// we just wrote a page
-					{
-						outPage.m_pageNumber++; // increment page number to avoid overwriting page
-					}
+					//if (outPage.m_insertionIndex == 0 )	// we just wrote a page
+					//{
+					//	outPage.m_pageNumber++; // increment page number to avoid overwriting page
+					//}
 							
 					// determine if we need to load next block
 					if (buffers.get(myRecListNumber).m_records.length == 0)	// if buffer is exhausted
 					{
 						// get next page of sublist
-						if ( ((buffers.get(myRecListNumber).m_pageNumber + 1) % (numMemPages * ((int) Math.pow(2, (passCount - 1)))) ) != 0 )	// are there remaining pages in this 
+						//if ( ((buffers.get(myRecListNumber).m_pageNumber + 1) % (numMemPages * ((int) Math.pow(2, (passCount - 1)))) ) != 0 )	// are there remaining pages in this 
+						if ( ((buffers.get(myRecListNumber).m_pageNumber + 1) % (numMemPages * ((int) Math.pow(numInputBuffers, (passCount - 1)))) ) != 0 )	// are there remaining pages in this
 						{																														// sublist?	
 							// get next page
 							MemoryManager.getInstance().freePage(buffers.get(myRecListNumber));	// free page from memory
+							
+							// TODO: Remove Test Line
+							System.out.printf("Free Page. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
+							
 							T nextPage = MemoryManager.getInstance().getPage(myPageType, buffers.get(myRecListNumber).m_pageNumber + 1, inFilename);
 							
+							// TODO: Remove Test Line
+							System.out.printf("Get Next Page. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
+							
 							buffers.remove(myRecListNumber);	// remove exhausted page
-							buffers.add(nextPage);		// add next page
+							
+							if ((nextPage != null) && (nextPage.m_records.length != 0))	// ensure we are not reading a null page from the end of last sublist
+							{
+								buffers.add(nextPage);		// add next page
+							}
+							else if (nextPage.m_records.length == 0)	// TODO: ensure this is necessary
+							{
+								// TODO: ensure freeing a page here is correct
+								MemoryManager.getInstance().freePage(nextPage);	// free page from memory
+								
+								// TODO: Remove Test Line
+								System.out.printf("Array[0]. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
+								
+							}
 						}
 						else
 						{
 							MemoryManager.getInstance().freePage(buffers.get(myRecListNumber));	// free page from memory
+							
+							// TODO: Remove Test Line
+							System.out.printf("End of Buffers. Free Page. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
+							
 							buffers.remove(myRecListNumber);	// remove page from buffers
 						}
 					}
 				}
 			}
 			
-			// TODO: do we free outpage again? set it to null?
-			if ( outPage.m_insertionIndex > 0)
-			{
+			// TODO: do we free outpage again? set it to null? doesn't free it!!!! (is it because of the auto writes?)
+			//if ( outPage.m_insertionIndex > 0)
+			//{
 				MemoryManager.getInstance().freePage(outPage);
-			}
+				
+				// TODO: Remove Test Line
+				System.out.printf("End Pass. Free Out Page. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
+			//}
 			
 			// set next input and output files
 			inFilename  = "pass" + passCount + ".txt";
 			outFilename = "pass" + (passCount + 1) + ".txt";
 			
 			// determine number of sublists for next pass
-			numOfSubLists = (int) Math.ceil((double) numOfSubLists / (double) (2)) ;
+			numOfSubLists = (int) Math.ceil((double) numOfSubLists / (double) (numInputBuffers)) ;
 		}
 		
 		return true;

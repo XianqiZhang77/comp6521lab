@@ -1,6 +1,7 @@
 package comp6521.lab.com.Records;
 
-public class LineItemRecord extends Record {
+public class LineItemRecord extends Record implements Comparable<Record>
+{
 	public LineItemRecord()
 	{
 		AddElement( "l_orderkey",      new IntegerRecordElement()  ); // PK, FK(orders)
@@ -19,5 +20,11 @@ public class LineItemRecord extends Record {
 		AddElement( "l_shipInstruct",  new StringRecordElement(20) );
 		AddElement( "l_shipMode",      new StringRecordElement(10) );
 		AddElement( "l_comment",       new StringRecordElement(120));
+	}
+	
+	public int compareTo(Record r)
+	{
+		// TODO: insert compare code
+		return 1;
 	}
 }

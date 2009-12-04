@@ -2,7 +2,7 @@ package comp6521.lab.com.Records;
 
 import java.util.Hashtable;
 
-public abstract class Record {
+public abstract class Record implements Comparable<Record>{
 	public Record() 
 	{
 		m_recordElements = new Hashtable<String, RecordElement>();

@@ -1,6 +1,7 @@
 package comp6521.lab.com.Records;
 
-public class SupplierRecord extends Record {
+public class SupplierRecord extends Record implements Comparable<Record>
+{
 	public SupplierRecord()
 	{
 		AddElement( "s_suppKey",   new IntegerRecordElement()   );
@@ -10,5 +11,11 @@ public class SupplierRecord extends Record {
 		AddElement( "s_phone",     new StringRecordElement(30)  );
 		AddElement( "s_acctBal",   new FloatRecordElement()     );
 		AddElement( "s_comment",   new StringRecordElement(120) );
+	}
+	
+	public int compareTo(Record r)
+	{
+		// TODO: insert compare code
+		return 1;
 	}
 }

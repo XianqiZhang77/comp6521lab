@@ -97,7 +97,7 @@ public abstract class Page<T extends Record> {
 		m_insertionIndex = 0;
 	}
 	
-	public void AddRecord( T record )
+	public void AddRecord( Record record )
 	{
 		if( m_insertionIndex == -1 )
 		{
@@ -105,7 +105,7 @@ public abstract class Page<T extends Record> {
 		}
 		
 		// Insert record
-		m_records[m_insertionIndex++] = record;
+		m_records[m_insertionIndex++] = (T) record;
 		
 		// If the page is full, write it to file
 		if( m_insertionIndex == GetNumberRecordsPerPage() )
@@ -113,6 +113,8 @@ public abstract class Page<T extends Record> {
 			WritePageToFile();
 			m_insertionIndex = 0;
 			m_cleanupToDo = false;
+			MemoryManager.getInstance().GetNextEmptyPage(this);
+			m_records = CreateArray(m_nbRecordsPerPage);
 		}
 		else
 		{		

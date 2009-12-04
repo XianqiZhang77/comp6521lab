@@ -149,7 +149,8 @@ public class MemoryManager
     		{
     			if( pn < 0 )
     			{
-    				page.m_pageNumber = rk.m_pageNumber++;
+    				page.m_pageNumber = rk.m_pageNumber; 
+    				rk.m_pageNumber++;
     			}
     			else
     			{
@@ -291,6 +292,33 @@ public class MemoryManager
     		 // Explode
     		 System.out.println("Trying to free a page that wasn't loaded or that was freed already!");
     	 }
+    }
+    
+    public <T extends Page<?> > void GetNextEmptyPage( T page )
+    {
+    // Duplicate the freePage / getEmpty page process
+    RecordKeeper rk = getRecordKeeperFromPage( page ); 
+   	int pageNumber = page.m_pageNumber;
+   	 
+   	 // Make sure we're not cheating by checking the memory entry
+   	 if( rk.m_pagesTaken.contains( Integer.valueOf(pageNumber) ) )
+   	 	{
+   		 // Remove from memory entry 
+   		 rk.m_pagesTaken.remove( Integer.valueOf(pageNumber));    
+   		 
+   		 // Perform any cleanup needed (auto-writes, for example)
+   		 page.Cleanup();    		 
+   		 
+   	   	 page.m_pageNumber = rk.m_pageNumber;
+   	   	 rk.m_pageNumber++;
+   	   	 
+   	   	 rk.m_pagesTaken.add(Integer.valueOf(page.m_pageNumber));
+   	 	}
+   	 else
+   	 	{
+   		 // Explode
+   		 System.out.println("Trying to free a page that wasn't loaded or that was freed already!");
+   	 	}
     }
     
     public <T extends Page<?> > void writePage( T page )

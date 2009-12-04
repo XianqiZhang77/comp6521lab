@@ -220,20 +220,20 @@ public class Query_E {
 		
 		// Second pass:
 		// perform a 2PMMS on the data, sorting on ps_partkey (ascending or descending)
-		// ... 
-		// TODO !
-		// ...
+		TPMMS sort = new TPMMS(QE_Page.class, "qe_f.txt");
+		String sortedFilename = sort.Execute();
+		MemoryManager.getInstance().AddPageType(QE_Page.class, sortedFilename);
 		
-		ThirdPass(totalValue, "qe_f.txt", "qeg_f.txt");
+		ThirdPass(totalValue, sortedFilename, "qeg_f.txt");
 		
 		// Fourth pass 
 		// Sort the groups by value in descending order
-		// ...
-		// TODO !!
-		// ...
+		sort = new TPMMS( QEGroups_Page.class, "qeg_f.txt");
+		String groupedSorted = sort.Execute();
+		MemoryManager.getInstance().AddPageType(QEGroups_Page.class, groupedSorted);
 		
 		// Last: output results
-		OutputResults( "qeg_f.txt" );
+		OutputResults( groupedSorted );
 	}
 	
 	public void ThirdPass(float totalValue, String qeFile, String groupsFile)
@@ -245,7 +245,7 @@ public class Query_E {
 		QE_Page qe = null;
 				
 		int previousKey = -1;
-		QE_Record group = null;
+		QEGroups_Record group = null;
 		
 		int qe_p = 0;
 		while( (qe = MemoryManager.getInstance().getPage( QE_Page.class, qe_p++, qeFile)) != null )
@@ -265,7 +265,7 @@ public class Query_E {
 					if( group != null && group.get("value").getFloat() > totalValue * 0.0001 )
 						qeg.AddRecord(group);
 					
-					group = new QE_Record();
+					group = new QEGroups_Record();
 					group.get("ps_partKey").set( qeRecords[i].get("ps_partKey") );
 					group.get("value").set( qeRecords[i].get("value" ) );
 					
@@ -317,6 +317,11 @@ class QE_Record extends Record
 		AddElement( "ps_partKey", new IntegerRecordElement() );
 		AddElement( "value",      new FloatRecordElement()   );
 	}
+	
+	public int compareTo(Record rec)
+	{
+		return get("ps_partKey").CompareTo( rec.get("ps_partKey"));
+	}
 }
 
 class QE_Page extends Page<QE_Record>
@@ -324,21 +329,30 @@ class QE_Page extends Page<QE_Record>
 	public QE_Page()
 	{
 		super();
-		m_nbRecordsPerPage = 100;
+		m_nbRecordsPerPage = 50;
 	}
 	public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
 	public QE_Record   CreateElement(){ return new QE_Record(); }
 }
 
-class QEGroups_Page extends Page<QE_Record>
+class QEGroups_Record extends QE_Record
+{
+	public QEGroups_Record() { super(); }
+	public int compareTo(Record rec)
+	{
+		return - get("value").CompareTo(rec.get("value"));
+	}
+}
+
+class QEGroups_Page extends Page<QEGroups_Record>
 {
 	public QEGroups_Page()
 	{
 		super();
-		m_nbRecordsPerPage = 100;
+		m_nbRecordsPerPage = 50;
 	}
-	public QE_Record[] CreateArray(int n){ return new QE_Record[n]; }
-	public QE_Record   CreateElement(){ return new QE_Record(); }		
+	public QEGroups_Record[] CreateArray(int n){ return new QEGroups_Record[n]; }
+	public QEGroups_Record   CreateElement(){ return new QEGroups_Record(); }		
 }
 
 // First phase records

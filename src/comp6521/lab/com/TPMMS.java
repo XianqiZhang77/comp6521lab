@@ -38,12 +38,10 @@ public class TPMMS <T extends Page<?>>
 	}
 	
 	// execute TPMMS Algorithm
-	public boolean Execute()
+	public String Execute()
 	{
 		DoPhaseI();		// TPMMS Phase I
-		DoPhaseII(); 	// TPMMS Phase II
-		
-		return true;
+		return DoPhaseII(); 	// TPMMS Phase II
 	}
 	
 	// perform phase 1
@@ -98,7 +96,7 @@ public class TPMMS <T extends Page<?>>
 					}
 					
 					// output record string
-					PageManagerSingleton.getInstance().writePage("phase1.txt", strBuffer.toString());
+					PageManagerSingleton.getInstance().writePage(filename + "phase1.txt", strBuffer.toString());
 					
 					// empty array list
 					memRecords.clear();
@@ -114,7 +112,7 @@ public class TPMMS <T extends Page<?>>
 	}
 	
 	// perform phase 2
-	private boolean DoPhaseII()
+	private String DoPhaseII()
 	{		
 		// TODO: remove lines
 		System.out.println("PHASE II");
@@ -123,8 +121,8 @@ public class TPMMS <T extends Page<?>>
 		System.out.printf("B(R) = %s\n", numberOfPages);
 		System.out.printf("#Input Buffers = %s\n", numInputBuffers);
 		
-		String inFilename  =  "phase1.txt";	// input file
-		String outFilename =  "pass1.txt";  // output file
+		String inFilename  =  filename + "phase1.txt";	// input file
+		String outFilename =  filename + "pass1.txt";  // output file
 		
 		// add input pages to memory manager for tracking
 		MemoryManager.getInstance().AddPageType(myPageType, inFilename);
@@ -276,13 +274,21 @@ public class TPMMS <T extends Page<?>>
 			//}
 			
 			// set next input and output files
-			inFilename  = "pass" + passCount + ".txt";
-			outFilename = "pass" + (passCount + 1) + ".txt";
+			inFilename  = filename + "pass" + passCount + ".txt";
+			outFilename = filename + "pass" + (passCount + 1) + ".txt";
 			
 			// determine number of sublists for next pass
 			numOfSubLists = (int) Math.ceil((double) numOfSubLists / (double) (numInputBuffers)) ;
 		}
 		
-		return true;
+		 
+		if (numOfPasses == 0)
+		{
+			return inFilename;
+		}
+		else
+		{
+			return outFilename;
+		}
 	}
 }

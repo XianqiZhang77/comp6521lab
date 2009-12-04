@@ -62,7 +62,7 @@ public class Query_B {
 	{
 		for( int s = 0; s < list.length; s++ )
 		{
-			if( str == list[s] )
+			if( str.compareTo(list[s]) == 0 )
 				return true;
 		}
 		return false;

@@ -42,6 +42,11 @@ public abstract class Record implements Comparable<Record>{
 		return data;
 	}
 	
+	public String toString()
+	{
+		return Write() + "\r\n";
+	}
+	
 	public int GetRecordSize()
 	{
 		int len = 0;
@@ -49,4 +54,6 @@ public abstract class Record implements Comparable<Record>{
 			len += m_recordElementsOrder.get( Integer.valueOf(i) ).Size();
 		return len + 2; // for the CR+LN	
 	}
+	
+	public int compareTo(Record rec) { return 0; }
 }

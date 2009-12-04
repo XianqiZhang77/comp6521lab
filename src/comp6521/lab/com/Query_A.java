@@ -57,9 +57,13 @@ public class Query_A {
 				{
 					sum_qty        += LineItems[r].get("l_quantity").getInt();
 					sum_base_price += LineItems[r].get("l_extendedPrice").getFloat();
-					sum_disc_price += LineItems[r].get("l_extendedPrice").getFloat() * (1 - LineItems[r].get("l_discount").getFloat());
-					sum_charge     += LineItems[r].get("l_extendedPrice").getFloat() * (1 - LineItems[r].get("l_discount").getFloat())/* * (1 + LineItems[r].get("l_tax").getFloat())*/;
+					sum_disc_price += LineItems[r].get("l_extendedPrice").getFloat() * (1.0f - LineItems[r].get("l_discount").getFloat());
+					sum_charge     += LineItems[r].get("l_extendedPrice").getFloat() * (1.0f - LineItems[r].get("l_discount").getFloat())/* * (1 + LineItems[r].get("l_tax").getFloat())*/;
 					count++;
+				}
+				else
+				{
+					System.out.println("RN: " + (r + p * 10) + " -- " + LineItems[r].get("l_receiptDate").Write());
 				}
 			}
 			
@@ -67,7 +71,7 @@ public class Query_A {
 		}
 		
 		// Compute averages
-		avg_qty = (count == 0 ? 0 : (sum_qty / count) );
+		avg_qty = (count == 0 ? 0 : (sum_qty / (float)count) );
 		m_queryPerformed = true;
 	}
 	
@@ -76,7 +80,10 @@ public class Query_A {
 		if( m_queryPerformed )
 		{
 			System.out.println("sum_qty\tsum_base_price\tsum_disc_price\tsum_charge\tavg_qty\tcount_order");
-			System.out.println( sum_qty + "\t" + sum_base_price + "\t" + sum_disc_price + "\t" + sum_charge + "\t" + avg_qty + "\t" + count);
+			//System.out.println( sum_qty + "\t" + sum_base_price + "\t" + sum_disc_price + "\t" + sum_charge + "\t" + avg_qty + "\t" + count);
+			
+			System.out.printf("%d\t%f\t%f\t%f\t%f\t%d\n", sum_qty, sum_base_price, sum_disc_price, sum_charge, avg_qty, count);
+		
 		}
 		else
 		{

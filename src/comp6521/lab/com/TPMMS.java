@@ -240,14 +240,17 @@ public class TPMMS <T extends Page<?>>
 							{
 								buffers.add(nextPage);		// add next page
 							}
+							else if (nextPage  == null)
+							{
+								// do nohting
+							}
 							else if (nextPage.m_records.length == 0)	// TODO: ensure this is necessary
 							{
 								// TODO: ensure freeing a page here is correct
 								MemoryManager.getInstance().freePage(nextPage);	// free page from memory
 								
 								// TODO: Remove Test Line
-								System.out.printf("Array[0]. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());
-								
+								System.out.printf("Array[0]. Availabe Memory (M) = %s\n", MemoryManager.getInstance().RemainingMemory());								
 							}
 						}
 						else

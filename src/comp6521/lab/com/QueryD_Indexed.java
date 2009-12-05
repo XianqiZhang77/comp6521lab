@@ -38,25 +38,24 @@ public class QueryD_Indexed
 	public void ProcessQuery(String r_name)
 	{
 		// *** build indexes ***
+		// r_name in RegionTable      [b-tree]
+		BPlusTree< RegionPage, StringRecordElement > RegionNameIndex = new BPlusTree< RegionPage, StringRecordElement >();
+		RegionNameIndex.CreateBPlusTree( RegionPage.class, StringRecordElement.class, 50, "Region.txt", "regionBTreeIndex.idx", "r_name");
 		
-		// build b+ tree index on region.r_name
-		BPlusTree<RegionPage, StringRecordElement> regionNameIndex = new BPlusTree<RegionPage, StringRecordElement>();	// instantiate b+ tree  
-		regionNameIndex.CreateBPlusTree(RegionPage.class, StringRecordElement.class, "Region.txt", "regionBTreeIndex.idx", "r_name");
-		
-		// build b+ tree index on nation.n_nationKey
-		BPlusTree<NationPage, StringRecordElement> nationNameIndex = new BPlusTree<NationPage, StringRecordElement>();	// instantiate b+ tree
-		nationNameIndex.CreateBPlusTree(NationPage.class, StringRecordElement.class, "Nation.txt", "nationBTreeIndex.idx", "n_regionKey");
-		
-		// build b+ tree index on supplier.s_nationKey
-		BPlusTree<SupplierPage, StringRecordElement> supNameIndex = new BPlusTree<SupplierPage, StringRecordElement>();	// instantiate b+ tree
-		supNameIndex.CreateBPlusTree(SupplierPage.class, StringRecordElement.class, "Supplier.txt", "supBTreeIndex.idx", "s_nationKey");
-		
+		// n_regionKey in Nation      [b-tree]
+		BPlusTree< NationPage, IntegerRecordElement > NationFKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
+		NationFKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_FK_tree.txt", "n_regionKey");
+
+		// s_nationKey in Supplier    [b-tree]
+		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = new BPlusTree< SupplierPage, IntegerRecordElement >();
+		SupplierFKIndex.CreateBPlusTree( SupplierPage.class, IntegerRecordElement.class, "Supplier.txt", "Supplier_FK_tree.txt", "s_nationKey");
+
 		// *** process query ***
 		
 		StringRecordElement searchKey = new StringRecordElement(15);	// initialise search key
 		searchKey.setString(r_name);
 		
-		int[] regions = regionNameIndex.Get(searchKey);	// lookup region record numbers
+		int[] regions = RegionNameIndex.Get(searchKey);	// lookup region record numbers
 		Arrays.sort(regions);	// sort array using quick-sort
 																										// record number to key processing function
 		RecordNumberToKeyPF<RegionPage> recNumToKeyPF = new RecordNumberToKeyPF<RegionPage> (regions, RegionPage.class, "n_name", "regionKeys.tmp");

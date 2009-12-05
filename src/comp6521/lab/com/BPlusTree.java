@@ -543,16 +543,18 @@ class BPlusTreeNode<S extends RecordElement>
 		m_elements = new RecordElement[m_n];
 		m_records  = new int[m_n+1];
 		
-		if( node < 0 )
-			node = MemoryManager.getInstance().GetNumberOfPages( BPlusTreePage.class, m_filename);
-		
 		m_page = MemoryManager.getInstance().getRWPage( BPlusTreePage.class, node, m_filename );
 		
-    	m_node = node;
+		m_node = m_page.m_pageNumber;
+		
+		if( m_node != node && node >= 0 )
+		{
+			System.out.println("Error found.. node doesn't match page number");
+		}
 		
 		if( m_page.m_records[0] == null )
 		{
-			m_page.AddRecord( m_page.CreateElement() );
+			m_page.setRecord( 0, m_page.CreateElement() );
 			m_nbElements = 0;
 		}
 		else

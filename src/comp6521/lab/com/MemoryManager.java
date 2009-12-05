@@ -172,7 +172,7 @@ public class MemoryManager
     	// Get the record keeper
     	RecordKeeper rk = m_records.get( getPageIndex( c, filename ) );
     	
-  		if( pageNumber < rk.m_pageNumber )
+  		if( pageNumber < rk.m_pageNumber && pageNumber >= 0 )
    		{
     		return getPage( c, rk, pageNumber );
     	}

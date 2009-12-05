@@ -12,6 +12,7 @@ public class LinearHashTable< T extends Page<?> > {
 	//static int m_bucketUniqueIndex;
 	
 	Class<T> m_pageType;
+	String m_wantedFilename;
 	String m_filename;
 	int m_i;
 	int m_p2i;
@@ -31,18 +32,21 @@ public class LinearHashTable< T extends Page<?> > {
 		//m_bucketUniqueIndex = 0;
 		m_i = 1; // nb bits used for the has
 		m_p2i = 2; // 2 ^ i
-		m_n = 0; // number of buckets
+		m_n = 2; // number of buckets
 		m_r = 0; // number of records
 		m_buckets = new ArrayList< HashBucket >();
-		m_threshold = 1.5;
 	}
 		
 	public void CreateHashTable( Class<T> pageClass, String filename, String key, HashFunction hf )
 	{
 		m_pageType = pageClass;
-		m_filename = filename;
+		m_wantedFilename = filename;
+		m_filename = "dirty_" + filename;
 		m_key = key;
 		m_hf  = hf;
+		
+		int nbRecsPerPage = MemoryManager.getInstance().GetNumberOfRecordsPerPage(pageClass);
+		m_threshold = 1.5 * nbRecsPerPage;
 		
 		// Add the new entry to the memory manager
 		MemoryManager.getInstance().AddPageType( m_pageType, m_filename );
@@ -91,10 +95,19 @@ public class LinearHashTable< T extends Page<?> > {
 		if( ((double)m_r / (double)m_n) > m_threshold)
 		{
 			// Add a bucket.
+			int newB = m_buckets.size();
 			m_buckets.add( new HashBucket(m_pageType, m_filename) );
 			m_n++;
-			// Split the corresponding bucket
-			int newB = m_buckets.size();
+			
+			// If n > 2^i
+			// Increment i, 
+			if( m_n > m_p2i)
+			{
+				m_i++;
+				m_p2i *= 2;
+			}	
+			
+			// Split the corresponding bucket			
 			int correspondingB = newB - (m_p2i / 2);
 			
 			// We re-hash everything in the bucket correspondingB.
@@ -122,15 +135,7 @@ public class LinearHashTable< T extends Page<?> > {
 			assert( oldr == m_r );
 			assert( oldn == m_n );
 			assert( oldi == m_i );			
-		}
-		
-		// If n > 2^i
-		// Increment i, 
-		if( m_n > m_p2i)
-		{
-			m_i++;
-			m_p2i *= 2;
-		}		
+		}	
 	}
 	
 	public int[] getPageList( RecordElement el )
@@ -160,8 +165,7 @@ public class LinearHashTable< T extends Page<?> > {
 	{
 		int b = 0;
 		// Add a new entry to the memory manager
-		String index = "clean_" + m_filename;
-		MemoryManager.getInstance().AddPageType( m_pageType, index );
+		MemoryManager.getInstance().AddPageType( m_pageType, m_wantedFilename );
 		
 		T page = null;
 		
@@ -170,14 +174,14 @@ public class LinearHashTable< T extends Page<?> > {
 			for( int p = 0; p < m_buckets.get(i).m_pageNumbers.size(); p++ )
 			{
 				page = MemoryManager.getInstance().getPage( m_pageType, m_buckets.get(i).m_pageNumbers.get(p).intValue(), m_filename );
-				MemoryManager.getInstance().writePage(page, index, b);
+				MemoryManager.getInstance().writePage(page, m_wantedFilename, b);
 				m_buckets.get(i).m_pageNumbers.set(p, new Integer(b));
 				b++;
 				MemoryManager.getInstance().freePage(page);
 			}
 		}
 		
-		m_filename = index;
+		m_filename = m_wantedFilename;
 	}
 	
 	////////////////

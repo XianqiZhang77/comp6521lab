@@ -26,7 +26,7 @@ public class Query_B_Indexed extends Query_B
 				
 		for(int k = 0; k < AvgList.length; k++ )
 		{
-			el.setString("x" + AvgList[k]);
+			el.setString( AvgList[k]);
 			int[] pageList = index.getPageList( el );
 			
 			for( int p = 0; p < pageList.length; p++ )
@@ -37,7 +37,7 @@ public class Query_B_Indexed extends Query_B
 				for( int r = 0; r < customers.length; r++ )
 				{
 					// Check if the record matches the conditions
-					if( customers[r].get("c_phone").getString().substring(0,2) == AvgList[k] &&
+					if( customers[r].get("c_phone").getString().substring(0,2).compareTo(AvgList[k]) == 0 &&
 						customers[r].get("c_acctBal").getFloat() > 0 )
 					{
 						countAvg++;
@@ -61,7 +61,7 @@ public class Query_B_Indexed extends Query_B
 		
 		for( int k = 0; k < SelList.length; k++ )
 		{
-			el.setString("x" + SelList[k]);
+			el.setString( SelList[k]);
 			int[] pageList = index.getPageList( el );
 			
 			for( int p = 0; p < pageList.length; p++ )
@@ -72,7 +72,7 @@ public class Query_B_Indexed extends Query_B
 				for( int r = 0; r < customers.length; r++ )
 				{				
 					// Check if the record matches the conditions
-					if( customers[r].get("c_phone").getString().substring(0,2) == SelList[k] &&
+					if( customers[r].get("c_phone").getString().substring(0,2).compareTo(SelList[k]) == 0 &&
 						customers[r].get("c_acctBal").getFloat() > avgBalance )
 					{
 						// Print record info

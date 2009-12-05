@@ -10,6 +10,7 @@ package comp6521.lab.com;
  *
  */
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.FileReader;	
 import java.io.IOException;
@@ -126,5 +127,26 @@ public class PageManagerSingleton
 			// Do nothing, since the file may or may not exist
 		}
 		return length;
+	}
+	
+	// delete temporary files
+	public void deleteTmpFiles()
+	{
+		File file = new File(path);	// get file object for path 
+		File[] dirFiles = file.listFiles();	// get list of files in current path
+		
+		String ext = ".tmp";	// define extension to be removed
+		
+		// delete .tmp files
+		for ( File currFile : dirFiles )
+		{
+			String fName    = currFile.getName();	// get filename
+			String fNameExt = fName.substring( fName.lastIndexOf("."));	// get file extension
+			
+			if ( ext.compareToIgnoreCase(fNameExt) == 0)	// match found
+			{
+				currFile.delete();	// delete file
+			}
+		}	
 	}
 }

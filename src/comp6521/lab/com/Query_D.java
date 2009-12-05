@@ -183,9 +183,9 @@ public class Query_D
 		}
 		
 		MemoryManager.getInstance().freePage(outputBuffer);	// free remaining contents of page
+		
+		PageManagerSingleton.getInstance().deleteTmpFiles();	// remove temporary files (i.e. intermediate results)
 	}
-	
-	
 }
 
 //private RegionSubsetRecord inner class stores temporary region 

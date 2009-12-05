@@ -197,11 +197,11 @@ public class TPMMS <T extends Page<?>>
 							tempRecordArray[i] = buffers.get(myRecListNumber).m_records[i+1];	// skip copy of first item (i.e. lowest)				
 						}
 					
-						buffers.get(myRecListNumber).m_records = tempRecordArray;	// replace with array with removed lowest record
+						buffers.get(myRecListNumber).SetRecordArray(tempRecordArray);// replace with array with removed lowest record
 					}
 					else	// this is the last record
 					{
-						buffers.get(myRecListNumber).m_records = new Record[0];	// remove last record
+						buffers.get(myRecListNumber).SetRecordArray(new Record[0]);// remove last record
 					}
 						
 					// add to output buffer	TODO: remove test line to system.out

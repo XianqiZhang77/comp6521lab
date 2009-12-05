@@ -70,22 +70,19 @@ public class Query_Z {
 		// Third phase:
 		// Sort by o_custKey & month
 		////////////////////////////////////////////////////////////////////
-		// ...
-		// TODO !!
-		// ...
+		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os.txt");
+		String sortedOS = sort.Execute();
 		
 		////////////////////////////////////////////////////////////////////
 		// Fourth phase:
 		// Group by o_custKey (sum total price) & month
 		////////////////////////////////////////////////////////////////////
-		FourthPhase("qz_os.txt", "qzg_os.txt");
+		FourthPhase(sortedOS, "qzg_os.txt");
 		
 		////////////////////////////////////////////////////////////////////
 		// Fifth phase:
 		// Find the name (matching o_cust with c_cust, getting c_name)
 		////////////////////////////////////////////////////////////////////
-		//CustomerPage custPage = null;
-		//int prevCustPage = -1;
 		OrdersGroupsPage osgPage = null;
 		int osg_p = 0;
 		
@@ -221,6 +218,15 @@ class OrdersSubsetRecord extends Record
 		AddElement( "o_custKey",    new IntegerRecordElement());
 		AddElement( "o_totalPrice", new FloatRecordElement()  );
 		AddElement( "o_orderDate",  new DateRecordElement()   );
+	}
+	
+	public int compareTo(Record rec)
+	{
+		int keyCompare = get("o_custKey").CompareTo(rec.get("o_custKey"));
+		if( keyCompare != 0 )
+			return keyCompare;
+		else
+			return get("o_orderDate").CompareTo(rec.get("o_orderDate"));
 	}
 }
 

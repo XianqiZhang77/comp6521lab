@@ -157,4 +157,10 @@ public abstract class Page<T extends Record> {
 		m_records[i] = (T)rec;
 		m_cleanupToDo = true;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public void SetRecordArray( Record[] recs )
+	{
+		m_records = (T[])recs;
+	}
 }

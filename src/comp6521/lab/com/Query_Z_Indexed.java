@@ -48,12 +48,11 @@ public class Query_Z_Indexed extends Query_Z
 		DB.ProcessingLoop(OutputSubsetOrdersPF);
 		
 		// Sort by o_custKey & by month
-		// ...
-		// TODO !!
-		// ...
+		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os_i.txt");
+		String sortedOS = sort.Execute();
 		
 		// Group by o_custKey (sum total price) & by month
-		FourthPhase( "qz_os_i.txt", "qzg_os_i.txt" );
+		FourthPhase( sortedOS, "qzg_os_i.txt" );
 		
 		// Translate customer key to customer name and output results
 		CustomerPage custPage = null;

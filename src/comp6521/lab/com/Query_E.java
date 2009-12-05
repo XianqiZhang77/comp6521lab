@@ -29,7 +29,7 @@ public class Query_E {
 		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_inner_ss.txt");
 				
 		// Info for the "having" clause:
-		float totalValue = 0;
+		double totalValue = 0;
 		
 		// First pass:
 		// Construct the (ps_suppkey, value) records, without any aggregation, sorting or anything.
@@ -170,7 +170,7 @@ public class Query_E {
 							// We found a partsupp entry for a supplier in the united states.
 							QE_Record qer = new QE_Record();
 							qer.get("ps_partKey").set( psRecords[j].get("ps_partKey") );
-							float value = psRecords[j].get("ps_supplyCost").getFloat() * (float)(psRecords[j].get("ps_availQty").getInt());
+							double value = psRecords[j].get("ps_supplyCost").getFloat() * (double)(psRecords[j].get("ps_availQty").getInt());
 							qer.get("value").setFloat( value );
 							
 							qe.AddRecord( qer );
@@ -206,7 +206,7 @@ public class Query_E {
 						if( psRecords[j].get("ps_suppKey").getInt() == ssRecords[i].get("s_suppKey").getInt() )
 						{
 							// Keep track of total , will be used for the "having" clause
-							float value = psRecords[j].get("ps_supplyCost").getFloat() * (float)(psRecords[j].get("ps_availQty").getInt());
+							double value = psRecords[j].get("ps_supplyCost").getFloat() * (double)(psRecords[j].get("ps_availQty").getInt());
 							totalValue += value;
 						}
 					}
@@ -236,7 +236,7 @@ public class Query_E {
 		OutputResults( groupedSorted );
 	}
 	
-	public void ThirdPass(float totalValue, String qeFile, String groupsFile)
+	public void ThirdPass(double totalValue, String qeFile, String groupsFile)
 	{
 		// Third pass:
 		// Creating the groups and applying the having clause

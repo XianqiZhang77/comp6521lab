@@ -168,14 +168,14 @@ public class Query_C {
 				// Keep indexes
 				ArrayList<Integer> keptProducts = new ArrayList<Integer>();
 				ArrayList<Integer> keptProductsSupp = new ArrayList<Integer>();
-				ArrayList<Float>   keptProductsCost = new ArrayList<Float>();
+				ArrayList<Double>   keptProductsCost = new ArrayList<Double>();
 				
 				for( int i = 0; i < psRecords.length; i++ )
 					for( int j = 0; j < qcsn.length; j++ )
 						if( psRecords[i].get("ps_suppKey").getInt() == qcsn[j].get("s_suppKey").getInt() )
 						{
 							keptProducts.add(Integer.valueOf(psRecords[i].get("ps_partKey").getInt()));
-							keptProductsCost.add(Float.valueOf(psRecords[i].get("ps_supplyCost").getFloat()));
+							keptProductsCost.add(Double.valueOf(psRecords[i].get("ps_supplyCost").getFloat()));
 							keptProductsSupp.add(Integer.valueOf(j));
 						}
 			

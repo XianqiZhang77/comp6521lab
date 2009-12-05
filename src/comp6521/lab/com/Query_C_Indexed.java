@@ -147,7 +147,7 @@ public class Query_C_Indexed extends Query_C
 				// We now have the exact record numbers we need to look at
 				MinSuppliersToMinPricePF MStMPpf = new MinSuppliersToMinPricePF(PartsMinSuppliers);
 				DB.ProcessingLoop(MStMPpf);			
-				float minPrice = MStMPpf.minPrice;
+				double minPrice = MStMPpf.minPrice;
 				
 				StOpf.Reset( PartsSuppliers, minPrice );
 				DB.ProcessingLoop(StOpf);
@@ -180,7 +180,7 @@ class NationToSupplierPF extends ProcessingFunction<NationPage, IntegerRecordEle
 
 class MinSuppliersToMinPricePF extends ProcessingFunction<PartSuppPage, FloatRecordElement>
 {
-	public float minPrice;
+	public double minPrice;
 	
 	public MinSuppliersToMinPricePF( ArrayList<Integer> input )
 	{
@@ -194,12 +194,12 @@ class MinSuppliersToMinPricePF extends ProcessingFunction<PartSuppPage, FloatRec
 	
 	public void ProcessStart()
 	{
-		minPrice = Float.MAX_VALUE;	
+		minPrice = Double.MAX_VALUE;	
 	}
 	
 	public void Process( Record r )
 	{
-		float rprice = r.get("ps_supplyCost").getFloat(); 
+		double rprice = r.get("ps_supplyCost").getFloat(); 
 		if( rprice < minPrice )
 			minPrice = rprice;
 	}
@@ -215,7 +215,7 @@ class SupplierToOutputPF extends ProcessingFunction<PartSuppPage, IntegerRecordE
 	BPlusTree<?,?> partIndex;
 	BPlusTree<?,?> suppIndex;
 	BPlusTree<?,?> nationIndex;
-	float minPrice;
+	double minPrice;
 	
 	PartPage partpage;
 	SupplierPage supppage;
@@ -241,7 +241,7 @@ class SupplierToOutputPF extends ProcessingFunction<PartSuppPage, IntegerRecordE
 		nationpagesize = MemoryManager.getInstance().GetNumberOfRecordsPerPage( NationPage.class );
 	}
 	
-	public void Reset( ArrayList<Integer> input, float _minPrice )
+	public void Reset( ArrayList<Integer> input, double _minPrice )
 	{
 		int[] inputArray = new int[input.size()];
 		for( int i = 0; i < inputArray.length; i++ )
@@ -277,7 +277,7 @@ class SupplierToOutputPF extends ProcessingFunction<PartSuppPage, IntegerRecordE
 	
 	public void Process( Record r )
 	{
-		float price = r.get("ps_supplyCost").getFloat();
+		double price = r.get("ps_supplyCost").getFloat();
 		
 		if( price == minPrice )
 			{

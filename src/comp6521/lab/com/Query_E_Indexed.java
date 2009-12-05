@@ -38,7 +38,7 @@ public class Query_E_Indexed extends Query_E
 		// Perform query          //
 		////////////////////////////
 		// First, the inner query
-		float totalValue = PerformSubquery(innerName, true, NationNameIndex, SupplierFKIndex, PartSuppSuppFKIndex);
+		double totalValue = PerformSubquery(innerName, true, NationNameIndex, SupplierFKIndex, PartSuppSuppFKIndex);
 		// Second, perform the outer query (grouping)
 		PerformSubquery(outerName, false, NationNameIndex, SupplierFKIndex, PartSuppSuppFKIndex);		
 		/////////////////
@@ -60,7 +60,7 @@ public class Query_E_Indexed extends Query_E
 		OutputResults( "qeig_f.txt" );
 	}
 	
-	protected float PerformSubquery( String name, boolean isInner, BPlusTree<?,?> NationNameIndex, BPlusTree<?,?> SupplierFKIndex, BPlusTree<?,?> PartSuppSuppFKIndex )
+	protected double PerformSubquery( String name, boolean isInner, BPlusTree<?,?> NationNameIndex, BPlusTree<?,?> SupplierFKIndex, BPlusTree<?,?> PartSuppSuppFKIndex )
 	{
 		// First, find the n_nationKey for the UNITED_STATES
 		StringRecordElement NN = new StringRecordElement(15);
@@ -107,7 +107,7 @@ class PartSuppToTotalPrice extends ProcessingFunction<PartSuppPage, FloatRecordE
 {
 	boolean isInner;
 	QE_Page page;
-	public float totalValue;
+	public double totalValue;
 	
 	public PartSuppToTotalPrice( int[] input, boolean isInner ) 
 	{ 
@@ -124,7 +124,7 @@ class PartSuppToTotalPrice extends ProcessingFunction<PartSuppPage, FloatRecordE
 	public void  ProcessStart()      { totalValue = 0; }
 	public void  Process( Record r ) 
 	{ 
-		float value = r.get("ps_supplyCost").getFloat() * r.get("ps_availQty").getFloat();
+		double value = r.get("ps_supplyCost").getFloat() * r.get("ps_availQty").getFloat();
 		
 		if( !isInner )
 		{

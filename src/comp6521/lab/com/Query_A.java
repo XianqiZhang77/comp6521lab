@@ -7,10 +7,10 @@ import java.util.Date;
 
 public class Query_A {
 	int   sum_qty;
-	float sum_base_price;
-	float sum_disc_price;
-	float sum_charge; // should be same as sum_disc_price since the tax was removed??
-	float avg_qty;
+	double sum_base_price;
+	double sum_disc_price;
+	double sum_charge; // should be same as sum_disc_price since the tax was removed??
+	double avg_qty;
 	int   count;	
 	boolean m_queryPerformed;
 	
@@ -71,7 +71,7 @@ public class Query_A {
 		}
 		
 		// Compute averages
-		avg_qty = (count == 0 ? 0 : (sum_qty / (float)count) );
+		avg_qty = (count == 0 ? 0 : (sum_qty / (double)count) );
 		m_queryPerformed = true;
 	}
 	

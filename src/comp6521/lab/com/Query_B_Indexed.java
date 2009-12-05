@@ -17,7 +17,7 @@ public class Query_B_Indexed extends Query_B
 		
 		// Perform the inner query ...
 		int countAvg = 0;
-		float avgBalance = 0;
+		double avgBalance = 0;
 		
 		// String length of 3 == "x12"
 		StringRecordElement el = new StringRecordElement(3);
@@ -50,7 +50,7 @@ public class Query_B_Indexed extends Query_B
 		}
 		
 		if( countAvg > 0 )
-			avgBalance /= countAvg;
+			avgBalance /= (double)countAvg;
 		
 		// Perform the outer query ...
 		// First step: print the header of the results

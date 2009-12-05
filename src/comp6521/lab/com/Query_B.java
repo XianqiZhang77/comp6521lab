@@ -11,7 +11,7 @@ public class Query_B {
 		// which is select avg(c_acctbal) from customer where c_acctbal > 0 and 
 		// substring(c_phone, 1,2) in AvgList
 		int countAvg          = 0;
-		float avgBalance      = 0;
+		double avgBalance      = 0;
 		CustomerPage custPage = null;
 		
 		while( (custPage = MemoryManager.getInstance().getPage( CustomerPage.class, p++ )) != null )
@@ -31,7 +31,7 @@ public class Query_B {
 		}
 		
 		if( countAvg > 0 )
-			avgBalance /= countAvg;
+			avgBalance /= (double)countAvg;
 		
 		// First step: print the header of the results
 		System.out.println("cntrycode\tc_acctbal");

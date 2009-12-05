@@ -37,8 +37,8 @@ public class Query_F
 			long lSuppKey         = Long.parseLong(args[2]);
 			long lLineNumber      = Long.parseLong(args[3]);
 			long lQuantity        = Long.parseLong(args[4]);
-			float lExtendedPrice  = Float.parseFloat(args[5]);
-			float lDiscount       = Float.parseFloat(args[6]);
+			double lExtendedPrice = Double.parseDouble(args[5]);
+			double lDiscount      = Double.parseDouble(args[6]);
 			String lTax           = new String("0");		// lTax attribute not in schema
 			String lShipDate;
 			String lCommitDate;

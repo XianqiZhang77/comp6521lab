@@ -21,9 +21,9 @@ public class Query_D
 	public void ProcessQuery(String r_name)
 	{
 		// initialise memory manager tracking for custom pages		
-		MemoryManager.getInstance().AddPageType(RegionSubsetPage.class, "r_subset.txt");
-		MemoryManager.getInstance().AddPageType(QDNationSubsetPage.class, "n_subset.txt");
-		MemoryManager.getInstance().AddPageType(QD_Page.class, "qd_resultset.txt");
+		MemoryManager.getInstance().AddPageType(RegionSubsetPage.class, "r_subset.tmp");
+		MemoryManager.getInstance().AddPageType(QDNationSubsetPage.class, "n_subset.tmp");
+		MemoryManager.getInstance().AddPageType(QD_Page.class, "qd_resultset.tmp");
 		
 		// get empty region subset page
 		RegionSubsetPage rSubsetPage = MemoryManager.getInstance().getEmptyPage(RegionSubsetPage.class);

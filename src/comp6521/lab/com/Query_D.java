@@ -17,12 +17,6 @@ public class Query_D
 	// where s_nationKey = n_nationKey and n_regionKey = r_regionKey and r_name = ?
 	// order by n_name DESC
 	
-	// memory available = 10240
-	// page sizes: 
-	//				region page size   = 1830
-	//				nation page size   = 1980
-	//				supplier page size = 2710
-	
 	// execute query:
 	public void ProcessQuery(String r_name)
 	{
@@ -168,8 +162,29 @@ public class Query_D
 		
 		// Sort using TPMMS
 		TPMMS<QD_Page> doTPMMS = new TPMMS<QD_Page>(QD_Page.class, qDResultSetPage.m_filename);
-		doTPMMS.Execute();
+		String sortedFile = doTPMMS.Execute();	
+		
+		// invert sorting order of sorted file (i.e. ORDER BY n_name DESC)
+		int numOfPages = MemoryManager.getInstance().GetNumberOfPages(QD_Page.class, sortedFile);	// get sorted number of pages
+		
+		MemoryManager.getInstance().AddPageType(QD_Page.class, "d.out");	// output buffer
+		QD_Page outputBuffer = MemoryManager.getInstance().getEmptyPage(QD_Page.class, "d.out");	// output buffer
+		
+		for ( int i = (numOfPages - 1); i >= 0 ; i-- )	// invert sorting order and output
+		{
+			qDResultSetPage = MemoryManager.getInstance().getPage(QD_Page.class, i, sortedFile);	// get page in DESC order
+			
+			for ( int j = (qDResultSetPage.m_records.length - 1); j >= 0; j-- )	// invert sorting order of records
+			{
+				outputBuffer.AddRecord(qDResultSetPage.m_records[j]);	// get jth record
+			}
+			
+			MemoryManager.getInstance().freePage(qDResultSetPage);	// free page
+		}
+		
+		MemoryManager.getInstance().freePage(outputBuffer);	// free remaining contents of page
 	}
+	
 	
 }
 

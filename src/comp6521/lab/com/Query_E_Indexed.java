@@ -43,21 +43,23 @@ public class Query_E_Indexed extends Query_E
 		PerformSubquery(outerName, false, NationNameIndex, SupplierFKIndex, PartSuppSuppFKIndex);		
 		/////////////////
 		// Perform sort//
-		// ... TODO ...//
 		/////////////////
-		// Sort file qei_f
-		//
+		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qei_f.txt");
+		String sortedFilename = sort.Execute();
+		MemoryManager.getInstance().AddPageType(QE_Page.class, sortedFilename);
 		
 		// Perform third pass
 		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeig_f.txt" );
-		ThirdPass( totalValue, "qei_f.txt", "qeig_f.txt" );
+		ThirdPass( totalValue, sortedFilename, "qeig_f.txt" );
 		
 		// Fourth pass: sort groups by value, descending order
-		// ... TODO ...
+		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeig_f.txt");
+		String groupedSorted = sort.Execute();
+		MemoryManager.getInstance().AddPageType(QEGroups_Page.class, groupedSorted);
 		
 		
 		// Last : output results
-		OutputResults( "qeig_f.txt" );
+		OutputResults( groupedSorted );
 	}
 	
 	protected double PerformSubquery( String name, boolean isInner, BPlusTree<?,?> NationNameIndex, BPlusTree<?,?> SupplierFKIndex, BPlusTree<?,?> PartSuppSuppFKIndex )
@@ -105,15 +107,16 @@ public class Query_E_Indexed extends Query_E
 
 class PartSuppToTotalPrice extends ProcessingFunction<PartSuppPage, FloatRecordElement>
 {
-	boolean isInner;
+	boolean m_isInner;
 	QE_Page page;
 	public double totalValue;
 	
 	public PartSuppToTotalPrice( int[] input, boolean isInner ) 
 	{ 
 		super( input, PartSuppPage.class ); 
+		m_isInner = isInner;
 		
-		if( !isInner )
+		if( !m_isInner )
 		{
 			// Create new page type, create an empty page.
 			MemoryManager.getInstance().AddPageType( QE_Page.class, "qei_f.txt" );
@@ -124,9 +127,9 @@ class PartSuppToTotalPrice extends ProcessingFunction<PartSuppPage, FloatRecordE
 	public void  ProcessStart()      { totalValue = 0; }
 	public void  Process( Record r ) 
 	{ 
-		double value = r.get("ps_supplyCost").getFloat() * r.get("ps_availQty").getFloat();
+		double value = r.get("ps_supplyCost").getFloat() * (double)r.get("ps_availQty").getInt();
 		
-		if( !isInner )
+		if( !m_isInner )
 		{
 			// Create new record
 			QE_Record qe = new QE_Record();
@@ -139,7 +142,7 @@ class PartSuppToTotalPrice extends ProcessingFunction<PartSuppPage, FloatRecordE
 	}
 	public int[] EndProcess()        
 	{ 
-		if( !isInner )
+		if( !m_isInner )
 			MemoryManager.getInstance().freePage(page);
 		return null; 
 	}	

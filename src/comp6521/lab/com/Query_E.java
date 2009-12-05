@@ -70,7 +70,6 @@ public class Query_E {
 		
 		//   -> 2- Find suppliers with matching s_nationkey.
 		SupplierSubsetPage ssPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class );
-		SupplierSubsetPage ssiPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class, "qe_inner_ss.txt");
 		
 		// Loop on all subset nations
 		int sn_p = 0;
@@ -108,6 +107,8 @@ public class Query_E {
 		// Write back the kept suppliers
 		MemoryManager.getInstance().freePage( ssPage );
 		ssPage = null;
+		
+		SupplierSubsetPage ssiPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class, "qe_inner_ss.txt");
 		
 		sn_p = 0;
 		while( (sniPage = MemoryManager.getInstance().getPage( NationSubsetPage.class, sn_p++, "qe_inner_ns.txt")) != null )
@@ -188,6 +189,7 @@ public class Query_E {
 		qe = null;
 		
 		// Compute the total value now :
+		ss_p = 0;
 		while( (ssiPage = MemoryManager.getInstance().getPage( SupplierSubsetPage.class, ss_p++, "qe_inner_ss.txt")) != null )
 		{
 			SupplierSubsetRecord[] ssRecords = ssiPage.m_records;
@@ -220,7 +222,7 @@ public class Query_E {
 		
 		// Second pass:
 		// perform a 2PMMS on the data, sorting on ps_partkey (ascending or descending)
-		TPMMS sort = new TPMMS(QE_Page.class, "qe_f.txt");
+		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qe_f.txt");
 		String sortedFilename = sort.Execute();
 		MemoryManager.getInstance().AddPageType(QE_Page.class, sortedFilename);
 		
@@ -228,7 +230,7 @@ public class Query_E {
 		
 		// Fourth pass 
 		// Sort the groups by value in descending order
-		sort = new TPMMS( QEGroups_Page.class, "qeg_f.txt");
+		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeg_f.txt");
 		String groupedSorted = sort.Execute();
 		MemoryManager.getInstance().AddPageType(QEGroups_Page.class, groupedSorted);
 		

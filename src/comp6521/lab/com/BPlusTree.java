@@ -17,10 +17,16 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 	String   m_key;	
 	int      m_n;
 	int      m_recordElementLength; // Parameter needed when initializing keys (for StringRecordElement)
+	
+	BPlusTreeCache<S> cache;
+	boolean caching;
+	boolean rootCached;
 
 	public BPlusTree()
 	{
 		m_treeCreated = false;
+		caching = false;
+		rootCached = false;
 	}
 	
 	public void CacheRoot()
@@ -29,6 +35,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			return;
 		
 		m_root.Load(0);
+		rootCached = true;
 	}
 	
 	public void UncacheRoot()
@@ -37,6 +44,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			return;
 		
 		m_root.Clear();
+		rootCached = false;
 	}
 	
 	public void CreateBPlusTree( Class<T> pageClass, Class<S> recordElementClass, String pageFilename, String treeFilename, String key )
@@ -67,21 +75,28 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		m_n = (1024 - 2 * pointerSize - 1) / (keySize + pointerSize);
 		
 		// Consider number of levels we'll need.
-		//int nbRecords = MemoryManager.getInstance().GetNumberOfRecords( pageClass, pageFilename );
-		//int nbLevels = 1 + (int)(Math.log((double)nbRecords) / Math.log((double)m_n));
+		int nbRecords = MemoryManager.getInstance().GetNumberOfRecords( pageClass, pageFilename );
+		int nbLevels = 1 + (int)(Math.log((double)nbRecords) / Math.log((double)m_n));
 		
-		// TODO: remove this, since this is temporary
-		//System.out.println("Nb records: " + nbRecords);
-		//System.out.println("Nb levels needed: " + nbLevels);
-		//System.out.println("n : " + m_n );
+		Log.LogSomething("Nb records to index: " + nbRecords );
+		Log.LogSomething("Nb levels needed: " + nbLevels );
+		Log.LogSomething("n : " + m_n );
 		
 		// Add a custom page type
 		MemoryManager.getInstance().AddPageType( BPlusTreePage.class, m_filename );
 		
+		// Compute our cache size..
+		// We must hold in memory 1 page of the relation
+		// Plus any number of cached nodes
+		int CacheMemory = MemoryManager.getInstance().RemainingMemory() - MemoryManager.getInstance().GetPageSize( m_pageType );
+		int NodeSize    = MemoryManager.getInstance().GetPageSize( BPlusTreePage.class );
+		
+		int maxCacheSize = CacheMemory / NodeSize;
+		cache = new BPlusTreeCache<S>(maxCacheSize, m_recordElementClass, m_recordElementLength, m_n, m_filename);
+		caching = true;				
+		
 		// Get the root and keep it in memory at this time.
-		m_root = createNode();
-		m_root.Load(0);
-		m_root.m_isLeaf = true;
+		m_root = LoadNode(-1);
 		
 		// Parse the whole table
 		int p = 0;
@@ -98,8 +113,9 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			p++;
 		}
 		
-		// Free root
-		m_root.Clear();
+		cache.ClearCache();
+		cache = null;
+		caching = false;
 		
 		m_treeCreated = true;
 	}
@@ -108,25 +124,20 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 	{
 		KeyPointerPair pair = new KeyPointerPair( rec.get(m_key), recordNumber );
 		// Load the root
-		boolean RootLoaded = (m_root.IsLoaded());
-		if( !RootLoaded )
-			m_root.Load(0);
+		BPlusTreeNode<S> root = LoadNode(0);
 		
 		// We try to find a place for the new key in the appropriate leaf
-		BPlusTreeNode<S> target = getLeafNode( m_root, pair.el, false );
+		BPlusTreeNode<S> target = getLeafNode( root, pair.el );
 
 		Insert( target, pair );		
 		
 		// Clear the root if it wasn't previously loaded
-		if( !RootLoaded )
-			m_root.Clear();		
+		ClearNode(root);
 	}
 	
 	private void Insert( BPlusTreeNode<S> node, KeyPointerPair pair)
 	{
 		assert(node.IsLoaded());
-		
-		boolean isRootAndIsLoaded = (node == m_root && m_root.IsLoaded());
 		
 		// Special case for "null" nodes .. we must find the appropriate node first
 		if( node.m_IsNullNode )
@@ -134,8 +145,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			while( node.m_elements[node.m_nbElements-1].CompareTo( pair.el ) < 0 && node.m_IsNullNode )
 			{
 				int nextLeaf = node.m_records[node.m_nbElements];
-				node.Clear();
-				node.Load(nextLeaf);
+				ClearNode(node);
+				node = LoadNode(nextLeaf);
 			}
 		}
 		
@@ -146,8 +157,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			
 			// Start by creating new sorted arrays
 			// Create a new split node
-			BPlusTreeNode<S> splitNode = createNode();
-			splitNode.Load(-1);
+			BPlusTreeNode<S> splitNode = LoadNode(-1);
 			
 			KeyPointerPair nodeToAdd = SplitNode( node, splitNode, pair );
 					
@@ -155,8 +165,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			{
 				// In the case of the root, the root becomes a leaf or interior node
 				// And we create a new root
-				BPlusTreeNode<S> newroot = createNode();
-				newroot.Load(-1);
+				BPlusTreeNode<S> newroot = LoadNode(-1);
 				
 				// Now, perform a big hack
 				assert(newroot.m_node == newroot.m_page.m_pageNumber);
@@ -185,25 +194,25 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 				splitNode.m_isLeaf = true;
 				node.m_isLeaf = true;
 				
-				m_root.Clear();				
-				splitNode.Clear();
-				node.Clear();
+				ClearNode(m_root);
+				ClearNode(splitNode);
+				ClearNode(node);
 				// No recursive calls in this case			
 			}
 			else
 			{
 				splitNode.m_parent = node.m_parent;
-				splitNode.Clear();
+				ClearNode(splitNode);
 				
 				int parentptr = node.m_parent;
-				node.Clear();
+				ClearNode(node);
 				
 				BPlusTreeNode<S> parent = null;
 				
 				if( parentptr == 0 )
 					parent = m_root;
 				else
-					parent = getNode(parentptr);
+					parent = LoadNode(parentptr);
 
 				// parent is cleared inside the Insert.
 				Insert( parent, nodeToAdd );
@@ -212,9 +221,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		else
 		{
 			node.Insert( pair );
-			
-			if( !isRootAndIsLoaded )
-				node.Clear();
+			ClearNode(node);
 		}
 	}
 	
@@ -225,13 +232,10 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 	public ArrayList<Integer> GetList( RecordElement sel, RecordElement eel )
 	{
 		ArrayList<Integer> recs = new ArrayList<Integer>();
-		boolean wasRootLoaded = m_root.IsLoaded();
-		
-		if(!wasRootLoaded)
-			m_root.Load(0);
+		m_root = LoadNode(0);
 		
 		// Get first leaf where we have a value <= to our start element
-		BPlusTreeNode<S> leaf = getLeafNode( m_root, sel, !wasRootLoaded );
+		BPlusTreeNode<S> leaf = getLeafNode( m_root, sel );
 		
 		boolean ContinueToNextLeaf = true;
 		
@@ -259,16 +263,15 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 					ContinueToNextLeaf = false;
 				}
 				else
-				{				
-					if( leaf != m_root || !wasRootLoaded )
-						leaf.Clear();
-					leaf.Load(nextLeaf);
+				{			
+					ClearNode(leaf);
+					leaf = LoadNode(nextLeaf);
 				}
 			}
 		}
 		
-		if( leaf != m_root || !wasRootLoaded )
-			leaf.Clear();		
+		ClearNode(leaf);			
+		ClearNode(m_root);
 		return recs;
 	}
 	
@@ -284,20 +287,58 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 	}
 	
 	// ---- Implementation methods ----
+	BPlusTreeNode<S> LoadNode( int nodeNb )
+	{
+		BPlusTreeNode<S> node = null;
+		if( caching )
+		{
+			node = cache.getNode(nodeNb);
+			
+			if( node == null )
+				node = cache.AddToCache(nodeNb);
+		}
+		else if( rootCached && nodeNb == 0 )
+		{
+			node = m_root;
+		}
+		else
+		{
+			// not using cache
+			node = _getNode(nodeNb);
+		}
 	
-	BPlusTreeNode<S> createNode()
+		return node;		
+	}
+	
+	void ClearNode( BPlusTreeNode<S> node )
+	{
+		if( caching )
+		{
+			// Don't free yet
+		}
+		else if( rootCached && node.m_node == 0 )
+		{
+			// Don't free yet
+		}
+		else
+		{
+			node.Clear();
+		}
+	}
+	
+	BPlusTreeNode<S> _createNode()
 	{
 		return new BPlusTreeNode<S>(m_recordElementClass, m_recordElementLength, m_n, m_filename);
 	}
 		
-	BPlusTreeNode<S> getNode( int nb )
+	BPlusTreeNode<S> _getNode( int nb )
 	{
-		BPlusTreeNode<S> node = createNode();
+		BPlusTreeNode<S> node = _createNode();
 		node.Load(nb);
 		return node;
 	}
 	
-	BPlusTreeNode<S> getLeafNode( BPlusTreeNode<S> parent, RecordElement el, boolean freeRoot )
+	BPlusTreeNode<S> getLeafNode( BPlusTreeNode<S> parent, RecordElement el )
 	{
 		if( parent.IsLeaf() )
 			return parent;
@@ -343,15 +384,14 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			// If we can branch to a child in this iteration
 			if( childnode >= 0 )
 			{
-				if( parent != m_root || freeRoot )
-					parent.Clear();
+				ClearNode(parent);
 				
-				BPlusTreeNode<S> child = getNode( childnode );
+				BPlusTreeNode<S> child = LoadNode(childnode);
 				
 				if( childnode == firstNull )
 					child.m_IsNullNode = true;
 				
-				return getLeafNode( child, el, freeRoot );
+				return getLeafNode( child, el );
 			}				
 		}
 
@@ -486,6 +526,114 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 //////////////////////////////////////
 // Subclasses ////////////////////////
 //////////////////////////////////////
+class BPlusTreeCache<S extends RecordElement>
+{
+	// info needed to be able to create nodes
+	Class<S> m_recordElementClass;
+	int      m_recordElementLength;
+	int      m_n;
+	String   m_filename;
+	
+	// Real cache data
+	int maxCacheSize;
+	ArrayList< BPlusTreeNode<S> > cache;
+	ArrayList< Long >          cacheHits;
+	long cacheCount;
+	
+	BPlusTreeCache( int cacheSize, Class<S> classRec, int RecLength, int n, String filename )
+	{
+		cacheCount = 0;
+		maxCacheSize = cacheSize;
+		cache = new ArrayList< BPlusTreeNode<S> >();
+		cacheHits = new ArrayList< Long >();
+		
+		m_recordElementClass = classRec;
+		m_recordElementLength = RecLength;
+		m_n = n;
+		m_filename = filename;
+	}
+	
+	BPlusTreeNode<S> AddToCache( int nodeNb )
+	{
+		BPlusTreeNode<S> node = new BPlusTreeNode<S>(m_recordElementClass, m_recordElementLength, m_n, m_filename);
+		// If cache is full, remove oldest one (except the root)
+		if( cache.size() == maxCacheSize )
+		{
+			int idx = -1;
+			long minHit = Long.MAX_VALUE;
+			
+			for( int i = 0; i < cache.size(); i++ )
+			{
+				if( cache.get(i) == null )
+				{
+					idx = i;
+					break;
+				}
+				else
+				{
+					// Skip root
+					if( cacheHits.get(i) < minHit && cache.get(i).m_node != 0 )
+					{
+						minHit = cacheHits.get(i).longValue();
+						idx = i;
+					}
+				}
+			}
+			
+			cache.get(idx).Clear();
+			
+			// Load new node			
+			node.Load(nodeNb);
+			
+			cache.set(idx, node);
+			cacheHits.set(idx, new Long(cacheCount++));			
+		}
+		// Add the node to the cache and give it a number	
+		else
+		{
+			// Load new node
+			node.Load(nodeNb);
+			
+			cache.add(node);
+			cacheHits.add(new Long(cacheCount++));
+		}
+		
+		return node;
+	}
+	
+	BPlusTreeNode<S> getNode( int node )
+	{
+		for(int i = 0; i < cache.size(); i++)
+		{
+			BPlusTreeNode<S> cachedNode = cache.get(i);
+			
+			if( cachedNode != null && cachedNode.m_node == node )
+			{
+				// We found the good node
+				// Update the cache hit
+				cacheHits.set(i, new Long(cacheCount++));
+				return cachedNode;
+			}
+		}
+		
+		return null;
+	}
+	
+	public void ClearCache()
+	{
+		for(int i = 0; i < cache.size(); i++)
+		{
+			BPlusTreeNode<S> cachedNode = cache.get(i);
+			if( cachedNode != null )
+				cachedNode.Clear();
+		}
+		
+		cache.clear();
+		cacheHits.clear();
+	}
+}
+
+
 class BPlusTreeRecord extends Record
 {
 	public BPlusTreeRecord()
@@ -572,6 +720,7 @@ class BPlusTreeNode<S extends RecordElement>
 		{
 			m_page.setRecord( 0, m_page.CreateElement() );
 			m_nbElements = 0;
+			m_isLeaf = true;
 		}
 		else
 		{

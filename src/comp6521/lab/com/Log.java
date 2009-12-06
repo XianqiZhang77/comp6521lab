@@ -11,6 +11,7 @@ public class Log
 	
 	// Members
 	boolean LogStarted;
+	boolean LogIO;
 	String filename;
 	Stack< LogSection > sections;
 	ArrayList< String > results;
@@ -25,11 +26,13 @@ public class Log
 		header = "";
 	}
 	
-	public static void StartLog(String outputFilename) { getInstance().StartLogInternal(outputFilename); }
-	private void StartLogInternal(String outputFilename)
+	public static void StartLog(String outputFilename, boolean logIO) { getInstance().StartLogInternal(outputFilename, logIO); }
+	public static void StartLog(String outputFilename) { getInstance().StartLogInternal(outputFilename, true); }
+	private void StartLogInternal(String outputFilename, boolean logIO)
 	{
 		if( !LogStarted )
 		{
+			LogIO = logIO;
 			LogStarted = true;
 			filename = outputFilename;
 			PageManagerSingleton.getInstance().deleteFile(outputFilename);
@@ -59,7 +62,7 @@ public class Log
 	public static void StartLogSection(String text)
 	{
 		// Push a new section
-		getInstance().sections.push(new LogSection(text, getInstance().filename));
+		getInstance().sections.push(new LogSection(text, getInstance().filename, getInstance().LogIO, getInstance().sections.size()));
 	}
 	
 	public static void EndLogSection()
@@ -92,11 +95,11 @@ public class Log
 		
 		// Write header
 		if( header.length() > 0 )
-			PageManagerSingleton.getInstance().writePage(filename, header + "\r\n");
+			PageManagerSingleton.getInstance().writeOutput(filename, header + "\r\n");
 
 		// Flush all results		
 		for( int i = 0; i < results.size(); i++)
-			PageManagerSingleton.getInstance().writePage(filename, results.get(i) + "\r\n");
+			PageManagerSingleton.getInstance().writeOutput(filename, results.get(i) + "\r\n");
 		
 		header = "";
 		results.clear();		
@@ -110,11 +113,15 @@ class LogSection
 	ArrayList<String> lines;
 	String filename;
 	
+	boolean LogIO;
 	long start_read_io;
 	long start_write_io;
+	int level;
 	
-	LogSection(String text, String _filename)
+	LogSection(String text, String _filename, boolean logIO, int _level)
 	{
+		level = _level;
+		LogIO = logIO;
 		sectionName = text;
 		lines = new ArrayList<String>();
 		
@@ -122,6 +129,8 @@ class LogSection
 		start_write_io = PageManagerSingleton.getInstance().getWriteIOCount();
 		
 		filename = _filename;
+		
+		PageManagerSingleton.getInstance().writeOutput(filename, GetLevelOffset() + ">> START -- " + sectionName + " -- START <<\r\n");
 	}
 	
 	void AddLine(String line)
@@ -137,14 +146,27 @@ class LogSection
 		long read_io_delta  = end_read_io - start_read_io;
 		long write_io_delta = end_write_io - start_write_io;
 		
-		PageManagerSingleton.getInstance().writePage(filename, ">> START -- " + sectionName + " -- START <<\r\n");
-		PageManagerSingleton.getInstance().writePage(filename, "-- Nb read I/Os : " + read_io_delta + " --\r\n");
-		PageManagerSingleton.getInstance().writePage(filename, "-- Nb write I/Os : " + write_io_delta + " --\r\n");
+		String offset = GetLevelOffset();
+		
+		if( LogIO )
+		{
+			PageManagerSingleton.getInstance().writeOutput(filename, offset + "-- Nb read I/Os : " + read_io_delta + " --\r\n");
+			PageManagerSingleton.getInstance().writeOutput(filename, offset + "-- Nb write I/Os : " + write_io_delta + " --\r\n");
+		}
 		
 		for( int i = 0; i < lines.size(); i++ )
-			PageManagerSingleton.getInstance().writePage(filename, lines.get(i) + "\r\n");
+			PageManagerSingleton.getInstance().writeOutput(filename, offset + lines.get(i) + "\r\n");
 		
-		PageManagerSingleton.getInstance().writePage(filename, "<< END ---- " + sectionName + " ---- END >>\r\n");
+		PageManagerSingleton.getInstance().writeOutput(filename, offset + "<< END ---- " + sectionName + " ---- END >>\r\n");
 	}
 	
+	String GetLevelOffset()
+	{
+		String offset = "";
+		
+		for( int i = 0; i < level; i++ )
+			offset += "           ";
+		
+		return offset;
+	}	
 }

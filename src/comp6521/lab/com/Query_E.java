@@ -317,7 +317,7 @@ public class Query_E {
 		QEGroups_Page qeg = null;
 		// Finally,
 		// Write the results
-		System.out.println("ps_partKey\tvalue");
+		Log.SetResultHeader("ps_partKey\tvalue");
 		// Here we assume the groups are sorted.
 		int qeg_p = 0;
 		while( (qeg = MemoryManager.getInstance().getPage( QEGroups_Page.class, qeg_p++, groupsFile)) != null )
@@ -325,7 +325,7 @@ public class Query_E {
 			QE_Record[] qegRecords = qeg.m_records;
 			for(int i = 0; i < qegRecords.length; i++)
 			{
-				System.out.println( qegRecords[i].get("ps_partKey").getInt() + "\t" + qegRecords[i].get("value").getFloat() );
+				Log.AddResult( qegRecords[i].get("ps_partKey").getInt() + "\t" + qegRecords[i].get("value").getFloat() );
 			}
 			
 			MemoryManager.getInstance().freePage(qeg);

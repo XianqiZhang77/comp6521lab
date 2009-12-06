@@ -17,22 +17,27 @@ public class Stats {
 	
 	public void GenerateStats()
 	{
-		System.out.println("-- Generating all stats -- ");
+		Log.StartLog("stats.out", false);
+		Log.StartLogSection("Generating all statistics");
+
 		CustomerStats();
-		System.out.println("");
+		Log.LogSomething("");
 		LineItemStats();
-		System.out.println("");
+		Log.LogSomething("");
 		NationStats();
-		System.out.println("");
+		Log.LogSomething("");
 		OrdersStats();
-		System.out.println("");
+		Log.LogSomething("");
 		PartStats();
-		System.out.println("");
+		Log.LogSomething("");
 		PartSuppStats();
-		System.out.println("");
+		Log.LogSomething("");
 		RegionStats();
-		System.out.println("");
+		Log.LogSomething("");
 		SupplierStats();
+		
+		Log.EndLogSection();
+		Log.EndLog();
 	}
 	
 	public void CustomerStats()
@@ -174,13 +179,13 @@ public class Stats {
 		
 		NumberOfPages = p - 1; // because we stop when we get one page too far
 		
-		System.out.println("Relation name: " + pageClass.getName());
-		System.out.println("Number of pages: " + NumberOfPages);
-		System.out.println("Number of records: " + NumberOfRecords);
+		Log.LogSomething("Relation name: " + pageClass.getName());
+		Log.LogSomething("Number of pages: " + NumberOfPages);
+		Log.LogSomething("Number of records: " + NumberOfRecords);
 		
 		for( int att = 0; att < attributeList.length; att++ )
 		{
-			System.out.println("Stats for attribute: " + attributeList[att] + " " + statsObjects[att].StatType());
+			Log.LogSomething("Stats for attribute: " + attributeList[att] + " " + statsObjects[att].StatType());
 			statsObjects[att].PrintStats();
 		}
 	}	
@@ -223,9 +228,9 @@ public class Stats {
 					max = values[i];
 			}
 			
-			System.out.println("Number of distinct values: " + values.length);
-			System.out.println("Minimum number of occurrences of a value: " + min);
-			System.out.println("Maximum number of occurrences of a value: " + max);
+			Log.LogSomething("Number of distinct values: " + values.length);
+			Log.LogSomething("Minimum number of occurrences of a value: " + min);
+			Log.LogSomething("Maximum number of occurrences of a value: " + max);
 		}
 		
 		public String StatType(){ return new String(""); }

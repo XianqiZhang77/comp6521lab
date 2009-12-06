@@ -88,6 +88,21 @@ public class PageManagerSingleton
 		// return character buffer 
 		return cbuf;
 	}
+	
+	public void writeOutput(String filename, String cbuf)
+	{
+		try
+		{
+			// append String file
+			FileWriter file = new FileWriter(path + filename, true);
+			file.write(cbuf);
+			file.close();
+		}
+		catch(IOException ioException)
+		{
+			ioException.printStackTrace();
+		}
+	}
 
 	// two argument write page to disk
 	public void writePage(String filename, String cbuf)

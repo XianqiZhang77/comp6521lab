@@ -209,7 +209,7 @@ public class Query_C {
 								QCFinal_Record qf = new QCFinal_Record();
 								qf.copyFromQCSN( qcsn[keptProductsSupp.get(j)]);
 								
-								qf.get("ps_supplyCost").setFloat( keptProductsCost.get(j).floatValue() );								
+								qf.get("ps_supplyCost").setFloat( keptProductsCost.get(j).doubleValue() );								
 								qf.get("p_partKey").set( pRecords[i].get("p_partKey") );
 								qf.get("p_mfgr").set( pRecords[i].get("p_mfgr") );	
 								// Save record
@@ -245,11 +245,12 @@ public class Query_C {
 			for( int i = 0; i < qf.length; i++ )
 			{
 				boolean OutputRecord = true;
+				boolean AtLeastOneMatchFoundInInnerQuery = false;
 				// For all suppliers in the other table
 				Log.StartLogSection("For all suppliers in the minimum suppliers temp. table");
 				qcsk_page = null;
 				int qcsk_p = 0;
-				while( (qcsk_page = MemoryManager.getInstance().getPage( QCSK_Page.class, qcsk_p++)) != null && OutputRecord )
+				while( OutputRecord && (qcsk_page = MemoryManager.getInstance().getPage( QCSK_Page.class, qcsk_p++)) != null )
 				{
 					QCSK_Record[] qcsk = qcsk_page.m_records;
 					
@@ -269,10 +270,14 @@ public class Query_C {
 								//                      (min sel supp key - part supp supp key )
 								//                      ( price check )
 								if( psRecords[k].get("ps_partKey").getInt() == qf[i].get("p_partKey").getInt() && 
-									psRecords[k].get("ps_suppKey").getInt() == qcsk[j].get("s_suppKey").getInt() &&
-									psRecords[k].get("ps_supplyCost").getFloat() < qf[i].get("ps_supplyCost").getFloat() )
+									psRecords[k].get("ps_suppKey").getInt() == qcsk[j].get("s_suppKey").getInt() )
 								{
-									OutputRecord = false;
+									AtLeastOneMatchFoundInInnerQuery = true;
+									
+									if( psRecords[k].get("ps_supplyCost").getFloat() < qf[i].get("ps_supplyCost").getFloat() )
+									{
+										OutputRecord = false;
+									}
 								}
 							}
 							
@@ -284,6 +289,10 @@ public class Query_C {
 					MemoryManager.getInstance().freePage(qcsk_page);
 				}
 				Log.EndLogSection();
+				
+				// In this case, the "min" wasn't found. We can't output anything.
+				if(!AtLeastOneMatchFoundInInnerQuery)
+					OutputRecord = false;
 				
 				if( OutputRecord )
 				{

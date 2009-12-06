@@ -1,5 +1,6 @@
 package comp6521.lab.com;
 
+import comp6521.lab.com.Hashing.IntegerHashFunction;
 import comp6521.lab.com.Pages.*;
 import comp6521.lab.com.Records.DateRecordElement;
 import comp6521.lab.com.Records.IntegerRecordElement;
@@ -14,6 +15,7 @@ public class IndexManager
 	
 	// Members
 	BPlusTree       < LineItemPage, DateRecordElement    > LineItemDateIndex;
+	LinearHashTable < LineItemPage                       > LineItemOrderIndex;
 	BPlusTree       < CustomerPage, IntegerRecordElement > CustomerPKIndex;
 	LinearHashTable < CustomerPage                       > CustomerCountryCodeIndex;
 	BPlusTree       < RegionPage,   StringRecordElement  > RegionNameIndex;
@@ -27,6 +29,7 @@ public class IndexManager
 	BPlusTree       < PartPage,     IntegerRecordElement > PartSizeIndex; // Should probably be a linear hash..
 	BPlusTree       < PartPage,     IntegerRecordElement > PartPKIndex;   // though it can cause problem with this index <<-
 	BPlusTree       < OrdersPage,   DateRecordElement    > OrderDateIndex;
+	BPlusTree       < OrdersPage,   IntegerRecordElement > OrderPKIndex;
 
 	// Constructor
 	private IndexManager()
@@ -37,6 +40,7 @@ public class IndexManager
 	public void CreateIndexes()
 	{
 		CreateLineItemDateIndex();
+		CreateLineItemOrderIndex();
 		CreateCustomerPKIndex();
 		CreateCustomerCountryCodeIndex();
 		CreateRegionNameIndex();
@@ -50,6 +54,7 @@ public class IndexManager
 		CreatePartSizeIndex(); 
 		CreatePartPKIndex();   
 		CreateOrderDateIndex();
+		CreateOrderPKIndex();
 	}
 	
 	public void PurgeIndexes()
@@ -59,6 +64,7 @@ public class IndexManager
 		
 		// Set to null everything
 		LineItemDateIndex = null;
+		LineItemOrderIndex = null;
 		CustomerPKIndex = null;
 		CustomerCountryCodeIndex = null;
 		RegionNameIndex = null;
@@ -72,9 +78,11 @@ public class IndexManager
 		PartSizeIndex = null; 
 		PartPKIndex = null;  
 		OrderDateIndex = null;
+		OrderPKIndex = null;
 	}
 	
 	public BPlusTree       < LineItemPage, DateRecordElement    > getLineItemDateIndex()        { if(LineItemDateIndex        == null){CreateLineItemDateIndex();       } return LineItemDateIndex; }
+	public LinearHashTable < LineItemPage                       > getLineItemOrderIndex()       { if(LineItemOrderIndex       == null){CreateLineItemOrderIndex();      } return LineItemOrderIndex; }
 	public BPlusTree       < CustomerPage, IntegerRecordElement > getCustomerPKIndex()          { if(CustomerPKIndex          == null){CreateCustomerPKIndex();         } return CustomerPKIndex; }
 	public LinearHashTable < CustomerPage                       > getCustomerCountryCodeIndex() { if(CustomerCountryCodeIndex == null){CreateCustomerCountryCodeIndex();} return CustomerCountryCodeIndex; }
 	public BPlusTree       < RegionPage,   StringRecordElement  > getRegionNameIndex()          { if(RegionNameIndex          == null){CreateRegionNameIndex();         } return RegionNameIndex; }
@@ -88,16 +96,18 @@ public class IndexManager
 	public BPlusTree       < PartPage,     IntegerRecordElement > getPartSizeIndex()            { if(PartSizeIndex            == null){CreatePartSizeIndex();           } return PartSizeIndex; }
 	public BPlusTree       < PartPage,     IntegerRecordElement > getPartPKIndex()              { if(PartPKIndex              == null){CreatePartPKIndex();             } return PartPKIndex; }
 	public BPlusTree       < OrdersPage,   DateRecordElement    > getOrderDateIndex()           { if(OrderDateIndex           == null){CreateOrderDateIndex();          } return OrderDateIndex; }
+	public BPlusTree       < OrdersPage,   IntegerRecordElement > getOrderPKIndex()             { if(OrderPKIndex             == null){CreateOrderPKIndex();            } return OrderPKIndex; }
 	
 	void AddLineItemRecord( LineItemRecord rec, int recordNumber )
 	{
 		// Only one index uses the line item relation.
 		
 		// Update the index only if it exists
-		if( LineItemDateIndex == null )
-			return;
+		if( LineItemDateIndex != null )
+			LineItemDateIndex.InsertLeaf(rec, recordNumber);
 		
-		LineItemDateIndex.InsertLeaf(rec, recordNumber);
+		if( LineItemOrderIndex != null )
+			LineItemOrderIndex.Insertion(rec);
 	}
 	
 	
@@ -112,6 +122,15 @@ public class IndexManager
 		
 		LineItemDateIndex = new BPlusTree< LineItemPage, DateRecordElement >();
 		LineItemDateIndex.CreateBPlusTree( LineItemPage.class, DateRecordElement.class, "LineItem.txt", "LineItem_Date.idx", "l_receiptDate");
+	}
+	void CreateLineItemOrderIndex()
+	{
+		if(LineItemOrderIndex != null)
+			return;
+		
+		LineItemOrderIndex = new LinearHashTable< LineItemPage >();
+		IntegerHashFunction ihf = new IntegerHashFunction();
+		LineItemOrderIndex.CreateHashTable( LineItemPage.class, "LineItem_order.idx", "l_orderKey", ihf);
 	}
 	void CreateCustomerPKIndex() 
 	{
@@ -217,5 +236,13 @@ public class IndexManager
 		
 		OrderDateIndex = new BPlusTree< OrdersPage, DateRecordElement >();
 		OrderDateIndex.CreateBPlusTree(OrdersPage.class, DateRecordElement.class, "Orders.txt", "orders_date.idx", "o_orderDate");
+	}
+	void CreateOrderPKIndex()
+	{
+		if(OrderPKIndex != null)
+			return;
+		
+		OrderPKIndex = new BPlusTree< OrdersPage, IntegerRecordElement >();
+		OrderPKIndex.CreateBPlusTree(OrdersPage.class, IntegerRecordElement.class, "Orders.txt", "orders_pk.idx", "o_orderKey");
 	}
 }

@@ -96,101 +96,25 @@ public class Query_F
 				throw e;
 			}
 			
-			try
-			{
-				// check for unique primary key 
-				int liItemCounter       =  0;																					// region page counter
-				LineItemPage liItemPage = null;																					// region page		
-				while ( (liItemPage = MemoryManager.getInstance().getPage(LineItemPage.class, liItemCounter++)) != null )		// get region page
-				{
-					LineItemRecord[] liItemRecords = liItemPage.m_records;	// store line item records
-					
-					// determine if primary key is unique 
-					for (LineItemRecord rec : liItemRecords)
-					{
-						// if primary key exists set isUnique = false
-						if ( (rec.get("l_orderkey").getInt() == lOrderKey) && (rec.get("l_lineNumber").getInt() == lLineNumber)	)
-						{							
-							// throw exception
-							throw new Exception("0 Records Affected. Primary Key Is Not Unique.");
-						}
-					}
-					
-					// free page
-					MemoryManager.getInstance().freePage(liItemPage);
-				}
-			}
-			catch(Exception e)
-			{
-				// re-throw exception
-				throw e;
-			}
+			boolean PrimaryKeyOk = CheckPrimaryKey(lOrderKey, lLineNumber);
+
+			if( !PrimaryKeyOk )
+				throw new Exception("0 Records Affected. Primary Key Is Not Unique.");
 			
-			try
-			{
-				// check for referential integrity constraints against Part table
-				int partCounter   =  0;																						// part page counter
-				PartPage partPage = null;																					// part page		
-				boolean pFKExists = false;																					// part FK flag		
-				while ( (partPage = MemoryManager.getInstance().getPage(PartPage.class, partCounter++)) != null )			// get part page
-				{
-					PartRecord[] partRecords = partPage.m_records;	// store part records
-					
-					// determine if foreign key exists 
-					for (PartRecord rec : partRecords)
-					{
-						// if foreign key exists set fkExists = true
-						if ( (rec.get("p_partKey").getInt() == lPartKey) )
-						{
-							pFKExists = true;
-						}
-					}
-					
-					// free page
-					MemoryManager.getInstance().freePage(partPage);
-				}
-				
-				if ( pFKExists == false )
-					throw new Exception("0 Records Affected. Failed l_partKey FK Contraint.");
-			}
-			catch(Exception e)
-			{
-				// re-throw exception
-				throw e;
-			}
+			boolean PartPKOk = CheckPartKey( lPartKey );
+
+			if( !PartPKOk )
+				throw new Exception("0 Records Affected. Failed l_partKey FK Contraint.");
 			
-			try
-			{
-				// check for referential integrity constraints against Orders table
-				int ordersCounter   =  0;																						// orders page counter
-				OrdersPage ordersPage = null;																					// orders page		
-				boolean oFKExists = false;																						// order FK flag
-				while ( (ordersPage = MemoryManager.getInstance().getPage(OrdersPage.class, ordersCounter++)) != null )			// get orders page
-				{
-					OrdersRecord[] ordersRecords = ordersPage.m_records;	// store orders records
-					
-					// determine if foreign key exists 
-					for (OrdersRecord rec : ordersRecords)
-					{
-						// if foreign key exists set fkExists = true
-						if ( (rec.get("o_orderKey").getInt() == lOrderKey) )
-						{
-							oFKExists = true;
-						}
-					}
-					
-					// free page
-					MemoryManager.getInstance().freePage(ordersPage);
-				}
-				
-				if (oFKExists == false) 
-					throw new Exception("0 Records Affected. Failed l_orderKey FK Constraint.");
-			}
-			catch(Exception e)
-			{
-				// re-throw exception
-				throw e;
-			}
+			boolean OrdersPKOk = CheckOrdersKey( lOrderKey );
+
+			if( !OrdersPKOk )
+				throw new Exception("0 Records Affected. Failed l_orderKey FK Constraint.");
+			
+			boolean SupplierPKOk = CheckSupplierKey( lSuppKey );
+			
+			if( !SupplierPKOk )
+				throw new Exception("0 Records Affected. Failed l_suppKey FK Constraint.");
 			
 			// build record
 			String rec = String.format("%-11d%-11d%-11d%-11d%-11d%-22.2f%-22.2f%-22s%-2s%-2s%-19s%-19s%-19s%-20s%-10s%-120s\r\n", 
@@ -236,7 +160,7 @@ public class Query_F
 			PageManagerSingleton.getInstance().writePage("f.out", logMsg);
 		}
 		catch(Exception e)
-		{	
+		{
 			// log message
 			String logMsg = String.format("%s\r\n", e.toString());
 						
@@ -249,5 +173,110 @@ public class Query_F
 		
 		// return success status
 		return true;
+	}
+	
+	public boolean CheckPrimaryKey( long orderKey, long lineNumber )
+	{
+		// check for unique primary key
+		boolean unique = true;
+		int liItemCounter       =  0;																					// region page counter
+		LineItemPage liItemPage = null;																					// region page		
+		while ( unique && (liItemPage = MemoryManager.getInstance().getPage(LineItemPage.class, liItemCounter++)) != null )		// get region page
+		{
+			LineItemRecord[] liItemRecords = liItemPage.m_records;	// store line item records
+			
+			// determine if primary key is unique 
+			for (LineItemRecord rec : liItemRecords)
+			{
+				// if primary key exists set isUnique = false
+				if ( (rec.get("l_orderkey").getInt() == orderKey) && (rec.get("l_lineNumber").getInt() == lineNumber)	)
+				{
+					unique = false;
+				}
+			}
+			
+			// free page
+			MemoryManager.getInstance().freePage(liItemPage);
+		}
+
+		return unique;
+	}
+	
+	public boolean CheckPartKey( long partKey )
+	{
+		// check for referential integrity constraints against Part table
+		int partCounter   =  0;																						// part page counter
+		PartPage partPage = null;																					// part page		
+		boolean pFKExists = false;																					// part FK flag		
+		while ( !pFKExists && (partPage = MemoryManager.getInstance().getPage(PartPage.class, partCounter++)) != null )			// get part page
+		{
+			PartRecord[] partRecords = partPage.m_records;	// store part records
+			
+			// determine if foreign key exists 
+			for (PartRecord rec : partRecords)
+			{
+				// if foreign key exists set fkExists = true
+				if ( (rec.get("p_partKey").getInt() == partKey) )
+				{
+					pFKExists = true;
+				}
+			}
+			
+			// free page
+			MemoryManager.getInstance().freePage(partPage);
+		}
+
+		return pFKExists;
+	}
+	
+	public boolean CheckOrdersKey( long orderKey )
+	{
+		// check for referential integrity constraints against Orders table
+		int ordersCounter   =  0;																						// orders page counter
+		OrdersPage ordersPage = null;																					// orders page		
+		boolean oFKExists = false;																						// order FK flag
+		while ( !oFKExists && (ordersPage = MemoryManager.getInstance().getPage(OrdersPage.class, ordersCounter++)) != null )			// get orders page
+		{
+			OrdersRecord[] ordersRecords = ordersPage.m_records;	// store orders records
+			
+			// determine if foreign key exists 
+			for (OrdersRecord rec : ordersRecords)
+			{
+				// if foreign key exists set fkExists = true
+				if ( (rec.get("o_orderKey").getInt() == orderKey) )
+				{
+					oFKExists = true;
+				}
+			}
+			
+			// free page
+			MemoryManager.getInstance().freePage(ordersPage);
+		}
+
+		return oFKExists;
+	}
+	
+	public boolean CheckSupplierKey( long suppKey )
+	{
+		int p = 0;
+		SupplierPage page = null;
+		boolean sFKExists = false;
+		
+		while( !sFKExists && (page = MemoryManager.getInstance().getPage(SupplierPage.class, p++)) != null)
+		{
+			SupplierRecord[] supplierRecords = page.m_records;
+			
+			// determine if foreign key exists
+			for(SupplierRecord rec : supplierRecords)
+			{
+				if( rec.get("s_suppKey").getInt() == suppKey )
+					sFKExists = true;
+			}
+			
+			// free page
+			MemoryManager.getInstance().freePage(page);
+		}
+		
+		return sFKExists;
 	}
 }

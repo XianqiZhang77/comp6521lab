@@ -11,9 +11,8 @@ public class Query_B_Indexed extends Query_B
 	public void PerformQuery( String[] SelList, String[] AvgList )
 	{
 		// First, use a hash table for the cntrycode
-		LinearHashTable< CustomerPage > index = new LinearHashTable< CustomerPage >();
-		CountryHashFunction cntry_hf = new CountryHashFunction();
-		index.CreateHashTable( CustomerPage.class, "customer_cntrycode.txt", "c_phone", cntry_hf );
+		LinearHashTable< CustomerPage > index = IndexManager.getInstance().getCustomerCountryCodeIndex();
+		String indexFilename = index.m_filename;
 		
 		// Perform the inner query ...
 		int countAvg = 0;
@@ -31,7 +30,7 @@ public class Query_B_Indexed extends Query_B
 			
 			for( int p = 0; p < pageList.length; p++ )
 			{
-				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p], "customer_cntrycode.txt" );
+				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p], indexFilename );
 				CustomerRecord[] customers = page.m_records;
 
 				for( int r = 0; r < customers.length; r++ )
@@ -66,7 +65,7 @@ public class Query_B_Indexed extends Query_B
 			
 			for( int p = 0; p < pageList.length; p++ )
 			{
-				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p], "customer_cntrycode.txt" );
+				page = MemoryManager.getInstance().getPage( CustomerPage.class, pageList[p], indexFilename );
 				CustomerRecord[] customers = page.m_records;
 
 				for( int r = 0; r < customers.length; r++ )

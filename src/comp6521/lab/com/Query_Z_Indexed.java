@@ -18,16 +18,13 @@ public class Query_Z_Indexed extends Query_Z
 		// Zeroeth phase:
 		// Initialization
 		////////////////////////////////////////////////////////////////////
-		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class, "qz_os_i.txt");
-		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class, "qzg_os_i.txt");
+		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class, "qz_os_i.tmp");
+		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class, "qzg_os_i.tmp");
 		
 		// Indexes
-		BPlusTree< OrdersPage, DateRecordElement > OrderDateIndex = new BPlusTree< OrdersPage, DateRecordElement >();
-		OrderDateIndex.CreateBPlusTree(OrdersPage.class, DateRecordElement.class, "Orders.txt", "orders_date_tree.txt", "o_orderDate");
+		BPlusTree< OrdersPage, DateRecordElement > OrderDateIndex = IndexManager.getInstance().getOrderDateIndex();
 		// customer key -> record index
-		BPlusTree< CustomerPage, IntegerRecordElement > CustomerPKIndex = new BPlusTree< CustomerPage, IntegerRecordElement >();
-		CustomerPKIndex.CreateBPlusTree(CustomerPage.class, IntegerRecordElement.class, "Customer.txt", "customer_pk_tree.txt", "c_custKey");
-		
+		BPlusTree< CustomerPage, IntegerRecordElement > CustomerPKIndex = IndexManager.getInstance().getCustomerPKIndex();
 		
 		// What we must do:
 		// Group orders by month & customer key
@@ -48,11 +45,11 @@ public class Query_Z_Indexed extends Query_Z
 		DB.ProcessingLoop(OutputSubsetOrdersPF);
 		
 		// Sort by o_custKey & by month
-		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os_i.txt");
+		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os_i.tmp");
 		String sortedOS = sort.Execute();
 		
 		// Group by o_custKey (sum total price) & by month
-		FourthPhase( sortedOS, "qzg_os_i.txt" );
+		FourthPhase( sortedOS, "qzg_os_i.tmp" );
 		
 		// Translate customer key to customer name and output results
 		CustomerPage custPage = null;
@@ -71,7 +68,7 @@ public class Query_Z_Indexed extends Query_Z
 
 		String result = "";
 		
-		while( (osgPage = MemoryManager.getInstance().getPage(OrdersGroupsPage.class, osg_p++, "qzg_os_i.txt")) != null )
+		while( (osgPage = MemoryManager.getInstance().getPage(OrdersGroupsPage.class, osg_p++, "qzg_os_i.tmp")) != null )
 		{
 			OrdersSubsetRecord[] osgRecords = osgPage.m_records;
 			
@@ -151,7 +148,7 @@ class OrdersSubsetPF extends ProcessingFunction<OrdersPage, DateRecordElement>
 	
 	public void ProcessStart()
 	{
-		page = MemoryManager.getInstance().getEmptyPage(OrdersSubsetPage.class, "qz_os_i.txt");
+		page = MemoryManager.getInstance().getEmptyPage(OrdersSubsetPage.class, "qz_os_i.tmp");
 	}
 	
 	public void Process( Record r )

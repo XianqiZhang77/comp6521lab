@@ -198,9 +198,37 @@ public class Query_F
 									   lExtendedPrice, lDiscount, lTax, lReturnFlag, lLineStatus, 
 									   lShipDate, lCommitDate, lReceiptDate, lShipInstruct, lShipMode, lComment);
 			
-			//String rec = String.format("%-11d\r\n", lOrderKey);					// build test record
-			PageManagerSingleton.getInstance().writePage("LineItem.txt", rec);		// write page
+			LineItemRecord liRec = new LineItemRecord();
+			liRec.Parse(rec);
+			
+			int nbRecordsPerPage = MemoryManager.getInstance().GetNumberOfRecordsPerPage(LineItemPage.class);
+			int pageNumber = MemoryManager.getInstance().GetNumberOfPages(LineItemPage.class, "LineItem.txt") - 1;
+			
+			int recordNumber = -1;
+			LineItemPage liPage = MemoryManager.getInstance().getPage(LineItemPage.class, pageNumber);
+	
+			if(liPage.m_records.length == nbRecordsPerPage)
+			{
+				// We need to create a new page
+				LineItemPage newPage = MemoryManager.getInstance().getEmptyPage(LineItemPage.class);
+				newPage.AddRecord(liRec);
 				
+				recordNumber = newPage.m_pageNumber * nbRecordsPerPage;
+				// Free & Write the new page
+				MemoryManager.getInstance().freePage(newPage);
+			}
+			else
+			{
+				recordNumber = liPage.m_pageNumber * nbRecordsPerPage + liPage.m_records.length;
+				liPage.setRecord(liPage.m_records.length, liRec);				
+			}
+			
+			// Free loaded page
+			MemoryManager.getInstance().freePage(liPage);
+			
+			// Update the index (if it exists)
+			IndexManager.getInstance().AddLineItemRecord(liRec, recordNumber);			
+
 			// log message
 			String logMsg = String.format("%s\r\n", "1 Record Affected.");
 				 

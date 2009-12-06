@@ -18,15 +18,15 @@ public class Query_E {
 		// Initialise custom pages
 		
 		// Non grouped results
-		MemoryManager.getInstance().AddPageType( QE_Page.class, "qe_f.txt" );
+		MemoryManager.getInstance().AddPageType( QE_Page.class, "qe_f.tmp" );
 		// Grouped results
-		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeg_f.txt" );
+		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeg_f.tmp" );
 		// Kept nations keys
-		MemoryManager.getInstance().AddPageType( NationSubsetPage.class,  "qe_ns.txt");
-		MemoryManager.getInstance().AddPageType( NationSubsetPage.class, "qe_inner_ns.txt");
+		MemoryManager.getInstance().AddPageType( NationSubsetPage.class,  "qe_ns.tmp");
+		MemoryManager.getInstance().AddPageType( NationSubsetPage.class, "qe_inner_ns.tmp");
 		// Kept supplier keys
-		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_ss.txt");
-		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_inner_ss.txt");
+		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_ss.tmp");
+		MemoryManager.getInstance().AddPageType( SupplierSubsetPage.class, "qe_inner_ss.tmp");
 				
 		// Info for the "having" clause:
 		double totalValue = 0;
@@ -35,7 +35,7 @@ public class Query_E {
 		// Construct the (ps_suppkey, value) records, without any aggregation, sorting or anything.
 		//   -> 1- Find nation(s) with name 'UNITED STATES' .. likely to be only one
 		NationSubsetPage snPage = MemoryManager.getInstance().getEmptyPage( NationSubsetPage.class );
-		NationSubsetPage sniPage = MemoryManager.getInstance().getEmptyPage( NationSubsetPage.class, "qe_inner_ns.txt" );
+		NationSubsetPage sniPage = MemoryManager.getInstance().getEmptyPage( NationSubsetPage.class, "qe_inner_ns.tmp" );
 		
 		NationPage nationPage = null;
 		int n_p = 0;
@@ -108,10 +108,10 @@ public class Query_E {
 		MemoryManager.getInstance().freePage( ssPage );
 		ssPage = null;
 		
-		SupplierSubsetPage ssiPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class, "qe_inner_ss.txt");
+		SupplierSubsetPage ssiPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class, "qe_inner_ss.tmp");
 		
 		sn_p = 0;
-		while( (sniPage = MemoryManager.getInstance().getPage( NationSubsetPage.class, sn_p++, "qe_inner_ns.txt")) != null )
+		while( (sniPage = MemoryManager.getInstance().getPage( NationSubsetPage.class, sn_p++, "qe_inner_ns.tmp")) != null )
 		{
 			NationSubsetRecord[] nsRecords = sniPage.m_records;
 
@@ -190,7 +190,7 @@ public class Query_E {
 		
 		// Compute the total value now :
 		ss_p = 0;
-		while( (ssiPage = MemoryManager.getInstance().getPage( SupplierSubsetPage.class, ss_p++, "qe_inner_ss.txt")) != null )
+		while( (ssiPage = MemoryManager.getInstance().getPage( SupplierSubsetPage.class, ss_p++, "qe_inner_ss.tmp")) != null )
 		{
 			SupplierSubsetRecord[] ssRecords = ssiPage.m_records;
 			
@@ -222,15 +222,15 @@ public class Query_E {
 		
 		// Second pass:
 		// perform a 2PMMS on the data, sorting on ps_partkey (ascending or descending)
-		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qe_f.txt");
+		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qe_f.tmp");
 		String sortedFilename = sort.Execute();
 		MemoryManager.getInstance().AddPageType(QE_Page.class, sortedFilename);
 		
-		ThirdPass(totalValue, sortedFilename, "qeg_f.txt");
+		ThirdPass(totalValue, sortedFilename, "qeg_f.tmp");
 		
 		// Fourth pass 
 		// Sort the groups by value in descending order
-		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeg_f.txt");
+		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeg_f.tmp");
 		String groupedSorted = sort.Execute();
 		MemoryManager.getInstance().AddPageType(QEGroups_Page.class, groupedSorted);
 		

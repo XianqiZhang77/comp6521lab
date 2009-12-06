@@ -13,8 +13,7 @@ public class Query_A_Indexed extends Query_A
 		ClearResults();
 		
 		// Create index, if it's not already done
-		BPlusTree< LineItemPage, DateRecordElement > index = new BPlusTree< LineItemPage, DateRecordElement >();
-		index.CreateBPlusTree( LineItemPage.class, DateRecordElement.class, "LineItem.txt", "LineItem_tree_Date.txt", "l_receiptDate");
+		BPlusTree< LineItemPage, DateRecordElement > index = IndexManager.getInstance().getLineItemDateIndex();
 		
 		// Create the date elements so they can be compared in the tree
 		DateRecordElement sd = new DateRecordElement();

@@ -23,16 +23,13 @@ public class Query_E_Indexed extends Query_E
 		// Zero : Create indexes //
 		///////////////////////////
 		// n_name in Nation table
-		BPlusTree< NationPage, StringRecordElement > NationNameIndex = new BPlusTree< NationPage, StringRecordElement >();
-		NationNameIndex.CreateBPlusTree( NationPage.class, StringRecordElement.class, 15, "Nation.txt", "Nation_Name_tree.txt", "n_name");
+		BPlusTree< NationPage, StringRecordElement > NationNameIndex = IndexManager.getInstance().getNationNameIndex();
 		
 		// s_nationKey in Supplier (used in query C indexed)
-		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = new BPlusTree< SupplierPage, IntegerRecordElement >();
-		SupplierFKIndex.CreateBPlusTree( SupplierPage.class, IntegerRecordElement.class, "Supplier.txt", "Supplier_FK_tree.txt", "s_nationKey");
+		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = IndexManager.getInstance().getSupplierFKIndex();
 		
 		// ps_suppKey in PartSupp, used in query C indexed
-		BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppSuppFKIndex = new BPlusTree< PartSuppPage, IntegerRecordElement >();
-		PartSuppSuppFKIndex.CreateBPlusTree( PartSuppPage.class, IntegerRecordElement.class, "PartSupp.txt", "PartSupp_suppFK_tree.txt", "ps_suppKey");
+		BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppSuppFKIndex = IndexManager.getInstance().getPartSuppSuppFKIndex();
 		
 		////////////////////////////
 		// Perform query          //
@@ -44,16 +41,16 @@ public class Query_E_Indexed extends Query_E
 		/////////////////
 		// Perform sort//
 		/////////////////
-		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qei_f.txt");
+		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qei_f.tmp");
 		String sortedFilename = sort.Execute();
 		MemoryManager.getInstance().AddPageType(QE_Page.class, sortedFilename);
 		
 		// Perform third pass
-		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeig_f.txt" );
-		ThirdPass( totalValue, sortedFilename, "qeig_f.txt" );
+		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeig_f.tmp" );
+		ThirdPass( totalValue, sortedFilename, "qeig_f.tmp" );
 		
 		// Fourth pass: sort groups by value, descending order
-		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeig_f.txt");
+		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeig_f.tmp");
 		String groupedSorted = sort.Execute();
 		MemoryManager.getInstance().AddPageType(QEGroups_Page.class, groupedSorted);
 		
@@ -119,8 +116,8 @@ class PartSuppToTotalPrice extends ProcessingFunction<PartSuppPage, FloatRecordE
 		if( !m_isInner )
 		{
 			// Create new page type, create an empty page.
-			MemoryManager.getInstance().AddPageType( QE_Page.class, "qei_f.txt" );
-			page = MemoryManager.getInstance().getEmptyPage( QE_Page.class, "qei_f.txt");
+			MemoryManager.getInstance().AddPageType( QE_Page.class, "qei_f.tmp" );
+			page = MemoryManager.getInstance().getEmptyPage( QE_Page.class, "qei_f.tmp");
 		}
 	}	
 	

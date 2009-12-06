@@ -34,8 +34,8 @@ public class Query_Z {
 		// Zeroeth phase:
 		// Initialization
 		////////////////////////////////////////////////////////////////////
-		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class, "qz_os.txt");
-		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class, "qzg_os.txt");
+		MemoryManager.getInstance().AddPageType( OrdersSubsetPage.class, "qz_os.tmp");
+		MemoryManager.getInstance().AddPageType( OrdersGroupsPage.class, "qzg_os.tmp");
 		////////////////////////////////////////////////////////////////////
 		// First phase:
 		// Select orders subset that satisfy the year condition and
@@ -70,14 +70,14 @@ public class Query_Z {
 		// Third phase:
 		// Sort by o_custKey & month
 		////////////////////////////////////////////////////////////////////
-		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os.txt");
+		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os.tmp");
 		String sortedOS = sort.Execute();
 		
 		////////////////////////////////////////////////////////////////////
 		// Fourth phase:
 		// Group by o_custKey (sum total price) & month
 		////////////////////////////////////////////////////////////////////
-		FourthPhase(sortedOS, "qzg_os.txt");
+		FourthPhase(sortedOS, "qzg_os.tmp");
 		
 		////////////////////////////////////////////////////////////////////
 		// Fifth phase:
@@ -95,7 +95,7 @@ public class Query_Z {
 
 		String result = "";
 		
-		while( (osgPage = MemoryManager.getInstance().getPage(OrdersGroupsPage.class, osg_p++, "qzg_os.txt")) != null )
+		while( (osgPage = MemoryManager.getInstance().getPage(OrdersGroupsPage.class, osg_p++, "qzg_os.tmp")) != null )
 		{
 			OrdersSubsetRecord[] osgRecords = osgPage.m_records;
 			

@@ -15,9 +15,9 @@ public class Query_C {
 		// 1 page of type1 + 1 page of type2 == 1830 + 1980 + 2170 + 2730 + 1300 < 10240
 		
 		// Add the custom pages to the memory manager
-		MemoryManager.getInstance().AddPageType( QCSN_Page.class,    "qc_t1.txt"    ); // 275 * 10
-		MemoryManager.getInstance().AddPageType( QCSK_Page.class,    "qc_t2.txt"    ); // 13 * 100
-		MemoryManager.getInstance().AddPageType( QCFinal_Page.class, "qc_final.txt" ); // 312 * 10
+		MemoryManager.getInstance().AddPageType( QCSN_Page.class,    "qc_t1.tmp"    ); // 275 * 10
+		MemoryManager.getInstance().AddPageType( QCSK_Page.class,    "qc_t2.tmp"    ); // 13 * 100
+		MemoryManager.getInstance().AddPageType( QCFinal_Page.class, "qc_final.tmp" ); // 312 * 10
 		
 		// Phase I
 		// Find all regions with one or the other name.

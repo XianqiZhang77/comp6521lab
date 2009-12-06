@@ -19,40 +19,23 @@ public class Query_C_Indexed extends Query_C
 		///////////////////////////////////////////////////////////////////////
 		// Here we'll use a few indexes:
 		// r_name in RegionTable      [b-tree]
-		BPlusTree< RegionPage, StringRecordElement > RegionNameIndex = new BPlusTree< RegionPage, StringRecordElement >();
-		RegionNameIndex.CreateBPlusTree( RegionPage.class, StringRecordElement.class, 50, "Region.txt", "Region_rname_tree.txt", "r_name");
-		
+		BPlusTree< RegionPage, StringRecordElement > RegionNameIndex = IndexManager.getInstance().getRegionNameIndex();
 		// n_regionKey in Nation      [b-tree]
-		BPlusTree< NationPage, IntegerRecordElement > NationFKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
-		NationFKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_FK_tree.txt", "n_regionKey");
-		
+		BPlusTree< NationPage, IntegerRecordElement > NationFKIndex = IndexManager.getInstance().getNationFKIndex();
 		// n_nationKey in Nation      [b-tree]
-		BPlusTree< NationPage, IntegerRecordElement > NationPKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
-		NationPKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_PK_tree.txt", "n_nationKey");		
-
+		BPlusTree< NationPage, IntegerRecordElement > NationPKIndex = IndexManager.getInstance().getNationPKIndex();
 		// s_nationKey in Supplier    [b-tree]
-		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = new BPlusTree< SupplierPage, IntegerRecordElement >();
-		SupplierFKIndex.CreateBPlusTree( SupplierPage.class, IntegerRecordElement.class, "Supplier.txt", "Supplier_FK_tree.txt", "s_nationKey");
-		
+		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = IndexManager.getInstance().getSupplierFKIndex();
 		// s_suppKey in Supplier    [b-tree]
-		BPlusTree< SupplierPage, IntegerRecordElement > SupplierPKIndex = new BPlusTree< SupplierPage, IntegerRecordElement >();
-		SupplierPKIndex.CreateBPlusTree( SupplierPage.class, IntegerRecordElement.class, "Supplier.txt", "Supplier_PK_tree.txt", "s_suppKey");
-		
+		BPlusTree< SupplierPage, IntegerRecordElement > SupplierPKIndex = IndexManager.getInstance().getSupplierPKIndex();
 		// ps_partKey in PartSupp     [b-tree]
-		BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppPartFKIndex = new BPlusTree< PartSuppPage, IntegerRecordElement >();
-		PartSuppPartFKIndex.CreateBPlusTree( PartSuppPage.class, IntegerRecordElement.class, "PartSupp.txt", "PartSupp_FK_tree.txt", "ps_partKey");
-		
+		BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppPartFKIndex = IndexManager.getInstance().getPartSuppPartFKIndex();
 		// ps_suppKey in PartSupp     [b-tree]
-		BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppSuppFKIndex = new BPlusTree< PartSuppPage, IntegerRecordElement >();
-		PartSuppSuppFKIndex.CreateBPlusTree( PartSuppPage.class, IntegerRecordElement.class, "PartSupp.txt", "PartSupp_suppFK_tree.txt", "ps_suppKey");		
-		
+		BPlusTree< PartSuppPage, IntegerRecordElement > PartSuppSuppFKIndex = IndexManager.getInstance().getPartSuppSuppFKIndex();
 		// p_size in Part             [b-tree] for no obvious reason
-		BPlusTree< PartPage, IntegerRecordElement > PartSizeIndex = new BPlusTree< PartPage, IntegerRecordElement >();
-		PartSizeIndex.CreateBPlusTree( PartPage.class, IntegerRecordElement.class, "Part.txt", "Part_Size_tree.txt", "p_size");
-		
+		BPlusTree< PartPage, IntegerRecordElement > PartSizeIndex = IndexManager.getInstance().getPartSizeIndex();
 		// p_partKey in Part
-		BPlusTree< PartPage, IntegerRecordElement > PartPKIndex = new BPlusTree< PartPage, IntegerRecordElement >();
-		PartPKIndex.CreateBPlusTree( PartPage.class, IntegerRecordElement.class, "Part.txt", "Part_PK_tree.txt", "p_partKey");
+		BPlusTree< PartPage, IntegerRecordElement > PartPKIndex = IndexManager.getInstance().getPartPKIndex();
 		
 		///////////////////////////////////////////////////////////////////////
 		// FIRST: 
@@ -74,7 +57,7 @@ public class Query_C_Indexed extends Query_C
 		int[] suppliers = DB.ProcessingLoop(NtSpf);
 		
 		// Suppliers record number -> s_suppKey
-		RecordNumberToKeyPF<SupplierPage> StSKpf = new RecordNumberToKeyPF<SupplierPage>(suppliers, SupplierPage.class, "s_suppKey", "tmp_supp_keys.txt");
+		RecordNumberToKeyPF<SupplierPage> StSKpf = new RecordNumberToKeyPF<SupplierPage>(suppliers, SupplierPage.class, "s_suppKey", "supp_keys.tmp");
 		DB.ProcessingLoop(StSKpf);
 		// ATTN :: StSKpf is not freed right now, check the Clear() method a few lines down
 
@@ -95,7 +78,7 @@ public class Query_C_Indexed extends Query_C
 		int[] min_suppliers = DB.ProcessingLoop(min_NtSpf);
 		
 		// Suppliers record number -> s_suppKey
-		RecordNumberToKeyPF<SupplierPage> min_StSKpf = new RecordNumberToKeyPF<SupplierPage>(min_suppliers, SupplierPage.class, "s_suppKey", "tmp_min_supp_keys.txt");
+		RecordNumberToKeyPF<SupplierPage> min_StSKpf = new RecordNumberToKeyPF<SupplierPage>(min_suppliers, SupplierPage.class, "s_suppKey", "min_supp_keys.tmp");
 		DB.ProcessingLoop(min_StSKpf);
 		// ATTN :: min_StSKpf is not freed right now, check the Clear() method a few lines down
 		
@@ -108,7 +91,7 @@ public class Query_C_Indexed extends Query_C
 		Arrays.sort(parts);
 		
 		// parts record number -> p_partKey
-		RecordNumberToKeyPF<PartPage > PRtPKpf = new RecordNumberToKeyPF<PartPage>(parts, PartPage.class, "p_partKey", "tmp_part_keys.txt");
+		RecordNumberToKeyPF<PartPage > PRtPKpf = new RecordNumberToKeyPF<PartPage>(parts, PartPage.class, "p_partKey", "part_keys.tmp");
 		DB.ProcessingLoop(PRtPKpf);
 		// ATTN: the PRtPKpf PF is not free right now, check the Clear() method a few lines down.
 		

@@ -10,6 +10,7 @@ public class Query_B_Indexed extends Query_B
 {
 	public void PerformQuery( String[] SelList, String[] AvgList )
 	{
+		Log.StartLog("b_i.out");
 		// First, use a hash table for the cntrycode
 		LinearHashTable< CustomerPage > index = IndexManager.getInstance().getCustomerCountryCodeIndex();
 		String indexFilename = index.m_filename;
@@ -91,6 +92,8 @@ public class Query_B_Indexed extends Query_B
 			}
 		}	
 		Log.EndLogSection();
+		
+		Log.EndLog();
 	}
 }
 

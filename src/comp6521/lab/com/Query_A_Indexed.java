@@ -8,6 +8,8 @@ import comp6521.lab.com.Records.DateRecordElement;
 
 public class Query_A_Indexed extends Query_A 
 {
+	public String getLogFilename() { return "a_i.out"; }
+	
 	public void ProcessQuery( Date StartDate, Date EndDate )
 	{
 		ClearResults();

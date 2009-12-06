@@ -16,6 +16,8 @@ import java.util.Date;
 
 public class Query_F 
 {
+	public String getLogFilename() { return "f.out"; }
+	
 	/* method that executes query f: 
 	Insert into lineitem
 	(
@@ -26,7 +28,9 @@ public class Query_F
 	values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 	*/
 	public boolean ProcessQuery(String[] args)  
-	{ 
+	{
+		Log.StartLog(getLogFilename());
+		
 		try 
 		{	
 			// TODO: Handle ' ' insertion and null insertion
@@ -96,22 +100,30 @@ public class Query_F
 				throw e;
 			}
 			
+			Log.StartLogSection("Checking primary key uniqueness");
 			boolean PrimaryKeyOk = CheckPrimaryKey(lOrderKey, lLineNumber);
+			Log.EndLogSection();
 
 			if( !PrimaryKeyOk )
 				throw new Exception("0 Records Affected. Primary Key Is Not Unique.");
-			
+
+			Log.StartLogSection("Checking part key existence");
 			boolean PartPKOk = CheckPartKey( lPartKey );
+			Log.EndLogSection();
 
 			if( !PartPKOk )
 				throw new Exception("0 Records Affected. Failed l_partKey FK Contraint.");
 			
+			Log.StartLogSection("Checking order key existence");
 			boolean OrdersPKOk = CheckOrdersKey( lOrderKey );
+			Log.EndLogSection();
 
 			if( !OrdersPKOk )
 				throw new Exception("0 Records Affected. Failed l_orderKey FK Constraint.");
-			
+
+			Log.StartLogSection("Check supplier key existence");
 			boolean SupplierPKOk = CheckSupplierKey( lSuppKey );
+			Log.EndLogSection();
 			
 			if( !SupplierPKOk )
 				throw new Exception("0 Records Affected. Failed l_suppKey FK Constraint.");
@@ -157,7 +169,7 @@ public class Query_F
 			String logMsg = String.format("%s\r\n", "1 Record Affected.");
 				 
 			// output log message to f.out
-			PageManagerSingleton.getInstance().writePage("f.out", logMsg);
+			Log.AddResult(logMsg);
 		}
 		catch(Exception e)
 		{
@@ -165,12 +177,14 @@ public class Query_F
 			String logMsg = String.format("%s\r\n", e.toString());
 						
 			// output log message to f.out
-			PageManagerSingleton.getInstance().writePage("f.out", logMsg);
+			Log.AddResult(logMsg);
 			
-			// return failure status
+			Log.EndLog();
+			// return failure status			
 			return false;
 		}
 		
+		Log.EndLog();
 		// return success status
 		return true;
 	}

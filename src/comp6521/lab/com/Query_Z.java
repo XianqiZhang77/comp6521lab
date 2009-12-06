@@ -13,6 +13,7 @@ import comp6521.lab.com.Records.Record;
 public class Query_Z {
 	public void ProcessQuery(int year)
 	{
+		Log.StartLog("z.out");
 		/////////////////////////////////////////////////////////////////////
 		// The expected result:
 		// 
@@ -41,6 +42,7 @@ public class Query_Z {
 		// Select orders subset that satisfy the year condition and
 		// Generate the (o_custKey, o_totalPrice, month(o_orderDate)) tuples
 		////////////////////////////////////////////////////////////////////
+		Log.StartLogSection("Go through the orders relation, write subset (o_custKey, o_totalPrice, o_orderDate) ");
 		OrdersSubsetPage osPage = MemoryManager.getInstance().getEmptyPage( OrdersSubsetPage.class );
 		
 		OrdersPage orderPage = null;
@@ -66,23 +68,30 @@ public class Query_Z {
 		// Write back the data
 		MemoryManager.getInstance().freePage(osPage);
 		osPage = null;
+		
+		Log.EndLogSection();
         ////////////////////////////////////////////////////////////////////
 		// Third phase:
 		// Sort by o_custKey & month
 		////////////////////////////////////////////////////////////////////
 		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os.tmp");
+		Log.StartLogSection("Sort the subset by o_custKey and by month");
 		String sortedOS = sort.Execute();
+		Log.EndLogSection();
 		
 		////////////////////////////////////////////////////////////////////
 		// Fourth phase:
 		// Group by o_custKey (sum total price) & month
 		////////////////////////////////////////////////////////////////////
+		Log.StartLogSection("Group results");
 		FourthPhase(sortedOS, "qzg_os.tmp");
+		Log.EndLogSection();
 		
 		////////////////////////////////////////////////////////////////////
 		// Fifth phase:
 		// Find the name (matching o_cust with c_cust, getting c_name)
 		////////////////////////////////////////////////////////////////////
+		Log.StartLogSection("Find customer name & output results");
 		OrdersGroupsPage osgPage = null;
 		int osg_p = 0;
 		
@@ -90,7 +99,7 @@ public class Query_Z {
 		int previousCustKey = -1;
 		
 		// Print header first
-		System.out.println("customerName\tJAN\tFEB\tMAR\tAPR\tMAY\tJUN\tJUL\tAUG\tSEP\tOCT\tNOV\tDEC");
+		Log.SetResultHeader("customerName\tJAN\tFEB\tMAR\tAPR\tMAY\tJUN\tJUL\tAUG\tSEP\tOCT\tNOV\tDEC");
 		int prevMonth = 0;
 
 		String result = "";
@@ -108,7 +117,7 @@ public class Query_Z {
 				{
 					// Output previous result
 					if( result.length() > 0 )
-						System.out.println(result);
+						Log.AddResult( result );
 					
 					result = "";	
 					prevMonth = 0;					
@@ -152,7 +161,11 @@ public class Query_Z {
 		
 		// Output last result if needed
 		if( result.length() > 0 )
-			System.out.println(result);
+			Log.AddResult(result);
+		
+		Log.EndLogSection();
+		
+		Log.EndLog();
 	}
 	
 	public void FourthPhase( String subsetFilename, String groupsFilename )

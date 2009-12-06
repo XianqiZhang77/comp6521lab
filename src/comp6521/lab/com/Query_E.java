@@ -14,6 +14,7 @@ import comp6521.lab.com.Records.SupplierRecord;
 public class Query_E {
 	public void ProcessQuery(String innerName, String outerName)
 	{
+		Log.StartLog("e.out");
 		// Zeroeth pass:
 		// Initialise custom pages
 		
@@ -37,6 +38,7 @@ public class Query_E {
 		NationSubsetPage snPage = MemoryManager.getInstance().getEmptyPage( NationSubsetPage.class );
 		NationSubsetPage sniPage = MemoryManager.getInstance().getEmptyPage( NationSubsetPage.class, "qe_inner_ns.tmp" );
 		
+		Log.StartLogSection("Find nations with name " + outerName + " or " + innerName );
 		NationPage nationPage = null;
 		int n_p = 0;
 		while( (nationPage = MemoryManager.getInstance().getPage( NationPage.class, n_p++) ) != null )
@@ -68,7 +70,10 @@ public class Query_E {
 		MemoryManager.getInstance().freePage( sniPage );
 		sniPage = null;
 		
+		Log.EndLogSection();
+		
 		//   -> 2- Find suppliers with matching s_nationkey.
+		Log.StartLogSection("Find suppliers that match the outer query nation(s)");
 		SupplierSubsetPage ssPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class );
 		
 		// Loop on all subset nations
@@ -108,6 +113,8 @@ public class Query_E {
 		MemoryManager.getInstance().freePage( ssPage );
 		ssPage = null;
 		
+		Log.EndLogSection();
+		Log.StartLogSection("Find suppliers that match the inner query nation(s)");
 		SupplierSubsetPage ssiPage = MemoryManager.getInstance().getEmptyPage( SupplierSubsetPage.class, "qe_inner_ss.tmp");
 		
 		sn_p = 0;
@@ -145,8 +152,11 @@ public class Query_E {
 		// Write back the kept suppliers
 		MemoryManager.getInstance().freePage( ssiPage );
 		ssiPage = null;
+		
+		Log.EndLogSection();
 
 		//   -> 3- Write all results from PartSupp with the ps_suppKey matching one found
+		Log.StartLogSection("Write all results from partSupp with the ps_suppKey matching the outer query suppliers");
 		QE_Page qe = MemoryManager.getInstance().getEmptyPage( QE_Page.class );
 		
 		// Loop on all subset suppliers
@@ -188,6 +198,8 @@ public class Query_E {
 		MemoryManager.getInstance().freePage(qe);
 		qe = null;
 		
+		Log.EndLogSection();
+		Log.StartLogSection("Compute the total value from the PartSupp table using the inner query suppliers");
 		// Compute the total value now :
 		ss_p = 0;
 		while( (ssiPage = MemoryManager.getInstance().getPage( SupplierSubsetPage.class, ss_p++, "qe_inner_ss.tmp")) != null )
@@ -220,22 +232,34 @@ public class Query_E {
 			MemoryManager.getInstance().freePage(ssiPage);
 		}
 		
+		Log.EndLogSection();
+		
 		// Second pass:
 		// perform a 2PMMS on the data, sorting on ps_partkey (ascending or descending)
 		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qe_f.tmp");
+		Log.StartLogSection("Sort the subset results by ps_partKey");
 		String sortedFilename = sort.Execute();
+		Log.EndLogSection();
 		MemoryManager.getInstance().AddPageType(QE_Page.class, sortedFilename);
 		
+		Log.StartLogSection("Group the results");
 		ThirdPass(totalValue, sortedFilename, "qeg_f.tmp");
+		Log.EndLogSection();
 		
 		// Fourth pass 
 		// Sort the groups by value in descending order
 		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeg_f.tmp");
+		Log.StartLogSection("Sort the groups by descending value order");
 		String groupedSorted = sort.Execute();
+		Log.EndLogSection();
 		MemoryManager.getInstance().AddPageType(QEGroups_Page.class, groupedSorted);
 		
 		// Last: output results
+		Log.StartLogSection("Output the results");
 		OutputResults( groupedSorted );
+		Log.EndLogSection();
+		
+		Log.EndLog();
 	}
 	
 	public void ThirdPass(double totalValue, String qeFile, String groupsFile)

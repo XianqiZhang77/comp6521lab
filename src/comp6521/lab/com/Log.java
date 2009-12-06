@@ -10,6 +10,8 @@ public class Log
 	public static Log getInstance() { return ms_Instance; }
 	
 	// Members
+	boolean LogStarted;
+	String filename;
 	Stack< LogSection > sections;
 	ArrayList< String > results;
 	String header;
@@ -17,16 +19,46 @@ public class Log
 	// Constructor
 	private Log()
 	{
+		LogStarted = false;
 		sections = new Stack< LogSection >();
 		results = new ArrayList< String >();
 		header = "";
+	}
+	
+	public static void StartLog(String outputFilename) { getInstance().StartLogInternal(outputFilename); }
+	private void StartLogInternal(String outputFilename)
+	{
+		if( !LogStarted )
+		{
+			LogStarted = true;
+			filename = outputFilename;
+		}
+		else
+		{
+			System.out.println("There's already a log in progress.");
+		}
+	}
+	
+	public static void EndLog() { getInstance().EndLogInternal(); }
+	private void EndLogInternal()
+	{
+		if( LogStarted )
+		{
+			FlushInternal();
+			LogStarted = false;
+			filename = "";
+		}
+		else
+		{
+			System.out.println("There's no log in progress.");
+		}
 	}
 	
 	// Methods	
 	public static void StartLogSection(String text)
 	{
 		// Push a new section
-		getInstance().sections.push(new LogSection(text));
+		getInstance().sections.push(new LogSection(text, getInstance().filename));
 	}
 	
 	public static void EndLogSection()
@@ -51,15 +83,16 @@ public class Log
 		getInstance().sections.peek().AddLine(line);
 	}
 	
-	public static void Flush() { getInstance().FlushInternal(); }
 	private void FlushInternal()
 	{
 		// First, pop everything out
 		while( sections.peek() != null )
 			EndLogSection();
 		
-		// Flush all results
-		System.out.println(header);
+		// Write header
+		if( header.length() > 0 )
+			System.out.println(header);
+		// Flush all results		
 		for( int i = 0; i < results.size(); i++)
 			System.out.println(results.get(i));
 		
@@ -73,17 +106,20 @@ class LogSection
 {
 	String sectionName;
 	ArrayList<String> lines;
+	String filename;
 	
 	long start_read_io;
 	long start_write_io;
 	
-	LogSection(String text)
+	LogSection(String text, String _filename)
 	{
 		sectionName = text;
 		lines = new ArrayList<String>();
 		
 		start_read_io = PageManagerSingleton.getInstance().getReadIOCount();
 		start_write_io = PageManagerSingleton.getInstance().getWriteIOCount();
+		
+		filename = _filename;
 	}
 	
 	void AddLine(String line)

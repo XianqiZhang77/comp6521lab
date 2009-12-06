@@ -30,10 +30,14 @@ public class Query_A {
 		m_queryPerformed = false;
 	}
 	
+	public String getLogFilename() { return "a.out"; }
+	
 	public void PerformQuery( Date StartDate, Date EndDate )
 	{
+		Log.StartLog(getLogFilename());
 		ProcessQuery( StartDate, EndDate );
 		WriteResults();
+		Log.EndLog();
 	}
 	
 	public void ProcessQuery( Date StartDate, Date EndDate )
@@ -85,7 +89,5 @@ public class Query_A {
 		{
 			Log.AddResult("Perform query before outputting results");
 		}
-		
-		Log.Flush();
 	}
 }

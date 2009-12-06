@@ -19,6 +19,7 @@ public class Query_E_Indexed extends Query_E
 {
 	public void ProcessQuery(String innerName, String outerName)
 	{
+		Log.StartLog("e_i.out");
 		///////////////////////////
 		// Zero : Create indexes //
 		///////////////////////////
@@ -35,28 +36,42 @@ public class Query_E_Indexed extends Query_E
 		// Perform query          //
 		////////////////////////////
 		// First, the inner query
+		Log.StartLogSection("Compute the total values (inner query)");
 		double totalValue = PerformSubquery(innerName, true, NationNameIndex, SupplierFKIndex, PartSuppSuppFKIndex);
+		Log.EndLogSection();
 		// Second, perform the outer query (grouping)
-		PerformSubquery(outerName, false, NationNameIndex, SupplierFKIndex, PartSuppSuppFKIndex);		
+		Log.StartLogSection("Perform the outer query");
+		PerformSubquery(outerName, false, NationNameIndex, SupplierFKIndex, PartSuppSuppFKIndex);
+		Log.EndLogSection();
 		/////////////////
 		// Perform sort//
 		/////////////////
 		TPMMS<?> sort = new TPMMS<QE_Page>(QE_Page.class, "qei_f.tmp");
+		Log.StartLogSection("Sorting the subset of records kept");
 		String sortedFilename = sort.Execute();
+		Log.EndLogSection();
 		MemoryManager.getInstance().AddPageType(QE_Page.class, sortedFilename);
 		
 		// Perform third pass
 		MemoryManager.getInstance().AddPageType( QEGroups_Page.class, "qeig_f.tmp" );
+		Log.StartLogSection("Grouping the results");
 		ThirdPass( totalValue, sortedFilename, "qeig_f.tmp" );
+		Log.EndLogSection();
 		
 		// Fourth pass: sort groups by value, descending order
 		sort = new TPMMS<QEGroups_Page>( QEGroups_Page.class, "qeig_f.tmp");
+		Log.StartLogSection("Sorting the groups by decreasing value");
 		String groupedSorted = sort.Execute();
+		Log.EndLogSection();
 		MemoryManager.getInstance().AddPageType(QEGroups_Page.class, groupedSorted);
 		
 		
 		// Last : output results
+		Log.StartLogSection("Outputting results");
 		OutputResults( groupedSorted );
+		Log.EndLogSection();
+		
+		Log.EndLog();
 	}
 	
 	protected double PerformSubquery( String name, boolean isInner, BPlusTree<?,?> NationNameIndex, BPlusTree<?,?> SupplierFKIndex, BPlusTree<?,?> PartSuppSuppFKIndex )
@@ -71,23 +86,33 @@ public class Query_E_Indexed extends Query_E
 		else
 			prefix += "outer_";
 		
+		Log.StartLogSection("Find nations RN that match the name " + name );
 		int[] nations = NationNameIndex.Get(NN);
+		Log.EndLogSection();
 		Arrays.sort(nations);
 		
 		// Record number -> n_nationKey
 		RecordNumberToKeyPF<NationPage> NtNKpf = new RecordNumberToKeyPF<NationPage>(nations, NationPage.class, "n_nationKey", prefix + "nation_keys.txt");
+		Log.StartLogSection("Getting all nation keys (n_nationKey) from the nations RN");
 		DB.ProcessingLoop(NtNKpf);
+		Log.EndLogSection();
 		// ATTN:: NtNKpf is not freed yet.
 		
 		// Second, find all suppliers in the united states
 		// nation key(s) -> suppliers record numbers
+		Log.StartLogSection("Find all suppliers RN that match the nation key (s_nationKey == n_nationKey)");
 		int[] suppliersRN = DB.ReverseProcessingLoop( NtNKpf.keys, key_page.class, SupplierFKIndex, "key");
+		Log.EndLogSection();
 		// supplier record numbers -> supplier keys
 		RecordNumberToKeyPF<SupplierPage> StSKpf = new RecordNumberToKeyPF<SupplierPage>(suppliersRN, SupplierPage.class, "s_suppKey", prefix + "supp_keys.txt");
+		Log.StartLogSection("Getting all suppliers keys from the suppliers RN");
 		DB.ProcessingLoop(StSKpf);
+		Log.EndLogSection();
 		// ATTN:: StSKpf is not free yet
 		// supplier keys -> ps record numbers
+		Log.StartLogSection("Find all partsupp RN that match the supplier keys");
 		int[] psRN = DB.ReverseProcessingLoop( StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
+		Log.EndLogSection();
 		Arrays.sort(psRN);
 		
 		// Once we have the matching record numbers, we can free the pages we were taking.
@@ -96,7 +121,15 @@ public class Query_E_Indexed extends Query_E
 		
 		// Third : Pre-compute the total value && write kept values --> qei_f.txt
 		PartSuppToTotalPrice PStTPpf = new PartSuppToTotalPrice( psRN, isInner );
+		
+		if(isInner)
+			Log.StartLogSection("Computing the total price from the partSupp RN found");
+		else
+			Log.StartLogSection("Outputting the result subset (ps_partKey, value) from the partSupp RN found");
+		
 		DB.ProcessingLoop( PStTPpf );
+		
+		Log.EndLogSection();
 		
 		return PStTPpf.totalValue;
 	}

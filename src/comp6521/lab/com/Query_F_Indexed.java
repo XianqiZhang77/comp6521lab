@@ -9,6 +9,8 @@ import comp6521.lab.com.Records.LineItemRecord;
 
 public class Query_F_Indexed extends Query_F 
 {
+	public String getLogFilename() { return "f_i.out"; }
+	
 	public boolean CheckPrimaryKey( long _orderKey, long _lineNumber )
 	{
 		int orderKey = (int)_orderKey;

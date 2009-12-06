@@ -16,6 +16,7 @@ public class Query_C_Indexed extends Query_C
 {
 	public void ProcessQuery( int partSize, String regionNameSel, String regionNameMin )
 	{
+		Log.StartLog("c_i.out");
 		///////////////////////////////////////////////////////////////////////
 		// Here we'll use a few indexes:
 		// r_name in RegionTable      [b-tree]
@@ -44,42 +45,58 @@ public class Query_C_Indexed extends Query_C
 		StringRecordElement RS = new StringRecordElement(50);
 		RS.setString(regionNameSel);
 		
+		Log.StartLogSection("Getting all regions matching the given name: " + regionNameSel);
 		int[] regions = RegionNameIndex.Get(RS);
+		Log.EndLogSection();
 		Arrays.sort(regions);
 		
 		RegionToNationPF RtNpf = new RegionToNationPF( regions, NationFKIndex, "r_regionKey" );
 		// Get all record numbers from the nations that matched regions found & sort them
+		Log.StartLogSection("Getting all record numbers from the Nations table that match the region key found");
 		int[] nations = DB.ProcessingLoop(RtNpf);
+		Log.EndLogSection();
 		
 		// Find suppliers
 		NationToSupplierPF NtSpf = new NationToSupplierPF( nations, SupplierFKIndex, "n_nationKey");
 		// Get all record numbers from the suppliers that matched a nation found & sort them
+		Log.StartLogSection("Getting all RN from the suppliers that matched a nation found");
 		int[] suppliers = DB.ProcessingLoop(NtSpf);
+		Log.EndLogSection();
 		
 		// Suppliers record number -> s_suppKey
 		RecordNumberToKeyPF<SupplierPage> StSKpf = new RecordNumberToKeyPF<SupplierPage>(suppliers, SupplierPage.class, "s_suppKey", "supp_keys.tmp");
+		Log.StartLogSection("Getting all suppliers keys (s_suppKey) from the RN");
 		DB.ProcessingLoop(StSKpf);
+		Log.EndLogSection();
 		// ATTN :: StSKpf is not freed right now, check the Clear() method a few lines down
 
 		///////////////////////////////////////////////////////////////////////
     	// SECOND:
 		// find suppliers from which we'll check the minimum cost
 		RS.setString(regionNameMin);
+		Log.StartLogSection("Getting the region(s) RN matching the name " + regionNameMin + " for the min price selection");
 		int[] min_regions = RegionNameIndex.Get(RS);
+		Log.EndLogSection();
 		Arrays.sort(min_regions);
 		
 		RegionToNationPF min_RtNpf = new RegionToNationPF( min_regions, NationFKIndex, "r_regionKey" );
 		// Get all record numbers from the nations that matched regions found & sort them
+		Log.StartLogSection("Getting the nations RN that matched the found region(s) key");
 		int[] min_nations = DB.ProcessingLoop(min_RtNpf);
+		Log.EndLogSection();
 		
 		// Find suppliers
 		NationToSupplierPF min_NtSpf = new NationToSupplierPF( min_nations, SupplierFKIndex, "n_nationKey");
 		// Get all record numbers from the suppliers that matched a nation found & sort them
+		Log.StartLogSection("Getting all suppliers RN that matched a nation key");
 		int[] min_suppliers = DB.ProcessingLoop(min_NtSpf);
+		Log.EndLogSection();
 		
 		// Suppliers record number -> s_suppKey
 		RecordNumberToKeyPF<SupplierPage> min_StSKpf = new RecordNumberToKeyPF<SupplierPage>(min_suppliers, SupplierPage.class, "s_suppKey", "min_supp_keys.tmp");
+		Log.StartLogSection("Getting all suppliers keys (s_suppKey) from the RN");
 		DB.ProcessingLoop(min_StSKpf);
+		Log.EndLogSection();
 		// ATTN :: min_StSKpf is not freed right now, check the Clear() method a few lines down
 		
 		// THIRD:
@@ -87,12 +104,16 @@ public class Query_C_Indexed extends Query_C
 		IntegerRecordElement partEL = new IntegerRecordElement();
 		partEL.setInt( partSize );
 		
+		Log.StartLogSection("Find all products RN with a size of " + partSize );
 		int[] parts = PartSizeIndex.Get(partEL);
+		Log.EndLogSection();
 		Arrays.sort(parts);
 		
 		// parts record number -> p_partKey
 		RecordNumberToKeyPF<PartPage > PRtPKpf = new RecordNumberToKeyPF<PartPage>(parts, PartPage.class, "p_partKey", "part_keys.tmp");
+		Log.StartLogSection("Getting all part keys (p_partKey) from the RN");
 		DB.ProcessingLoop(PRtPKpf);
+		Log.EndLogSection();
 		// ATTN: the PRtPKpf PF is not free right now, check the Clear() method a few lines down.
 		
 		// FOURTH:
@@ -101,11 +122,17 @@ public class Query_C_Indexed extends Query_C
 		// 
 		// Intersect ps_suppKey with the ones we found ..
 		// part PK -> ps record numbers
+		Log.StartLogSection("Getting all partSupp RN that match the parts key (ps_partKey == p_partKey)");
 		ArrayList<ArrayList<Integer> > psPartsRN = DB.ReverseProcessingLoopAAI( PRtPKpf.keys, key_page.class, PartSuppPartFKIndex, "key");
+		Log.EndLogSection();
 		// suppliers PK -> ps record numbers
+		Log.StartLogSection("Getting all partSupp RN that match the supplier keys (ps_suppKey == s_suppKey)");
 		ArrayList<Integer> psSuppliersRN = DB.ReverseProcessingLoopAI( StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
+		Log.EndLogSection();
 		// min_suppliers PK -> ps record numbers
+		Log.StartLogSection("Getting all partSupp RN that match the minimum selection supplier keys (ps_suppKey == s_suppKey)");
 		ArrayList<Integer> psMinSuppliersRN = DB.ReverseProcessingLoopAI( min_StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
+		Log.EndLogSection();
 		
 		// Once we have the matching record numbers, we can free the pages we were taking
 		// false here is to make sure we don't write the last page.. it's not needed anyways
@@ -117,9 +144,10 @@ public class Query_C_Indexed extends Query_C
 		SupplierToOutputPF StOpf = new SupplierToOutputPF( PartPKIndex, SupplierPKIndex, NationPKIndex);
 		
 		//Output header -- results will be printed in the StOpf processing loop
-		System.out.println( "s_acctbal\ts_name\tn_name\tp_partkey\tp_mfgr\ts_address\ts_phone\ts_comment");
+		Log.SetResultHeader( "s_acctbal\ts_name\tn_name\tp_partkey\tp_mfgr\ts_address\ts_phone\ts_comment");
 		
 		// Now we can intersect the record numbers 
+		Log.StartLogSection("Get all needed information for the results & output");
 		for( int i = 0; i < psPartsRN.size(); i++ )
 		{
 			ArrayList<Integer> PartsSuppliers = DB.Intersect( psPartsRN.get(i), psSuppliersRN );
@@ -129,18 +157,22 @@ public class Query_C_Indexed extends Query_C
 			{				
 				// We now have the exact record numbers we need to look at
 				MinSuppliersToMinPricePF MStMPpf = new MinSuppliersToMinPricePF(PartsMinSuppliers);
-				DB.ProcessingLoop(MStMPpf);			
+				Log.StartLogSection("Find minimum price in the min. suppliers");
+				DB.ProcessingLoop(MStMPpf);
+				Log.EndLogSection();
 				double minPrice = MStMPpf.minPrice;
 				
 				StOpf.Reset( PartsSuppliers, minPrice );
+				Log.StartLogSection("Get result data & output if constraints are met");
 				DB.ProcessingLoop(StOpf);
+				Log.EndLogSection();
 			}
 		}
+		Log.EndLogSection();
 		
 		StOpf.Clear();
 		
-		// REMINDER::
-		// TODO DELETE :: tmp_part_keys.txt, tmp_supp_keys.txt, tmp_min_supp_keys.txt
+		Log.EndLog();
 	}
 }
 

@@ -9,6 +9,7 @@ public class Query_C {
 
 	public void ProcessQuery( int partSize, String regionNameSel, String regionNameMin )
 	{		
+		Log.StartLog("c.out");
 		// Now, this query promises to be ugly.
 		// Memory notes:
 		// 1 region page + 1 nation page + 1 supplier page + 
@@ -34,6 +35,7 @@ public class Query_C {
 		QCSN_Page qcsn_page = MemoryManager.getInstance().getEmptyPage( QCSN_Page.class );
 		QCSK_Page qcsk_page = MemoryManager.getInstance().getEmptyPage( QCSK_Page.class );
 		
+		Log.StartLogSection("Go through the region relation to find the region(s) named " + regionNameSel + " or " + regionNameMin );
 		int r_p = 0;
 		while( (regionPage = MemoryManager.getInstance().getPage( RegionPage.class, r_p++)) != null )
 		{
@@ -53,7 +55,8 @@ public class Query_C {
 			
 			if(!regionsKept.isEmpty())
 			{
-				// Second: Parse the nation relation for nations in the region			
+				// Second: Parse the nation relation for nations in the region	
+				Log.StartLogSection("Go through the nation relation to find matches with the region keys");
 				int n_p = 0;
 				while( (nationPage = MemoryManager.getInstance().getPage(NationPage.class, n_p++)) != null )
 				{
@@ -76,6 +79,7 @@ public class Query_C {
 					if( !nationsKept.isEmpty())
 					{
 						// Third: match with suppliers
+						Log.StartLogSection("Go through the supplier relation to find matches with the nation keys -- and prepare the subset records if we find any");
 						int s_p = 0;
 						while( (suppPage = MemoryManager.getInstance().getPage(SupplierPage.class, s_p++)) != null )
 						{
@@ -130,14 +134,17 @@ public class Query_C {
 							
 							MemoryManager.getInstance().freePage(suppPage);
 						}
+						Log.EndLogSection();
 					}					
 					
 					MemoryManager.getInstance().freePage(nationPage);
 				}
+				Log.EndLogSection();
 			}			
 
 			MemoryManager.getInstance().freePage(regionPage);
 		}
+		Log.EndLogSection();
 		
 		// Free (and auto-write) the qcsX_pages
 		MemoryManager.getInstance().freePage( qcsn_page );
@@ -153,12 +160,14 @@ public class Query_C {
 		QCFinal_Page qf_page = MemoryManager.getInstance().getEmptyPage( QCFinal_Page.class );
 		
 		QCSN_Page qn_page = null;
+		Log.StartLogSection("For all subset (results) records found... ");
 		int qn_p = 0;
 		while( (qn_page = MemoryManager.getInstance().getPage( QCSN_Page.class, qn_p++)) != null )
 		{
 			QCSN_Record[] qcsn = qn_page.m_records;
 			
 			// First, take note of all product keys in the partSupp pages that fit any record in QCSN
+			Log.StartLogSection("Go through the partSupp relation, and find matching product keys");
 			PartSuppPage psPage = null;
 			int psp = 0;
 			while ( (psPage = MemoryManager.getInstance().getPage( PartSuppPage.class, psp++ ) ) != null )
@@ -166,9 +175,9 @@ public class Query_C {
 				PartSuppRecord[] psRecords = psPage.m_records;
 				
 				// Keep indexes
-				ArrayList<Integer> keptProducts = new ArrayList<Integer>();
+				ArrayList<Integer> keptProducts     = new ArrayList<Integer>();
 				ArrayList<Integer> keptProductsSupp = new ArrayList<Integer>();
-				ArrayList<Double>   keptProductsCost = new ArrayList<Double>();
+				ArrayList<Double>  keptProductsCost = new ArrayList<Double>();
 				
 				for( int i = 0; i < psRecords.length; i++ )
 					for( int j = 0; j < qcsn.length; j++ )
@@ -185,6 +194,7 @@ public class Query_C {
 					continue;
 				
 				// If we found potential products, find them.
+				Log.StartLogSection("If we have key matches, check for the part size in the part relation");
 				PartPage pPage = null;
 				int pp = 0;
 				while( (pPage = MemoryManager.getInstance().getPage(PartPage.class, pp++)) != null )
@@ -207,11 +217,14 @@ public class Query_C {
 							}
 					
 					MemoryManager.getInstance().freePage(pPage);
-				}	
+				}
+				Log.EndLogSection();
 			}	
 			
 			MemoryManager.getInstance().freePage(qn_page);
+			Log.EndLogSection();
 		}
+		Log.EndLogSection();
 		
 		// Write back the semi-final results
 		MemoryManager.getInstance().freePage(qf_page);
@@ -221,10 +234,11 @@ public class Query_C {
 		// If that's true, output the result!
 		
 		// 1. Output header
-		System.out.println( "s_acctbal\ts_name\tn_name\tp_partkey\tp_mfgr\ts_address\ts_phone\ts_comment");
+		Log.SetResultHeader( "s_acctbal\ts_name\tn_name\tp_partkey\tp_mfgr\ts_address\ts_phone\ts_comment");
 		
 		// 2. Check for matches		
 		int qf_p = 0;
+		Log.StartLogSection("Check for matches by comparing the complete potential results with the minimum prices");
 		while( (qf_page = MemoryManager.getInstance().getPage( QCFinal_Page.class, qf_p++)) != null )
 		{
 			QCFinal_Record[] qf = qf_page.m_records;
@@ -232,6 +246,7 @@ public class Query_C {
 			{
 				boolean OutputRecord = true;
 				// For all suppliers in the other table
+				Log.StartLogSection("For all suppliers in the minimum suppliers temp. table");
 				qcsk_page = null;
 				int qcsk_p = 0;
 				while( (qcsk_page = MemoryManager.getInstance().getPage( QCSK_Page.class, qcsk_p++)) != null && OutputRecord )
@@ -241,6 +256,7 @@ public class Query_C {
 					for( int j = 0; j < qcsk.length && OutputRecord; j++ )
 					{
 						// For matching in the partSupp table
+						Log.StartLogSection("Matching product key in the partSupp relation");
 						PartSuppPage psPage = null;
 						int psp = 0;
 						while ( (psPage = MemoryManager.getInstance().getPage( PartSuppPage.class, psp++ ) ) != null )
@@ -262,15 +278,17 @@ public class Query_C {
 							
 							MemoryManager.getInstance().freePage(psPage);
 						}
+						Log.EndLogSection();
 					}					
 					
 					MemoryManager.getInstance().freePage(qcsk_page);
 				}
+				Log.EndLogSection();
 				
 				if( OutputRecord )
 				{
-					// Succesful result found! yay!!!
-					System.out.println( qf[i].get("s_acctBal").getFloat() + "\t" +
+					// Successful result found!
+					Log.AddResult(      qf[i].get("s_acctBal").getFloat() + "\t" +
 							            qf[i].get("s_name").getString() + "\t" +
 							            qf[i].get("n_name").getString() + "\t" +
 							            qf[i].get("p_partKey").getInt() + "\t" +
@@ -282,12 +300,11 @@ public class Query_C {
 			}			
 			
 			MemoryManager.getInstance().freePage( qf_page );
-		}		
+		}
+		Log.EndLogSection();
+		
+		Log.EndLog();
 	}
-	
-
-	
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@ public class Query_Z_Indexed extends Query_Z
 {
 	public void ProcessQuery(int year)
 	{
-		Log.StartLogSection("Query_Z");
+		Log.StartLog("z.out");
 		////////////////////////////////////////////////////////////////////
 		// Zeroeth phase:
 		// Initialization
@@ -146,7 +146,7 @@ public class Query_Z_Indexed extends Query_Z
 		
 		Log.EndLogSection();
 		
-		Log.Flush();
+		Log.EndLog();
 	}
 }
 

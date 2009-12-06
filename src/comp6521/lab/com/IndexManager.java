@@ -55,6 +55,7 @@ public class IndexManager
 	public void PurgeIndexes()
 	{
 		// Delete all ".idx" files
+		PageManagerSingleton.getInstance().deleteIdxFiles();
 		
 		// Set to null everything
 		LineItemDateIndex = null;

@@ -129,14 +129,11 @@ public class PageManagerSingleton
 		return length;
 	}
 	
-	// delete temporary files
-	public void deleteTmpFiles()
+	protected void deleteFileType(String ext)
 	{
 		File file = new File(path);	// get file object for path 
 		File[] dirFiles = file.listFiles();	// get list of files in current path
-		
-		String ext = ".tmp";	// define extension to be removed
-		
+			
 		// delete .tmp files
 		for ( File currFile : dirFiles )
 		{
@@ -147,6 +144,17 @@ public class PageManagerSingleton
 			{
 				currFile.delete();	// delete file
 			}
-		}	
+		}			
+	}
+	
+	// delete temporary files
+	public void deleteTmpFiles()
+	{
+		deleteFileType(".tmp");
+	}
+	
+	public void deleteIdxFiles()
+	{
+		deleteFileType(".idx");
 	}
 }

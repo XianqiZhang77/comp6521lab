@@ -95,7 +95,7 @@ public class Query_Z {
 
 		String result = "";
 		
-		while( (osgPage = MemoryManager.getInstance().getPage(OrdersGroupsPage.class, osg_p++, "qzg_os_i.txt")) != null )
+		while( (osgPage = MemoryManager.getInstance().getPage(OrdersGroupsPage.class, osg_p++, "qzg_os.txt")) != null )
 		{
 			OrdersSubsetRecord[] osgRecords = osgPage.m_records;
 			
@@ -119,7 +119,7 @@ public class Query_Z {
 					CustomerPage custPage = null;
 					int custPageNb = 0;
 					boolean found = false;
-					while( (custPage = MemoryManager.getInstance().getPage(CustomerPage.class, custPageNb++)) != null && !found )
+					while( !found && (custPage = MemoryManager.getInstance().getPage(CustomerPage.class, custPageNb++)) != null )
 					{
 						for( int c = 0; c < custPage.m_records.length; c++ )
 						{

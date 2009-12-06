@@ -23,10 +23,10 @@ public class Query_Z_Indexed extends Query_Z
 		
 		// Indexes
 		BPlusTree< OrdersPage, DateRecordElement > OrderDateIndex = new BPlusTree< OrdersPage, DateRecordElement >();
-		OrderDateIndex.CreateBPlusTree(OrdersPage.class, DateRecordElement.class, "orders.txt", "orders_date_tree.txt", "o_orderDate");
+		OrderDateIndex.CreateBPlusTree(OrdersPage.class, DateRecordElement.class, "Orders.txt", "orders_date_tree.txt", "o_orderDate");
 		// customer key -> record index
 		BPlusTree< CustomerPage, IntegerRecordElement > CustomerPKIndex = new BPlusTree< CustomerPage, IntegerRecordElement >();
-		CustomerPKIndex.CreateBPlusTree(CustomerPage.class, IntegerRecordElement.class, "customer.txt", "customer_pk_tree.txt", "c_custKey");
+		CustomerPKIndex.CreateBPlusTree(CustomerPage.class, IntegerRecordElement.class, "Customer.txt", "customer_pk_tree.txt", "c_custKey");
 		
 		
 		// What we must do:

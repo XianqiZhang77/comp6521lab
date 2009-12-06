@@ -44,6 +44,7 @@ public class DateRecordElement extends RecordElement {
 	
 	public Date getDate() { return m_value; }
 	public void setDate(Date val) { m_value = val; }
+	public void set(RecordElement other) { m_value = other.getDate(); }
 	
 	public int CompareTo(RecordElement el) { return m_value.compareTo(el.getDate()); }
 }

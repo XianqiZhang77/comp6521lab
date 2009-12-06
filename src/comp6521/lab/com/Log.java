@@ -86,7 +86,7 @@ public class Log
 	private void FlushInternal()
 	{
 		// First, pop everything out
-		while( sections.peek() != null )
+		while( !sections.empty() )
 			EndLogSection();
 		
 		// Write header
@@ -142,7 +142,7 @@ class LogSection
 		for( int i = 0; i < lines.size(); i++ )
 			System.out.println(lines.get(i));
 		
-		System.out.println("<< END -- " + sectionName + " -- END >>");
+		System.out.println("<< END ---- " + sectionName + " ---- END >>");
 	}
 	
 }

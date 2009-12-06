@@ -117,6 +117,10 @@ public class Query_C_Indexed extends Query_C
 		// ATTN: the PRtPKpf PF is not free right now, check the Clear() method a few lines down.
 		
 		// FOURTH:
+		Log.StartLogSection("Cache index roots");
+		PartSuppPartFKIndex.CacheRoot();
+		PartSuppSuppFKIndex.CacheRoot();
+		Log.EndLogSection();
 		// For each part we have, lookup in the partsupp table.
 		// -- From that, we can check the prices
 		// 
@@ -130,9 +134,13 @@ public class Query_C_Indexed extends Query_C
 		ArrayList<Integer> psSuppliersRN = DB.ReverseProcessingLoopAI( StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
 		Log.EndLogSection();
 		// min_suppliers PK -> ps record numbers
-		Log.StartLogSection("Getting all partSupp RN that match the minimum selection supplier keys (ps_suppKey == s_suppKey)");
+		Log.StartLogSection("Getting all partSupp RN that match the minimum selection supplier keys (ps_suppKey == s_suppKey)");		
 		ArrayList<Integer> psMinSuppliersRN = DB.ReverseProcessingLoopAI( min_StSKpf.keys , key_page.class, PartSuppSuppFKIndex, "key");
 		Log.EndLogSection();
+		
+		// Uncache roots
+		PartSuppPartFKIndex.UncacheRoot();
+		PartSuppSuppFKIndex.UncacheRoot();
 		
 		// Once we have the matching record numbers, we can free the pages we were taking
 		// false here is to make sure we don't write the last page.. it's not needed anyways
@@ -347,7 +355,7 @@ class SupplierToOutputPF extends ProcessingFunction<PartSuppPage, IntegerRecordE
 				NationRecord nation = nationpage.m_records[nationR];
 				
 				// Output 
-				System.out.println( supplier.get("s_acctBal").getFloat()  + "\t" + 
+				Log.AddResult(      supplier.get("s_acctBal").getFloat()  + "\t" + 
 						            supplier.get("s_name").getString()    + "\t" +
 						            nation.get("n_name").getString()      + "\t" +
 						            part.get("p_partKey").getInt()        + "\t" +

@@ -23,6 +23,22 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		m_treeCreated = false;
 	}
 	
+	public void CacheRoot()
+	{
+		if(m_root.IsLoaded())
+			return;
+		
+		m_root.Load(0);
+	}
+	
+	public void UncacheRoot()
+	{
+		if(!m_root.IsLoaded())
+			return;
+		
+		m_root.Clear();
+	}
+	
 	public void CreateBPlusTree( Class<T> pageClass, Class<S> recordElementClass, String pageFilename, String treeFilename, String key )
 	{
 		CreateBPlusTree( pageClass, recordElementClass, -1, pageFilename, treeFilename, key );
@@ -106,7 +122,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			m_root.Clear();		
 	}
 	
-	public void Insert( BPlusTreeNode<S> node, KeyPointerPair pair)
+	private void Insert( BPlusTreeNode<S> node, KeyPointerPair pair)
 	{
 		assert(node.IsLoaded());
 		

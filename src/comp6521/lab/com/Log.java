@@ -32,6 +32,7 @@ public class Log
 		{
 			LogStarted = true;
 			filename = outputFilename;
+			PageManagerSingleton.getInstance().deleteFile(outputFilename);
 		}
 		else
 		{
@@ -91,10 +92,11 @@ public class Log
 		
 		// Write header
 		if( header.length() > 0 )
-			System.out.println(header);
+			PageManagerSingleton.getInstance().writePage(filename, header + "\r\n");
+
 		// Flush all results		
 		for( int i = 0; i < results.size(); i++)
-			System.out.println(results.get(i));
+			PageManagerSingleton.getInstance().writePage(filename, results.get(i) + "\r\n");
 		
 		header = "";
 		results.clear();		
@@ -135,14 +137,14 @@ class LogSection
 		long read_io_delta  = end_read_io - start_read_io;
 		long write_io_delta = end_write_io - start_write_io;
 		
-		System.out.println(">> START -- " + sectionName + " -- START <<");
-		System.out.println("-- Nb read I/Os : " + read_io_delta + " -- ");
-		System.out.println("-- Nb write I/Os : " + write_io_delta + " -- ");
+		PageManagerSingleton.getInstance().writePage(filename, ">> START -- " + sectionName + " -- START <<\r\n");
+		PageManagerSingleton.getInstance().writePage(filename, "-- Nb read I/Os : " + read_io_delta + " --\r\n");
+		PageManagerSingleton.getInstance().writePage(filename, "-- Nb write I/Os : " + write_io_delta + " --\r\n");
 		
 		for( int i = 0; i < lines.size(); i++ )
-			System.out.println(lines.get(i));
+			PageManagerSingleton.getInstance().writePage(filename, lines.get(i) + "\r\n");
 		
-		System.out.println("<< END ---- " + sectionName + " ---- END >>");
+		PageManagerSingleton.getInstance().writePage(filename, "<< END ---- " + sectionName + " ---- END >>\r\n");
 	}
 	
 }

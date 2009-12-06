@@ -167,4 +167,11 @@ public class PageManagerSingleton
 	{
 		deleteFileType(".idx");
 	}
+	
+	public void deleteFile(String outputFilename)
+	{
+		File file = new File(path + outputFilename);
+		if( file.exists() )
+			file.delete();
+	}
 }

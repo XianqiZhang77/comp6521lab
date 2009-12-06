@@ -19,14 +19,17 @@ public class Query_B_Indexed extends Query_B
 		double avgBalance = 0;
 		
 		// String length of 3 == "x12"
-		StringRecordElement el = new StringRecordElement(3);
+		StringRecordElement el = new StringRecordElement(2);
 		
 		CustomerPage page = null;
-				
+
+		Log.StartLogSection("Loop on all elements in the second list (used for the average) and compute average");
 		for(int k = 0; k < AvgList.length; k++ )
 		{
-			el.setString( AvgList[k]);
+			el.setString(AvgList[k]);
+			Log.StartLogSection("Get all records with country code matching " + AvgList[k]);
 			int[] pageList = index.getPageList( el );
+			Log.EndLogSection();
 			
 			for( int p = 0; p < pageList.length; p++ )
 			{
@@ -51,17 +54,22 @@ public class Query_B_Indexed extends Query_B
 		if( countAvg > 0 )
 			avgBalance /= (double)countAvg;
 		
+		Log.EndLogSection();
+		
 		// Perform the outer query ...
 		// First step: print the header of the results
-		System.out.println("cntrycode\tc_acctbal");
+		Log.SetResultHeader("cntrycode\tc_acctbal");
 		
 		// Now, perform the main query
 		page = null;
 		
+		Log.StartLogSection("Loop on all country codes in the first list and output results if over the computed average");
 		for( int k = 0; k < SelList.length; k++ )
 		{
 			el.setString( SelList[k]);
+			Log.StartLogSection("Get all records with country code matching " + SelList[k]);
 			int[] pageList = index.getPageList( el );
+			Log.EndLogSection();
 			
 			for( int p = 0; p < pageList.length; p++ )
 			{
@@ -75,13 +83,14 @@ public class Query_B_Indexed extends Query_B
 						customers[r].get("c_acctBal").getFloat() > avgBalance )
 					{
 						// Print record info
-						System.out.println(customers[r].get("c_phone").getString().substring( 0, 2) + "\t" + customers[r].get("c_acctBal").getFloat() );
+						Log.AddResult(customers[r].get("c_phone").getString().substring( 0, 2) + "\t" + customers[r].get("c_acctBal").getFloat() );
 					}					
 				}
 				
 				MemoryManager.getInstance().freePage(page);
 			}
-		}		
+		}	
+		Log.EndLogSection();
 	}
 }
 

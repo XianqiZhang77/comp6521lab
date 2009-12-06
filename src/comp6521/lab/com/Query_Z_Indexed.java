@@ -14,6 +14,7 @@ public class Query_Z_Indexed extends Query_Z
 {
 	public void ProcessQuery(int year)
 	{
+		Log.StartLogSection("Query_Z");
 		////////////////////////////////////////////////////////////////////
 		// Zeroeth phase:
 		// Initialization
@@ -37,19 +38,27 @@ public class Query_Z_Indexed extends Query_Z
 		DateRecordElement endDateElement = new DateRecordElement();
 		endDateElement.Parse(endDate);
 		
+		Log.StartLogSection("Getting the list of orders between the dates from the OrderDateIndex");
 		int[] OrdersList = OrderDateIndex.Get(startDateElement, endDateElement);
 		Arrays.sort(OrdersList);
+		Log.EndLogSection();
 		
 		// Write all results to the subset file containing the customer key, the total price & the order date
+		Log.StartLogSection("Writing the subset of attributes needed -- custKey, totalPrice, orderDate");
 		OrdersSubsetPF OutputSubsetOrdersPF = new OrdersSubsetPF(OrdersList);
 		DB.ProcessingLoop(OutputSubsetOrdersPF);
+		Log.EndLogSection();
 		
 		// Sort by o_custKey & by month
+		Log.StartLogSection("Sorting by custKey and by month");
 		TPMMS<OrdersSubsetPage> sort = new TPMMS<OrdersSubsetPage>(OrdersSubsetPage.class, "qz_os_i.tmp");
 		String sortedOS = sort.Execute();
+		Log.EndLogSection();
 		
 		// Group by o_custKey (sum total price) & by month
+		Log.StartLogSection("Grouping by custKey and by month");
 		FourthPhase( sortedOS, "qzg_os_i.tmp" );
+		Log.EndLogSection();
 		
 		// Translate customer key to customer name and output results
 		CustomerPage custPage = null;
@@ -62,8 +71,9 @@ public class Query_Z_Indexed extends Query_Z
 		String previousName = "";
 		int previousCustKey = -1;
 		
+		Log.StartLogSection("Outputting results and translating the custKey -> c_name");
 		// Print header first
-		System.out.println("customerName\tJAN\tFEB\tMAR\tAPR\tMAY\tJUN\tJUL\tAUG\tSEP\tOCT\tNOV\tDEC");
+		Log.SetResultHeader("customerName\tJAN\tFEB\tMAR\tAPR\tMAY\tJUN\tJUL\tAUG\tSEP\tOCT\tNOV\tDEC");
 		int prevMonth = 0;
 
 		String result = "";
@@ -81,7 +91,7 @@ public class Query_Z_Indexed extends Query_Z
 				{
 					// Output previous result
 					if( result.length() > 0 )
-						System.out.println(result);
+						Log.AddResult(result);
 					
 					result = "";	
 					prevMonth = 0;
@@ -132,8 +142,11 @@ public class Query_Z_Indexed extends Query_Z
 		
 		// Output last result if needed
 		if( result.length() > 0 )
-			System.out.println(result);
+			Log.AddResult(result);
 		
+		Log.EndLogSection();
+		
+		Log.Flush();
 	}
 }
 

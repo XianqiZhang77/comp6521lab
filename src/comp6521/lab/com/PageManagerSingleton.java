@@ -24,11 +24,15 @@ public class PageManagerSingleton
 	
 	private static final PageManagerSingleton INSTANCE = new PageManagerSingleton(); 	// page manager singleton
 	
+	private long readIO;
+	private long writeIO;
 	private String path;		// store file path 		 
 	
 	// default constructor
 	private PageManagerSingleton()
 	{
+		readIO = 0;
+		writeIO = 0;
 		path = "C:\\";		// set default path
 	}
 	
@@ -49,6 +53,9 @@ public class PageManagerSingleton
 	{
 		return this.path;
 	}
+	
+	public long getReadIOCount() { return readIO; }
+	public long getWriteIOCount() { return writeIO; }
 		
 	// get page from disk. a page is equal to 10 records.
 	// preconditions: recordSize, pageNumber to retrieve, fileName containing relation data.
@@ -69,6 +76,7 @@ public class PageManagerSingleton
 				file.read(cbuf);		    						// read data into character buffer
 							
 			file.close();											// close file
+			readIO++;
 		}
 		catch(IOException io)
 		{
@@ -90,6 +98,7 @@ public class PageManagerSingleton
 			FileWriter file = new FileWriter(path + filename, true);
 			file.write(cbuf);
 			file.close();
+			writeIO++;
 		}
 		catch(IOException ioException)
 		{
@@ -106,6 +115,7 @@ public class PageManagerSingleton
 			file.seek(pageSize * pageNumber);
 			file.writeBytes(cbuf);
 			file.close();
+			writeIO++;
 		}
 		catch(IOException ioException)
 		{

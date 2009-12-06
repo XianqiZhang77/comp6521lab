@@ -22,7 +22,9 @@ public class Query_A_Indexed extends Query_A
 		ed.setDate(EndDate);
 		
 		// Get the list of all records in the range [start date, end date]
+		Log.StartLogSection("Get the list of all records in the range [start date, end date]");
 		int[] matchingRecords = index.Get(sd, ed);
+		Log.EndLogSection();
 		
 		// Sort by record number
 		Arrays.sort(matchingRecords);
@@ -35,6 +37,7 @@ public class Query_A_Indexed extends Query_A
 		LineItemPage page = null;
 		int curPageNb = -1;
 		
+		Log.StartLogSection("Going through all matching records and compounding the results");
 		for(int i = 0; i < matchingRecords.length; i++)
 		{
 			// Compute page number & record index
@@ -61,6 +64,7 @@ public class Query_A_Indexed extends Query_A
 		
 		if( page != null )
 			MemoryManager.getInstance().freePage(page);
+		Log.EndLogSection();
 		
 		// Compute averages
 		avg_qty = (count == 0 ? 0 : (sum_qty / count) );

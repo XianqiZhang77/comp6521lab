@@ -44,6 +44,7 @@ public class Query_A {
 		int p = 0;
 		LineItemPage liPage = null;
 
+		Log.StartLogSection("Going through all records in the LineItem table to see if they match, and compound results");
 		while( (liPage = MemoryManager.getInstance().getPage( LineItemPage.class, p++ )) != null)
 		{			
 			LineItemRecord[] LineItems = liPage.m_records;
@@ -61,14 +62,11 @@ public class Query_A {
 					sum_charge     += LineItems[r].get("l_extendedPrice").getFloat() * (1.0f - LineItems[r].get("l_discount").getFloat())/* * (1 + LineItems[r].get("l_tax").getFloat())*/;
 					count++;
 				}
-				else
-				{
-					System.out.println("RN: " + (r + p * 10) + " -- " + LineItems[r].get("l_receiptDate").Write());
-				}
 			}
 			
 			MemoryManager.getInstance().freePage( liPage );			
 		}
+		Log.EndLogSection();
 		
 		// Compute averages
 		avg_qty = (count == 0 ? 0 : (sum_qty / (double)count) );
@@ -79,15 +77,15 @@ public class Query_A {
 	{
 		if( m_queryPerformed )
 		{
-			System.out.println("sum_qty\tsum_base_price\tsum_disc_price\tsum_charge\tavg_qty\tcount_order");
-			//System.out.println( sum_qty + "\t" + sum_base_price + "\t" + sum_disc_price + "\t" + sum_charge + "\t" + avg_qty + "\t" + count);
-			
-			System.out.printf("%d\t%f\t%f\t%f\t%f\t%d\n", sum_qty, sum_base_price, sum_disc_price, sum_charge, avg_qty, count);
+			Log.SetResultHeader("sum_qty\tsum_base_price\tsum_disc_price\tsum_charge\tavg_qty\tcount_order");
+			Log.AddResult(sum_qty + "\t" + sum_base_price + "\t" + sum_disc_price + "\t" + sum_charge + "\t" + avg_qty + "\t" + count );
 		
 		}
 		else
 		{
-			System.out.println("Perform query before asking for results");
+			Log.AddResult("Perform query before outputting results");
 		}
+		
+		Log.Flush();
 	}
 }

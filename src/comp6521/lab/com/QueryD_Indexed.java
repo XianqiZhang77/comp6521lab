@@ -33,7 +33,7 @@ public class QueryD_Indexed
 	{
 		// *** initialise memory manager ***
 		MemoryManager.getInstance().AddPageType( QDNationSubsetPage.class, "qd_ns_i.txt");	// add page type
-		MemoryManager.getInstance().AddPageType( QD_Page.class, "d.idx.out");	
+		MemoryManager.getInstance().AddPageType( QD_Page.class, "d.idx.tmp");	
 		
 		// *** build indexes ***
 		// r_name in RegionTable      [b-tree]
@@ -64,11 +64,37 @@ public class QueryD_Indexed
 		int[] nations = DB.ProcessingLoop(regionToNationPF);
 		Arrays.sort(nations);	// sort nations
 
-		// *** join *** and output
+		// *** join *** 
 		NationSubsetPF nationRecordsPF = new NationSubsetPF(nations, SupplierFKIndex);
 		DB.ProcessingLoop(nationRecordsPF);
 		
-		System.out.println("TEST");
+		// *** sort using tpmms ***
+		TPMMS<QD_Page> doTPMMS = new TPMMS<QD_Page>(QD_Page.class, "d.idx.tmp");
+		String sortedFile = doTPMMS.Execute();	
+		
+		// invert sorting order of sorted file (i.e. ORDER BY n_name DESC)
+		int numOfPages = MemoryManager.getInstance().GetNumberOfPages(QD_Page.class, sortedFile);	// get sorted number of pages
+		
+		MemoryManager.getInstance().AddPageType(QD_Page.class, "d.idx.out");	// output buffer
+		QD_Page outputBuffer = MemoryManager.getInstance().getEmptyPage(QD_Page.class, "d.idx.out");	// output buffer
+		
+		QD_Page qDResultSetPage = null;	// input buffer
+		
+		for ( int i = (numOfPages - 1); i >= 0 ; i-- )	// invert sorting order and output
+		{
+			qDResultSetPage = MemoryManager.getInstance().getPage(QD_Page.class, i, sortedFile);	// get page in DESC order
+			
+			for ( int j = (qDResultSetPage.m_records.length - 1); j >= 0; j-- )	// invert sorting order of records
+			{
+				outputBuffer.AddRecord(qDResultSetPage.m_records[j]);	// get jth record
+			}
+			
+			MemoryManager.getInstance().freePage(qDResultSetPage);	// free page
+		}
+		
+		MemoryManager.getInstance().freePage(outputBuffer);	// free remaining contents of page
+		
+		PageManagerSingleton.getInstance().deleteTmpFiles();	// remove temporary files (i.e. intermediate results)
 	}			
 }
 
@@ -127,6 +153,9 @@ class NationSubsetPF extends ProcessingFunction<NationPage, DateRecordElement>
 class QueryDIdxOutputPF extends ProcessingFunction<SupplierPage, DateRecordElement>
 {
 	// fields
+	int recordCount;							// recordCount
+	StringBuffer strBuffer;						// output buffer
+	
 	QDNationSubsetRecord	nationSubsetRec;	// nation record to join
 	QD_Page	page;								// output page
 	
@@ -136,13 +165,15 @@ class QueryDIdxOutputPF extends ProcessingFunction<SupplierPage, DateRecordEleme
 		// initialise
 		super( input, SupplierPage.class );	
 		this.nationSubsetRec = qDNationSubsetRecord;
+		
+		strBuffer = new StringBuffer();
 	}
 	
 	// start process
 	public void ProcessStart()
 	{
 		// get empty page
-		page = MemoryManager.getInstance().getEmptyPage(QD_Page.class, "d.idx.out");
+		page = MemoryManager.getInstance().getEmptyPage(QD_Page.class, "d.idx.tmp");
 	}
 	
 	// process method
@@ -156,12 +187,34 @@ class QueryDIdxOutputPF extends ProcessingFunction<SupplierPage, DateRecordEleme
 		qDOutput.get("s_phone").set( r.get("s_phone") );
 		qDOutput.get("s_comment").set( r.get("s_comment") );
 			
-		page.AddRecord(qDOutput); // add to page
+		// page.AddRecord(qDOutput); // add to page
+		
+		// build output string
+		if (recordCount < page.m_nbRecordsPerPage)
+		{
+			strBuffer.append(qDOutput.toString());	// add record string
+			recordCount++;							// increment record count
+		}
+		else
+		{
+			PageManagerSingleton.getInstance().writePage("d.idx.tmp", strBuffer.toString());	// output record string (i.e. block)
+			recordCount = 0;	// reset record count
+			strBuffer.delete(0, strBuffer.length());
+			strBuffer.append(qDOutput.toString());
+			recordCount++;	
+		}	
 	}
 	
 	// end process
 	public int[] EndProcess()
 	{
+		if (recordCount > 0)
+		{
+			PageManagerSingleton.getInstance().writePage("d.idx.tmp", strBuffer.toString());	// output record string (i.e. block)
+			recordCount = 0;	// reset record count
+			strBuffer.delete(0, strBuffer.length());
+		}
+		
 		// free page
 		MemoryManager.getInstance().freePage(page);
 		return null;

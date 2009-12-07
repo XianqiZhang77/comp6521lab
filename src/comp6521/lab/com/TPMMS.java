@@ -93,10 +93,17 @@ public class TPMMS <T extends Page<?>>
 						{
 							strBuffer.append("\r\n");	// add blank records to complete pages (e.g. 4 exact pages)							
 						}	
+					
+						if ( (recordCount +1) % numPageRecords == 0)	// output each block of m
+						{
+							// output record string
+							PageManagerSingleton.getInstance().writePage(filename + "_phase1.tmp", strBuffer.toString());
+							strBuffer.delete(0, strBuffer.length());	// clear string buffer
+						}
 					}
 					
 					// output record string
-					PageManagerSingleton.getInstance().writePage(filename + "_phase1.tmp", strBuffer.toString());
+					//PageManagerSingleton.getInstance().writePage(filename + "_phase1.tmp", strBuffer.toString());
 					
 					// empty array list
 					memRecords.clear();

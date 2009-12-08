@@ -48,25 +48,35 @@ public class QueryD_Indexed
 		StringRecordElement searchKey = new StringRecordElement(50);	// initialise search key
 		searchKey.setString(r_name);
 		
+		Log.StartLogSection("Getting all regions with name: " + r_name);
 		int[] regions = RegionNameIndex.Get(searchKey);	// lookup region record numbers
+		Log.EndLogSection();
 		Arrays.sort(regions);	// sort array using quick-sort
 		
 		RegionToNationPF regionToNationPF = new RegionToNationPF(regions, NationFKIndex, "r_regionKey");	// get nation record #s for regions
+		Log.StartLogSection("Getting all nations from the regions found");
 		int[] nations = DB.ProcessingLoop(regionToNationPF);
+		Log.EndLogSection();
 		Arrays.sort(nations);	// sort nations
 		
 		// *** Get all nations, save (n_nationKey, n_name) to file
 		NationRNToFilePF nationRNtoFilePF = new NationRNToFilePF(nations, "nation_subset.tmp");
+		Log.StartLogSection("Save the subset of nations needed to file (n_nationKey, n_name) to sort");
 		DB.ProcessingLoop(nationRNtoFilePF);
+		Log.EndLogSection();
 		
 		// *** Sort nation subset file using TPMMS
 		TPMMS<QDNationSubsetPage> nationSort = new TPMMS<QDNationSubsetPage>(QDNationSubsetPage.class, "nation_subset.tmp");
+		Log.StartLogSection("Sorting the nation subset");
 		String sortedNationFilename = nationSort.Execute();
+		Log.EndLogSection();
 		
 		// *** Output results ***
 		Log.SetResultHeader("s_acctbal\ts_name\tn_name\ts_address\ts_phone\ts_comment");
 		NationSubsetPF nationRecordsPF = new NationSubsetPF(SupplierFKIndex);
+		Log.StartLogSection("For all nations ... ");
 		DB.ProcessingLoopOnFile(QDNationSubsetPage.class, sortedNationFilename, nationRecordsPF);
+		Log.EndLogSection();
 		
 		Log.EndLog();
 		
@@ -131,7 +141,9 @@ class NationSubsetPF extends ProcessingFunction<NationPage, DateRecordElement>
 		Arrays.sort(suppliers);	// sort suppliers	
 		
 		QueryDIdxOutputPF output = new QueryDIdxOutputPF(suppliers, r.get("n_name").getString());	// output nation-supplier join
+		Log.StartLogSection("Output all suppliers");
 		DB.ProcessingLoop(output);
+		Log.EndLogSection();
 	}
 	
 	// end process

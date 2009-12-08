@@ -5,6 +5,8 @@
 package comp6521.lab.com;
 
 import comp6521.lab.com.Records.*;
+import comp6521.lab.com.Util.DB;
+import comp6521.lab.com.Util.ProcessingFunction;
 import comp6521.lab.com.Pages.*;
 
 /**
@@ -20,6 +22,8 @@ public class Query_D
 	// execute query:
 	public void ProcessQuery(String r_name)
 	{
+		Log.StartLog("d.out");
+	
 		// initialise memory manager tracking for custom pages		
 		MemoryManager.getInstance().AddPageType(RegionSubsetPage.class, "r_subset.tmp");
 		MemoryManager.getInstance().AddPageType(QDNationSubsetPage.class, "n_subset.tmp");
@@ -29,6 +33,7 @@ public class Query_D
 		RegionSubsetPage rSubsetPage = MemoryManager.getInstance().getEmptyPage(RegionSubsetPage.class);
 		
 		// select r_regionKey from Region where r_name = ? 
+		Log.StartLogSection("Find all regions named " + r_name);
 		int r_page =  0;																								// region page counter
 		RegionPage regionPage = null;																					// region page	
 		while ( (regionPage = MemoryManager.getInstance().getPage(RegionPage.class, r_page++)) != null )				// get region page
@@ -56,10 +61,13 @@ public class Query_D
 		MemoryManager.getInstance().freePage(rSubsetPage);
 		rSubsetPage = null;
 		
+		Log.EndLogSection();
+		
 		// get empty nation page
 		QDNationSubsetPage nSubsetPage = MemoryManager.getInstance().getEmptyPage(QDNationSubsetPage.class);
 		
 		// select n_regionKey, n_name from Nation, Region where r_regionKey = n_regionKey and r_name = ?
+		Log.StartLogSection("Find all nations matching a region found");
 		r_page = 0;
 		while ( (rSubsetPage = MemoryManager.getInstance().getPage(RegionSubsetPage.class, r_page++)) != null )				// get region subset page
 		{
@@ -103,6 +111,8 @@ public class Query_D
 		// write out selected nation subset page
 		MemoryManager.getInstance().freePage(nSubsetPage);
 		nSubsetPage = null;
+		
+		Log.EndLogSection();
 	
 		// get empty query d result set page for result set
 		QD_Page qDResultSetPage = MemoryManager.getInstance().getEmptyPage(QD_Page.class);
@@ -110,6 +120,8 @@ public class Query_D
 		// select s_acctbal, s_name, n_name, s_address, s_phone, s_comment 
 		// from nation, supplier
 		// where s_nationKey = n_nationKey
+		Log.StartLogSection("Find all suppliers matching a nation found");
+		
 		int n_page = 0;																											// nation page counter
 		while ( (nSubsetPage = MemoryManager.getInstance().getPage(QDNationSubsetPage.class, n_page++)) != null )				// get nation subset page
 		{
@@ -139,9 +151,6 @@ public class Query_D
 							qDRecord.get("s_address").set(sRec.get("s_address"));
 							qDRecord.get("s_phone").set(sRec.get("s_phone"));
 							qDRecord.get("s_comment").set(sRec.get("s_comment"));
-
-							// TODO: remove test line
-							System.out.println(qDRecord);
 							
 							// add record to page
 							qDResultSetPage.AddRecord(qDRecord);
@@ -160,31 +169,42 @@ public class Query_D
 		// write out query d result set page
 		MemoryManager.getInstance().freePage(qDResultSetPage);
 		
+		Log.EndLogSection();
+		
 		// Sort using TPMMS
 		TPMMS<QD_Page> doTPMMS = new TPMMS<QD_Page>(QD_Page.class, qDResultSetPage.m_filename);
+		Log.StartLogSection("Sort final results by nation");
 		String sortedFile = doTPMMS.Execute();	
+		Log.EndLogSection();
 		
-		// invert sorting order of sorted file (i.e. ORDER BY n_name DESC)
-		int numOfPages = MemoryManager.getInstance().GetNumberOfPages(QD_Page.class, sortedFile);	// get sorted number of pages
+		Log.SetResultHeader("s_acctbal\ts_name\tn_name\ts_address\ts_phone\ts_comment");
 		
-		MemoryManager.getInstance().AddPageType(QD_Page.class, "d.out");	// output buffer
-		QD_Page outputBuffer = MemoryManager.getInstance().getEmptyPage(QD_Page.class, "d.out");	// output buffer
-		
-		for ( int i = (numOfPages - 1); i >= 0 ; i-- )	// invert sorting order and output
-		{
-			qDResultSetPage = MemoryManager.getInstance().getPage(QD_Page.class, i, sortedFile);	// get page in DESC order
-			
-			for ( int j = (qDResultSetPage.m_records.length - 1); j >= 0; j-- )	// invert sorting order of records
-			{
-				outputBuffer.AddRecord(qDResultSetPage.m_records[j]);	// get jth record
-			}
-			
-			MemoryManager.getInstance().freePage(qDResultSetPage);	// free page
-		}
-		
-		MemoryManager.getInstance().freePage(outputBuffer);	// free remaining contents of page
+		OutputQDResultsPF oPF = new OutputQDResultsPF();
+		Log.StartLogSection("Output results");
+		DB.ProcessingLoopOnFile(QD_Page.class, sortedFile, oPF);
+		Log.EndLogSection();
 		
 		PageManagerSingleton.getInstance().deleteTmpFiles();	// remove temporary files (i.e. intermediate results)
+		Log.EndLog();
+	}
+}
+
+class OutputQDResultsPF extends ProcessingFunction<QD_Page, IntegerRecordElement>
+{
+	public OutputQDResultsPF()
+	{
+		super( new int[0], QD_Page.class );
+	}
+	
+	public void ProcessStart() {}
+	public void Process( Record r )
+	{
+		Log.AddResult( r.get("s_acctBal").getFloat()  + "\t" +
+			           r.get("s_name").getString()    + "\t" +
+			           r.get("n_name").getString()    + "\t" +
+			           r.get("s_address").getString() + "\t" +
+			           r.get("s_phone").getString()   + "\t" +
+			           r.get("s_comment").getString()          );
 	}
 }
 
@@ -232,7 +252,7 @@ class QD_Record extends Record
 	// comparator interface compare method implementation
 	public int compareTo(Record rec)
 	{	
-		return (this.get("n_name").getString().compareToIgnoreCase(rec.get("n_name").getString()));
+		return - (this.get("n_name").getString().compareToIgnoreCase(rec.get("n_name").getString()));
 	}
 	
 	// return string representation of record

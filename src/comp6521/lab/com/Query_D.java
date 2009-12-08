@@ -189,7 +189,7 @@ public class Query_D
 }
 
 //private RegionSubsetRecord inner class stores temporary region 
-class QDNationSubsetRecord extends Record implements Comparable<Record>
+class QDNationSubsetRecord extends Record
 {
 	public QDNationSubsetRecord()
 	{
@@ -200,8 +200,7 @@ class QDNationSubsetRecord extends Record implements Comparable<Record>
 	
 	public int compareTo(Record r)
 	{
-		// TODO: insert compare code
-		return 1;
+		return - get("n_name").CompareTo(r.get("n_name"));
 	}
 }
 
@@ -211,7 +210,7 @@ class QDNationSubsetPage extends Page<QDNationSubsetRecord>
 	public QDNationSubsetPage()
 	{
 		super();
-		super.m_records = CreateArray(100);
+		m_nbRecordsPerPage = 100;
 	}
 	
 	public QDNationSubsetRecord[] CreateArray(int n){ return new QDNationSubsetRecord[n]; }

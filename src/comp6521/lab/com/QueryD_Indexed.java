@@ -6,6 +6,7 @@ package comp6521.lab.com;
 import java.util.Arrays;
 
 import comp6521.lab.com.Pages.NationPage;
+import comp6521.lab.com.Pages.Page;
 import comp6521.lab.com.Pages.RegionPage;
 import comp6521.lab.com.Pages.SupplierPage;
 
@@ -31,29 +32,19 @@ public class QueryD_Indexed
 	// execute query:
 	public void ProcessQuery(String r_name)
 	{
-		// *** initialise memory manager ***
-		MemoryManager.getInstance().AddPageType( QDNationSubsetPage.class, "qd_ns_i.txt");	// add page type
-		MemoryManager.getInstance().AddPageType( QD_Page.class, "d.idx.tmp");	
+		Log.StartLog("d_i.out");
 		
 		// *** build indexes ***
 		// r_name in RegionTable      [b-tree]
-		BPlusTree< RegionPage, StringRecordElement > RegionNameIndex = new BPlusTree< RegionPage, StringRecordElement >();
-		RegionNameIndex.CreateBPlusTree( RegionPage.class, StringRecordElement.class, 50, "Region.txt", "r_nameBTreeIndex.txt", "r_name" );
+		BPlusTree< RegionPage, StringRecordElement > RegionNameIndex = IndexManager.getInstance().getRegionNameIndex();
 		
 		// n_regionKey in Nation      [b-tree]
-		BPlusTree< NationPage, IntegerRecordElement > NationFKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
-		NationFKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_FK_tree.txt", "n_regionKey" );
-
-		// n_nationKey in Nation    [b-tree]
-		BPlusTree< NationPage, IntegerRecordElement > NationPKIndex = new BPlusTree< NationPage, IntegerRecordElement >();
-		NationPKIndex.CreateBPlusTree( NationPage.class, IntegerRecordElement.class, "Nation.txt", "Nation_PK_tree.txt", "n_nationKey" );
+		BPlusTree< NationPage, IntegerRecordElement > NationFKIndex = IndexManager.getInstance().getNationFKIndex();
 		
 		// s_nationKey in Supplier    [b-tree]
-		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = new BPlusTree< SupplierPage, IntegerRecordElement >();
-		SupplierFKIndex.CreateBPlusTree( SupplierPage.class, IntegerRecordElement.class, "Supplier.txt", "Supplier_FK_tree.txt", "s_nationKey" );
+		BPlusTree< SupplierPage, IntegerRecordElement > SupplierFKIndex = IndexManager.getInstance().getSupplierFKIndex();
 		
-		// *** process query ***
-		
+		// *** process query ***		
 		StringRecordElement searchKey = new StringRecordElement(50);	// initialise search key
 		searchKey.setString(r_name);
 		
@@ -63,58 +54,68 @@ public class QueryD_Indexed
 		RegionToNationPF regionToNationPF = new RegionToNationPF(regions, NationFKIndex, "r_regionKey");	// get nation record #s for regions
 		int[] nations = DB.ProcessingLoop(regionToNationPF);
 		Arrays.sort(nations);	// sort nations
-
-		// *** join *** 
-		NationSubsetPF nationRecordsPF = new NationSubsetPF(nations, SupplierFKIndex);
-		DB.ProcessingLoop(nationRecordsPF);
 		
-		// *** sort using tpmms ***
-		TPMMS<QD_Page> doTPMMS = new TPMMS<QD_Page>(QD_Page.class, "d.idx.tmp");
-		String sortedFile = doTPMMS.Execute();	
+		// *** Get all nations, save (n_nationKey, n_name) to file
+		NationRNToFilePF nationRNtoFilePF = new NationRNToFilePF(nations, "nation_subset.tmp");
+		DB.ProcessingLoop(nationRNtoFilePF);
 		
-		// invert sorting order of sorted file (i.e. ORDER BY n_name DESC)
-		int numOfPages = MemoryManager.getInstance().GetNumberOfPages(QD_Page.class, sortedFile);	// get sorted number of pages
+		// *** Sort nation subset file using TPMMS
+		TPMMS<QDNationSubsetPage> nationSort = new TPMMS<QDNationSubsetPage>(QDNationSubsetPage.class, "nation_subset.tmp");
+		String sortedNationFilename = nationSort.Execute();
 		
-		MemoryManager.getInstance().AddPageType(QD_Page.class, "d.idx.out");	// output buffer
-		QD_Page outputBuffer = MemoryManager.getInstance().getEmptyPage(QD_Page.class, "d.idx.out");	// output buffer
+		// *** Output results ***
+		Log.SetResultHeader("s_acctbal\ts_name\tn_name\ts_address\ts_phone\ts_comment");
+		NationSubsetPF nationRecordsPF = new NationSubsetPF(SupplierFKIndex);
+		DB.ProcessingLoopOnFile(QDNationSubsetPage.class, sortedNationFilename, nationRecordsPF);
 		
-		QD_Page qDResultSetPage = null;	// input buffer
-		
-		for ( int i = (numOfPages - 1); i >= 0 ; i-- )	// invert sorting order and output
-		{
-			qDResultSetPage = MemoryManager.getInstance().getPage(QD_Page.class, i, sortedFile);	// get page in DESC order
-			
-			for ( int j = (qDResultSetPage.m_records.length - 1); j >= 0; j-- )	// invert sorting order of records
-			{
-				outputBuffer.AddRecord(qDResultSetPage.m_records[j]);	// get jth record
-			}
-			
-			MemoryManager.getInstance().freePage(qDResultSetPage);	// free page
-		}
-		
-		MemoryManager.getInstance().freePage(outputBuffer);	// free remaining contents of page
+		Log.EndLog();
 		
 		PageManagerSingleton.getInstance().deleteTmpFiles();	// remove temporary files (i.e. intermediate results)
 	}			
 }
 
-// get the nation records indexed
+class NationRNToFilePF extends ProcessingFunction<NationPage, IntegerRecordElement>
+{
+	String filename;
+	Page<?> page;
+	
+	public NationRNToFilePF( int[] input, String _filename )
+	{
+		super(input, NationPage.class);
+		filename = _filename;
+	}
+	
+	public void ProcessStart()
+	{
+		MemoryManager.getInstance().AddPageType(QDNationSubsetPage.class, filename);
+		page = MemoryManager.getInstance().getEmptyPage(QDNationSubsetPage.class, filename);
+	}
+	
+	public void Process( Record r )
+	{
+		QDNationSubsetRecord qd = new QDNationSubsetRecord();
+		qd.get("n_nationKey").set( r.get("n_nationKey") );
+		qd.get("n_name").set( r.get("n_name"));
+		page.AddRecord(qd);
+	}
+	
+	public int[] EndProcess()
+	{
+		MemoryManager.getInstance().freePage(page);
+		return null;
+	}	
+}
+
 class NationSubsetPF extends ProcessingFunction<NationPage, DateRecordElement>
 {
-	// fields
-	int recCount = 0;											// count of records processed
-	int[] recordNumbers;											// array of record numbers
-	
-	QDNationSubsetPage page;									// nation subset page
 	BPlusTree< SupplierPage, IntegerRecordElement > suppIdx;	// supplier b+ tree index
 	
 	// constructor
-	public NationSubsetPF( int[] input, BPlusTree< SupplierPage, IntegerRecordElement > suppIdx )
+	public NationSubsetPF( BPlusTree< SupplierPage, IntegerRecordElement > suppIdx )
 	{
 		// initialise
-		super( input, NationPage.class );	
+		super( new int[0], NationPage.class );	
 		this.suppIdx = suppIdx;				 
-		this.recordNumbers = input;			
 	}
 	
 	// start process
@@ -126,18 +127,10 @@ class NationSubsetPF extends ProcessingFunction<NationPage, DateRecordElement>
 	// process method
 	public void Process( Record r )
 	{
-		QDNationSubsetRecord ns = new QDNationSubsetRecord();	// populate nation record
-		ns.get("n_nationKey").set( r.get("n_nationKey") );
-		ns.get("n_name").set( r.get("n_name") );
-			
-		int[] nation = {recordNumbers[recCount]};	// current nation record number
-		recCount++;									// increment record count
-		
-		NationToSupplierPF nationToSuppPF = new NationToSupplierPF(nation, suppIdx, "n_nationKey");	// get supplier record #s for suppliers
-		int[] suppliers = DB.ProcessingLoop(nationToSuppPF);
+		int[] suppliers = suppIdx.Get( r.get("n_nationKey") );
 		Arrays.sort(suppliers);	// sort suppliers	
 		
-		QueryDIdxOutputPF output = new QueryDIdxOutputPF(suppliers, ns);	// output nation-supplier join
+		QueryDIdxOutputPF output = new QueryDIdxOutputPF(suppliers, r.get("n_name").getString());	// output nation-supplier join
 		DB.ProcessingLoop(output);
 	}
 	
@@ -150,73 +143,37 @@ class NationSubsetPF extends ProcessingFunction<NationPage, DateRecordElement>
 }
 
 //get the nation records indexed
-class QueryDIdxOutputPF extends ProcessingFunction<SupplierPage, DateRecordElement>
+class QueryDIdxOutputPF extends ProcessingFunction<SupplierPage, IntegerRecordElement>
 {
-	// fields
-	int recordCount;							// recordCount
-	StringBuffer strBuffer;						// output buffer
-	
-	QDNationSubsetRecord	nationSubsetRec;	// nation record to join
-	QD_Page	page;								// output page
+	String nationName;
 	
 	// constructor
-	public QueryDIdxOutputPF(int[] input, QDNationSubsetRecord qDNationSubsetRecord)
+	public QueryDIdxOutputPF(int[] input, String _nationName)
 	{
 		// initialise
 		super( input, SupplierPage.class );	
-		this.nationSubsetRec = qDNationSubsetRecord;
-		
-		strBuffer = new StringBuffer();
+		nationName = _nationName;
 	}
 	
 	// start process
 	public void ProcessStart()
 	{
-		// get empty page
-		page = MemoryManager.getInstance().getEmptyPage(QD_Page.class, "d.idx.tmp");
 	}
 	
 	// process method
 	public void Process( Record r )
 	{
-		QD_Record qDOutput = new QD_Record();	// populate query d output record
-		qDOutput.get("s_acctBal").set( r.get("s_acctBal") );
-		qDOutput.get("s_name").set( r.get("s_name") );
-		qDOutput.get("n_name").set( nationSubsetRec.get("n_name") );
-		qDOutput.get("s_address").set( r.get("s_address") );
-		qDOutput.get("s_phone").set( r.get("s_phone") );
-		qDOutput.get("s_comment").set( r.get("s_comment") );
-			
-		// page.AddRecord(qDOutput); // add to page
-		
-		// build output string
-		if (recordCount < page.m_nbRecordsPerPage)
-		{
-			strBuffer.append(qDOutput.toString());	// add record string
-			recordCount++;							// increment record count
-		}
-		else
-		{
-			PageManagerSingleton.getInstance().writePage("d.idx.tmp", strBuffer.toString());	// output record string (i.e. block)
-			recordCount = 0;	// reset record count
-			strBuffer.delete(0, strBuffer.length());
-			strBuffer.append(qDOutput.toString());
-			recordCount++;	
-		}	
+		Log.AddResult( r.get("s_acctBal").getFloat()  + "\t" +
+				       r.get("s_name").getString()    + "\t" +
+				       nationName                     + "\t" +
+				       r.get("s_address").getString() + "\t" +
+				       r.get("s_phone").getString()   + "\t" +
+				       r.get("s_comment").getString()          );
 	}
 	
 	// end process
 	public int[] EndProcess()
 	{
-		if (recordCount > 0)
-		{
-			PageManagerSingleton.getInstance().writePage("d.idx.tmp", strBuffer.toString());	// output record string (i.e. block)
-			recordCount = 0;	// reset record count
-			strBuffer.delete(0, strBuffer.length());
-		}
-		
-		// free page
-		MemoryManager.getInstance().freePage(page);
 		return null;
 	}
 }

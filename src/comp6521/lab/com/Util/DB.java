@@ -39,6 +39,26 @@ public class DB
 		return pf.EndProcess();
 	}
 	
+	public static <T extends Page<?> > void ProcessingLoopOnFile( Class<T> pc, String filename, ProcessingFunction<?,?> pf )
+	{
+		Page<?> curpage = null;
+		int p = MemoryManager.getInstance().GetNumberOfPages(pc, filename);
+		
+		// If the current page hasn't been written to disk, we must count it also in p.
+		for( int i = 0; i < p; i++ )
+		{
+			curpage = MemoryManager.getInstance().getPage(pc, i, filename);
+			
+			for( int j = 0; j < curpage.m_records.length; j++ )
+			{
+				if( curpage.m_records[j] != null )
+					pf.Process( curpage.m_records[j] );
+			}
+			
+			MemoryManager.getInstance().freePage(curpage);
+		}
+	}
+	
 	// Loop on records in a page -> process the key value
 	public static <T extends Page<?> > ArrayList<ArrayList<Integer>> ReverseProcessingLoopAAI( Page<?> page, Class<T> pc, BPlusTree<?,?> bt, String key)
 	{

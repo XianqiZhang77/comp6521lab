@@ -163,7 +163,12 @@ public class PageManagerSingleton
 		for ( File currFile : dirFiles )
 		{
 			String fName    = currFile.getName();	// get filename
-			String fNameExt = fName.substring( fName.lastIndexOf("."));	// get file extension
+			int lastIdx = fName.lastIndexOf(".");
+			
+			if( lastIdx < 0 )
+				continue;
+			
+			String fNameExt = fName.substring( lastIdx );	// get file extension
 			
 			if ( ext.compareToIgnoreCase(fNameExt) == 0)	// match found
 			{

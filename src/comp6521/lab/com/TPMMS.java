@@ -57,7 +57,7 @@ public class TPMMS <T extends Page<?>>
 		ArrayList<Record> memRecords = new ArrayList<Record>();		// memory records array for quick-sort
 		for ( int pageCount = 0; pageCount <= (numberOfPages-1); pageCount++ )	// while there are pages to be read
 		{
-			currPage = MemoryManager.getInstance().getPage(myPageType, pageCount);	// get page
+			currPage = MemoryManager.getInstance().getPage(myPageType, pageCount, filename);	// get page
 			
 			if (currPage != null)	// ensure currPage is not null
 			{	

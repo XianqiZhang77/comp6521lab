@@ -1,6 +1,8 @@
 package comp6521.lab.com;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Stack;
 
 public class Log 
@@ -112,6 +114,7 @@ class LogSection
 	String sectionName;
 	ArrayList<String> lines;
 	String filename;
+	Timestamp timer;
 	
 	boolean LogIO;
 	long start_read_io;
@@ -131,6 +134,7 @@ class LogSection
 		filename = _filename;
 		
 		PageManagerSingleton.getInstance().writeOutput(filename, GetLevelOffset() + ">> START -- " + sectionName + " -- START <<\r\n");
+		timer = new Timestamp((new Date()).getTime());
 	}
 	
 	void AddLine(String line)
@@ -140,6 +144,7 @@ class LogSection
 	
 	void Output()
 	{
+		Timestamp endTimer = new Timestamp((new Date()).getTime());
 		long end_read_io = PageManagerSingleton.getInstance().getReadIOCount();
 		long end_write_io = PageManagerSingleton.getInstance().getWriteIOCount();
 		
@@ -147,6 +152,8 @@ class LogSection
 		long write_io_delta = end_write_io - start_write_io;
 		
 		String offset = GetLevelOffset();
+		
+		PageManagerSingleton.getInstance().writeOutput(filename, "Duration: " + (endTimer.getTime() - timer.getTime()) + " ms.\r\n" );
 		
 		if( LogIO )
 		{

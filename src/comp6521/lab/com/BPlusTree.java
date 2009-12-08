@@ -113,7 +113,8 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 			p++;
 		}
 		
-		cache.ClearCache();
+		cache.OutputStats();
+		cache.ClearCache();		
 		cache = null;
 		caching = false;
 		
@@ -540,6 +541,9 @@ class BPlusTreeCache<S extends RecordElement>
 	ArrayList< Long >          cacheHits;
 	long cacheCount;
 	
+	int count_cacheHits;
+	int count_cacheMisses;
+	
 	BPlusTreeCache( int cacheSize, Class<S> classRec, int RecLength, int n, String filename )
 	{
 		cacheCount = 0;
@@ -551,6 +555,9 @@ class BPlusTreeCache<S extends RecordElement>
 		m_recordElementLength = RecLength;
 		m_n = n;
 		m_filename = filename;
+		
+		count_cacheHits = 0;
+		count_cacheMisses = 0;
 	}
 	
 	BPlusTreeNode<S> AddToCache( int nodeNb )
@@ -611,11 +618,13 @@ class BPlusTreeCache<S extends RecordElement>
 			{
 				// We found the good node
 				// Update the cache hit
+				count_cacheHits++;
 				cacheHits.set(i, new Long(cacheCount++));
 				return cachedNode;
 			}
 		}
 		
+		count_cacheMisses++;
 		return null;
 	}
 	
@@ -628,8 +637,18 @@ class BPlusTreeCache<S extends RecordElement>
 				cachedNode.Clear();
 		}
 		
+		count_cacheHits = 0;
+		count_cacheMisses = 0;
+		
 		cache.clear();
 		cacheHits.clear();
+	}
+	
+	public void OutputStats()
+	{
+		Log.LogSomething("Cache hits: " + count_cacheHits);
+		Log.LogSomething("Cache misses: " + count_cacheMisses );
+		Log.LogSomething("Cache efficiency : " + (double)count_cacheHits / (double)(count_cacheHits + count_cacheMisses));
 	}
 }
 

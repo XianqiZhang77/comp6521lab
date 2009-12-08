@@ -92,7 +92,7 @@ public class Query_E_Indexed extends Query_E
 		Arrays.sort(nations);
 		
 		// Record number -> n_nationKey
-		RecordNumberToKeyPF<NationPage> NtNKpf = new RecordNumberToKeyPF<NationPage>(nations, NationPage.class, "n_nationKey", prefix + "nation_keys.txt");
+		RecordNumberToKeyPF<NationPage> NtNKpf = new RecordNumberToKeyPF<NationPage>(nations, NationPage.class, "n_nationKey", prefix + "nation_keys.tmp");
 		Log.StartLogSection("Getting all nation keys (n_nationKey) from the nations RN");
 		DB.ProcessingLoop(NtNKpf);
 		Log.EndLogSection();
@@ -104,7 +104,7 @@ public class Query_E_Indexed extends Query_E
 		int[] suppliersRN = DB.ReverseProcessingLoop( NtNKpf.keys, key_page.class, SupplierFKIndex, "key");
 		Log.EndLogSection();
 		// supplier record numbers -> supplier keys
-		RecordNumberToKeyPF<SupplierPage> StSKpf = new RecordNumberToKeyPF<SupplierPage>(suppliersRN, SupplierPage.class, "s_suppKey", prefix + "supp_keys.txt");
+		RecordNumberToKeyPF<SupplierPage> StSKpf = new RecordNumberToKeyPF<SupplierPage>(suppliersRN, SupplierPage.class, "s_suppKey", prefix + "supp_keys.tmp");
 		Log.StartLogSection("Getting all suppliers keys from the suppliers RN");
 		DB.ProcessingLoop(StSKpf);
 		Log.EndLogSection();

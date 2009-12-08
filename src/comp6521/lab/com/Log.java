@@ -153,7 +153,7 @@ class LogSection
 		
 		String offset = GetLevelOffset();
 		
-		PageManagerSingleton.getInstance().writeOutput(filename, "Duration: " + (endTimer.getTime() - timer.getTime()) + " ms.\r\n" );
+		PageManagerSingleton.getInstance().writeOutput(filename, offset + "Duration: " + (endTimer.getTime() - timer.getTime()) + " ms.\r\n" );
 		
 		if( LogIO )
 		{

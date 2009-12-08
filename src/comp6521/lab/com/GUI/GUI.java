@@ -12,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import java.util.Date;
 
+import comp6521.lab.com.IndexManager;
 import comp6521.lab.com.MemoryManager;
 import comp6521.lab.com.PageManagerSingleton;
 import comp6521.lab.com.QueryD_Indexed;
@@ -28,6 +29,7 @@ import comp6521.lab.com.Query_F;
 import comp6521.lab.com.Query_F_Indexed;
 import comp6521.lab.com.Query_Z;
 import comp6521.lab.com.Query_Z_Indexed;
+import comp6521.lab.com.Stats;
 import comp6521.lab.com.Pages.CustomerPage;
 import comp6521.lab.com.Pages.LineItemPage;
 import comp6521.lab.com.Pages.NationPage;
@@ -46,10 +48,10 @@ public class GUI extends JFrame
 {
 	private JButton buttons[];	// array of buttons
 	private final String names[] =
-	{"Generate Statistics", "Build Indexes", "Clear Indexes",  
+	{"Generate Statistics", "Build Indexes", "Purge Indexes",  
 	 "Query A", "Query A - Indexed", "Query B", "Query B - Indexed", "Query C", "Query C - Indexed", 
 	 "Query D", "Query D - Indexed", "Query E", "Query E - Indexed", "Query F", "Query F - Indexed",
-	 "Query Z", "Query Z - Indexed"};
+	 "Query Z", "Query Z - Indexed", "Purge Outputs"};
 	private GridLayout gridLayout;
 	
 	
@@ -64,7 +66,7 @@ public class GUI extends JFrame
 		for ( int count = 0; count < names.length; count++)
 		{
 			buttons[ count ] = new JButton( names[count] );
-			buttons[ count ].addActionListener( new QueryHandler() );	// register listener	//TODO: fix this 
+			buttons[ count ].addActionListener( new QueryHandler() );	// register listener 
 			add(buttons [ count ] );	// add button to JFrame
 		}
 		
@@ -281,6 +283,55 @@ public class GUI extends JFrame
 					queryFIdx.ProcessQuery(input);
 				}
 			}
+			
+			// build statistics
+			if ( query.compareToIgnoreCase("Generate Statistics") == 0 )  //  Build Statistics
+			{	
+				int selection = JOptionPane.showConfirmDialog(GUI.this, "Build Statistics?");	// prompt user
+				
+				// build statistics
+				if (selection == 0) // selection = yes
+				{
+					Stats statistics = new Stats();
+					statistics.GenerateStats();	// generate statistics	
+				}		
+			}
+			
+			// build indexes
+			if ( query.compareToIgnoreCase("Build Indexes") == 0 )  //  Build Indexes
+			{	
+				int selection = JOptionPane.showConfirmDialog(GUI.this, "Build Indexes?");	// prompt user
+				
+				// build statistics
+				if (selection == 0) // selection = yes
+				{
+					IndexManager.getInstance().CreateIndexes();	// create indexes	
+				}		
+			}
+		
+			// purge indexes
+			if ( query.compareToIgnoreCase("Purge Indexes") == 0 )  //  Purge Indexes
+			{	
+				int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Indexes?");	// prompt user
+				
+				// build statistics
+				if (selection == 0) // selection = yes
+				{
+					IndexManager.getInstance().PurgeIndexes();	// purge indexes	
+				}		
+			}
+			
+			// purge outputs
+			if ( query.compareToIgnoreCase("Purge Outputs") == 0 )  //  Purge Indexes
+			{	
+				int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Outputs?");	// prompt user
+				
+				// build statistics
+				if (selection == 0) // selection = yes
+				{
+					PageManagerSingleton.getInstance().deleteFileType(".out");	// delete all .out files
+				}		
+			}
 		}
-	}	
+	}
 }

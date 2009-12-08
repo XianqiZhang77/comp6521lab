@@ -154,7 +154,7 @@ public class PageManagerSingleton
 		return length;
 	}
 	
-	protected void deleteFileType(String ext)
+	public void deleteFileType(String ext)
 	{
 		File file = new File(path);	// get file object for path 
 		File[] dirFiles = file.listFiles();	// get list of files in current path

@@ -176,12 +176,15 @@ public class LinearHashTable< T extends Page<?> > {
 				page = MemoryManager.getInstance().getPage( m_pageType, m_buckets.get(i).m_pageNumbers.get(p).intValue(), m_filename );
 				MemoryManager.getInstance().writePage(page, m_wantedFilename, b);
 				m_buckets.get(i).m_pageNumbers.set(p, new Integer(b));
+				m_buckets.get(i).m_filename = m_wantedFilename;
 				b++;
 				MemoryManager.getInstance().freePage(page);
 			}
 		}
 		
+		String oldfilename = m_filename;
 		m_filename = m_wantedFilename;
+		PageManagerSingleton.getInstance().deleteFile(oldfilename);
 	}
 	
 	////////////////

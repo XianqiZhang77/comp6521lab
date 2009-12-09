@@ -64,6 +64,7 @@ public class Log
 			FlushInternal();
 			LogStarted = false;
 			filename = "";
+			PageManagerSingleton.getInstance().deleteTmpFiles();	// remove temporary files (i.e. intermediate results)
 		}
 		else
 		{

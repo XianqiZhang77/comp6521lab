@@ -79,8 +79,6 @@ public class QueryD_Indexed
 		Log.EndLogSection();
 		
 		Log.EndLog();
-		
-		PageManagerSingleton.getInstance().deleteTmpFiles();	// remove temporary files (i.e. intermediate results)
 	}			
 }
 

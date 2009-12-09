@@ -184,7 +184,6 @@ public class Query_D
 		DB.ProcessingLoopOnFile(QD_Page.class, sortedFile, oPF);
 		Log.EndLogSection();
 		
-		PageManagerSingleton.getInstance().deleteTmpFiles();	// remove temporary files (i.e. intermediate results)
 		Log.EndLog();
 	}
 }

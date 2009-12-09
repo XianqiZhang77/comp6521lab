@@ -39,6 +39,7 @@ public class IndexManager
 	// Methods
 	public void CreateIndexes()
 	{
+		Log.StartLog("indexes.out");
 		CreateLineItemDateIndex();
 		CreateLineItemOrderIndex();
 		CreateCustomerPKIndex();
@@ -55,6 +56,7 @@ public class IndexManager
 		CreatePartPKIndex();   
 		CreateOrderDateIndex();
 		CreateOrderPKIndex();
+		Log.EndLog();
 	}
 	
 	public void PurgeIndexes()

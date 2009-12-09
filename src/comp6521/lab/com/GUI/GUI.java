@@ -74,7 +74,7 @@ public class GUI extends JFrame
 		
 		// initialise page manager
 		PageManagerSingleton myPageManager = PageManagerSingleton.getInstance();	// set data source path
-		myPageManager.setPath("Y:\\Dimitri\\Concordia\\Comp6521_AdvancedDatabaseSystemsAndTheory\\Lab\\ShortData\\");
+		myPageManager.setPath("C:\\Users\\Julien\\Documents\\Concordia\\COMP6521\\");
 		
 		// initialise memory manager
 		MemoryManager.getInstance().SetPageFile(CustomerPage.class, "Customer.txt");	// set default page types
@@ -100,8 +100,8 @@ public class GUI extends JFrame
 			if ( (query.compareToIgnoreCase("Query A") == 0) || (query.compareToIgnoreCase("Query A - Indexed") == 0) )  //  A
 			{
 				// obtain user input from option pane dialogs
-				String inputStartDate = JOptionPane.showInputDialog("Enter Start Date");
-				String inputEndDate   = JOptionPane.showInputDialog("Enter End Date");
+				String inputStartDate = JOptionPane.showInputDialog("Enter Start Date", "25/08/1992");
+				String inputEndDate   = JOptionPane.showInputDialog("Enter End Date", "14/07/1997");
 
 				// date record element for parsing
 				DateRecordElement dateElement = new DateRecordElement();
@@ -135,8 +135,8 @@ public class GUI extends JFrame
 			if ( (query.compareToIgnoreCase("Query B") == 0) || (query.compareToIgnoreCase("Query B - Indexed") == 0) )  //  B
 			{
 				// obtain user input from option pane dialogs
-				String input1 = JOptionPane.showInputDialog("Enter Input 1 (Comma Separated List of Integers)");
-				String input2 = JOptionPane.showInputDialog("Enter Input 2 (Comma Separated List of Integers)");
+				String input1 = JOptionPane.showInputDialog("Enter Input 1 (Comma Separated List of Integers)", "24");
+				String input2 = JOptionPane.showInputDialog("Enter Input 2 (Comma Separated List of Integers)", "10");
 
 				String[] input1List = input1.split(",");	// separate tokens
 				String[] input2List = input2.split(",");	// separate tokens
@@ -162,10 +162,10 @@ public class GUI extends JFrame
 			if ( (query.compareToIgnoreCase("Query C") == 0) || (query.compareToIgnoreCase("Query C - Indexed") == 0) )  //  C
 			{
 				// obtain user input from option pane dialogs
-				int p_size  = Integer.parseInt(JOptionPane.showInputDialog("Enter p_size"));
+				int p_size  = Integer.parseInt(JOptionPane.showInputDialog("Enter p_size", "26"));
 				
-				String r_name1 = JOptionPane.showInputDialog("Enter r_name1");
-				String r_name2 = JOptionPane.showInputDialog("Enter r_name2");
+				String r_name1 = JOptionPane.showInputDialog("Enter r_name1", "AMERICA");
+				String r_name2 = JOptionPane.showInputDialog("Enter r_name2", "AMERICA");
 				
 				// execute query c
 				if (query.compareToIgnoreCase("Query C") == 0)
@@ -188,7 +188,7 @@ public class GUI extends JFrame
 			if ( (query.compareToIgnoreCase("Query D") == 0) || (query.compareToIgnoreCase("Query D - Indexed") == 0) )  //  D
 			{
 				// obtain user input from option pane dialogs
-				String r_name = JOptionPane.showInputDialog("Enter r_name");
+				String r_name = JOptionPane.showInputDialog("Enter r_name", "ASIA");
 				
 				// execute query d
 				if (query.compareToIgnoreCase("Query D") == 0)
@@ -211,8 +211,8 @@ public class GUI extends JFrame
 			if ( (query.compareToIgnoreCase("Query E") == 0) || (query.compareToIgnoreCase("Query E - Indexed") == 0) )  //  E
 			{
 				// obtain user input from option pane dialogs
-				String n_name1 = JOptionPane.showInputDialog("Enter n_name1");
-				String n_name2 = JOptionPane.showInputDialog("Enter n_name2");
+				String n_name1 = JOptionPane.showInputDialog("Enter n_name1", "CANADA");
+				String n_name2 = JOptionPane.showInputDialog("Enter n_name2", "RUSSIA");
 				
 				// execute query e
 				if (query.compareToIgnoreCase("Query E") == 0)
@@ -235,7 +235,7 @@ public class GUI extends JFrame
 			if ( (query.compareToIgnoreCase("Query Z") == 0) || (query.compareToIgnoreCase("Query Z - Indexed") == 0) )  //  Z
 			{
 				// obtain user input from option pane dialogs
-				int yearOrderDate = Integer.parseInt(JOptionPane.showInputDialog("Enter year(o_orderdate)"));
+				int yearOrderDate = Integer.parseInt(JOptionPane.showInputDialog("Enter year(o_orderdate)", "1994"));
 				
 				// execute query z
 				if (query.compareToIgnoreCase("Query Z") == 0)
@@ -265,7 +265,7 @@ public class GUI extends JFrame
 					"		  L_DISCOUNT, L_RETURNFLAG, L_LINESTATUS,\n " +
 					"		  L_SHIPDATE, L_COMMITDATE, L_RECEIPTDATE,\n " +
 					"		  L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT)\n\n" +
-					"(Dates in YYYY-MM-DD format)\n\n");
+					"(Dates in YYYY-MM-DD format)\n\n", "800,149,302,988,990,990.123456677,990,A,A,2009-10-25,2009-10-25,2009-10-25,AAA,AAA,AAA");
 				
 				String[] input = inputRecord.split(",");	// separate tokens
 								

@@ -120,7 +120,7 @@ public class Query_Z {
 						Log.AddResult( result );
 					
 					result = "";	
-					prevMonth = 0;					
+					prevMonth = -1;					
 
 					previousCustKey = curCustKey;
 					
@@ -142,7 +142,6 @@ public class Query_Z {
 					}
 					
 					result += previousName;
-					prevMonth = 0;
 				}
 				
 				// Count the number of tabs to add

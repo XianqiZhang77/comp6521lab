@@ -100,8 +100,8 @@ public class GUI extends JFrame
 			if ( (query.compareToIgnoreCase("Query A") == 0) || (query.compareToIgnoreCase("Query A - Indexed") == 0) )  //  A
 			{
 				// obtain user input from option pane dialogs
-				String inputStartDate = JOptionPane.showInputDialog("Enter Start Date", "25/08/1992");
-				String inputEndDate   = JOptionPane.showInputDialog("Enter End Date", "14/07/1997");
+				String inputStartDate = JOptionPane.showInputDialog("Enter Start Date", "08/25/1992 00:00:00");
+				String inputEndDate   = JOptionPane.showInputDialog("Enter End Date", "07/14/1997 00:00:00");
 
 				// date record element for parsing
 				DateRecordElement dateElement = new DateRecordElement();

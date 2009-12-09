@@ -203,7 +203,7 @@ public class Query_F
 			for (LineItemRecord rec : liItemRecords)
 			{
 				// if primary key exists set isUnique = false
-				if ( (rec.get("l_orderkey").getInt() == orderKey) && (rec.get("l_lineNumber").getInt() == lineNumber)	)
+				if ( (rec.get("l_orderKey").getInt() == orderKey) && (rec.get("l_lineNumber").getInt() == lineNumber)	)
 				{
 					unique = false;
 				}

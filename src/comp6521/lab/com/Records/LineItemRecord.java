@@ -4,7 +4,7 @@ public class LineItemRecord extends Record implements Comparable<Record>
 {
 	public LineItemRecord()
 	{
-		AddElement( "l_orderkey",      new IntegerRecordElement()  ); // PK, FK(orders)
+		AddElement( "l_orderKey",      new IntegerRecordElement()  ); // PK, FK(orders)
 		AddElement( "l_partKey",       new IntegerRecordElement()  ); // FK (part)
 		AddElement( "l_suppKey",       new IntegerRecordElement()  ); // FK (supp)
 		AddElement( "l_lineNumber",    new IntegerRecordElement()  ); // PK

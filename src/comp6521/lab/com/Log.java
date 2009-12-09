@@ -22,6 +22,11 @@ public class Log
 	boolean toggle;
 	int pause;
 	
+	// Total stats
+	Timestamp timer;
+	long start_read_io;
+	long start_write_io;
+	
 	// Constructor
 	private Log()
 	{
@@ -49,6 +54,10 @@ public class Log
 			LogStarted = true;
 			filename = outputFilename;
 			PageManagerSingleton.getInstance().deleteFile(outputFilename);
+			
+			start_read_io = PageManagerSingleton.getInstance().getReadIOCount();
+			start_write_io = PageManagerSingleton.getInstance().getWriteIOCount();
+			timer = new Timestamp((new Date()).getTime());
 		}
 		else
 		{
@@ -108,6 +117,25 @@ public class Log
 		// First, pop everything out
 		while( !sections.empty() )
 			EndLogSection();
+		
+		long delta_read_io = PageManagerSingleton.getInstance().getReadIOCount() - start_read_io;
+		long delta_write_io = PageManagerSingleton.getInstance().getWriteIOCount() - start_write_io;
+		long totaltime = (new Date()).getTime() - timer.getTime();
+		
+		PageManagerSingleton.getInstance().writeOutput(filename, "<<----------------->>\r\n");
+		PageManagerSingleton.getInstance().writeOutput(filename, "<< Operation Ended >>\r\n");
+		PageManagerSingleton.getInstance().writeOutput(filename, "<<----------------->>\r\n");
+		PageManagerSingleton.getInstance().writeOutput(filename, "Duration: " + totaltime + " ms.\r\n" );
+		
+		if( LogIO )
+		{
+			PageManagerSingleton.getInstance().writeOutput(filename, "-- Nb read I/Os : " + delta_read_io + " --\r\n");
+			PageManagerSingleton.getInstance().writeOutput(filename, "-- Nb write I/Os : " + delta_write_io + " --\r\n");
+		}
+		
+		PageManagerSingleton.getInstance().writeOutput(filename, "<<----------------->>\r\n");
+		PageManagerSingleton.getInstance().writeOutput(filename, "<<     Results     >>\r\n");
+		PageManagerSingleton.getInstance().writeOutput(filename, "<<----------------->>\r\n");
 		
 		// Write header
 		if( header.length() > 0 )

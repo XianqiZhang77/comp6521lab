@@ -48,24 +48,32 @@ public class Control extends JFrame implements ActionListener
 		// pause
 		if ( selection.compareToIgnoreCase("Pause") == 0 )  
 		{
+			System.out.println("PAUSED");
+			
 			Log.Pause();
 		}
 		
 		// resume
 		if ( selection.compareToIgnoreCase("Resume") == 0 )  
 		{
+			System.out.println("RESUMED");
+			
 			Log.Continue();
 		}		
 		
 		// step
 		if ( selection.compareToIgnoreCase("Step") == 0 )  
 		{
+			System.out.println("STEP");
+			
 			Log.Step();
 		}		
 		
 		// step out
 		if ( selection.compareToIgnoreCase("Step Out") == 0 )  
 		{
+			System.out.println("STEP OUT");
+			
 			Log.StepOut();
 		}		
 	}	

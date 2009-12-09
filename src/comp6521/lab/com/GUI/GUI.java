@@ -7,6 +7,7 @@ package comp6521.lab.com.GUI;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
 import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
@@ -51,9 +52,8 @@ public class GUI extends JFrame
 	{"Generate Statistics", "Build Indexes", "Purge Indexes",  
 	 "Query A", "Query A - Indexed", "Query B", "Query B - Indexed", "Query C", "Query C - Indexed", 
 	 "Query D", "Query D - Indexed", "Query E", "Query E - Indexed", "Query F", "Query F - Indexed",
-	 "Query Z", "Query Z - Indexed", "Purge Outputs"};
+	 "Query Z", "Query Z - Indexed", "Purge Outputs", "Purge Memory Logs"};
 	private GridLayout gridLayout;
-	
 	
 	// no-argument constructor
 	public GUI()
@@ -63,6 +63,7 @@ public class GUI extends JFrame
 		setLayout(gridLayout);
 		buttons = new JButton[ names.length ];	// create array of JButtons
 		
+		// add action listeners to buttons
 		for ( int count = 0; count < names.length; count++)
 		{
 			buttons[ count ] = new JButton( names[count] );
@@ -330,6 +331,18 @@ public class GUI extends JFrame
 				if (selection == 0) // selection = yes
 				{
 					PageManagerSingleton.getInstance().deleteFileType(".out");	// delete all .out files
+				}		
+			}
+			
+			// purge memory logs
+			if ( query.compareToIgnoreCase("Purge Memory Logs") == 0 )  //  purge memory logs
+			{	
+				int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Memory Logs?");	// prompt user
+				
+				// build statistics
+				if (selection == 0) // selection = yes
+				{
+					PageManagerSingleton.getInstance().deleteFileType(".mem");	// delete all .mem files
 				}		
 			}
 		}

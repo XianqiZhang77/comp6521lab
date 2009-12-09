@@ -47,6 +47,7 @@ import comp6521.lab.com.Records.DateRecordElement;
  */
 public class GUI extends JFrame
 {
+	private static final long serialVersionUID = -2674198162318278235L;
 	private JButton buttons[];	// array of buttons
 	private final String names[] =
 	{"Generate Statistics", "Build Indexes", "Purge Indexes",  

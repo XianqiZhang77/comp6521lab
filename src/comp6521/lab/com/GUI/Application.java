@@ -26,6 +26,12 @@ public class Application
 		dBMS.setSize(900, 400);	// set size of frame
 		dBMS.setVisible(true);	// display frame
 		
+		Control control = new Control();	// instantiate control GUI
+		
+		control.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE);	// exit on close
+		control.setSize(250, 190);	// set size of frame
+		control.setVisible(true);	// display frame
+		
 		//ExecutorService application = Executors.newFixedThreadPool(1);
 		//application.execute( new MemoryReport("MemoryReport") );
 		

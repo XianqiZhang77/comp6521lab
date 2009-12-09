@@ -391,7 +391,7 @@ public class MemoryManager
     	{
     		if( !m_records.get(i).m_pagesTaken.isEmpty() )
     		{
-    			report += ( m_records.get(i).m_type + " pages used : " + m_records.get(i).m_pagesTaken.size() + " == " + m_records.get(i).m_pagesTaken.size() * m_records.get(i).m_pageSize + " bytes.\r\n " );
+    			report += ( m_records.get(i).m_type + " pages used : " + m_records.get(i).m_pagesTaken.size() + " == " + m_records.get(i).m_pagesTaken.size() * m_records.get(i).m_pageSize + " bytes.\r\n" );
     		}
     	}
     	

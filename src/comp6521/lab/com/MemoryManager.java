@@ -378,19 +378,27 @@ public class MemoryManager
     
     public void ReportMemoryUse()
     {
-    	System.out.println("------------------");
-    	System.out.println("-- Memory usage --");
+    	System.out.print( OutputMemoryUse() );
+    }
+    
+    public String OutputMemoryUse()
+    {
+    	String report = "";
+    	report += "------------------\r\n";
+    	report += "-- Memory usage --\r\n";
+    	
     	for( int i = 0; i < m_records.size(); i++ )
     	{
     		if( !m_records.get(i).m_pagesTaken.isEmpty() )
     		{
-    			System.out.println( m_records.get(i).m_type + " pages used : " + m_records.get(i).m_pagesTaken.size() + " == " + m_records.get(i).m_pagesTaken.size() * m_records.get(i).m_pageSize + " bytes " );
+    			report += ( m_records.get(i).m_type + " pages used : " + m_records.get(i).m_pagesTaken.size() + " == " + m_records.get(i).m_pagesTaken.size() * m_records.get(i).m_pageSize + " bytes.\r\n " );
     		}
     	}
     	
-    	System.out.println("------------------");
-    	System.out.println("-- Free memory: " + RemainingMemory() + " bytes ");
-    	System.out.println("------------------");    	
+    	report += "------------------\r\n";
+    	report += "-- Free memory: " + RemainingMemory() + " bytes.\r\n";
+    	report += "------------------\r\n";
+    	return report;
     }
 	
 	public <T extends Page<?> > void SetPageFile( Class<T> c, String filename ) { m_records.get(getPageIndex(c)).m_filename = filename; }

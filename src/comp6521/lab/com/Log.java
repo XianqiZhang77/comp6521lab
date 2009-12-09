@@ -19,14 +19,25 @@ public class Log
 	ArrayList< String > results;
 	String header;
 	
+	boolean toggle;
+	int pause;
+	
 	// Constructor
 	private Log()
 	{
+		toggle = false;
+		pause = -1;
 		LogStarted = false;
 		sections = new Stack< LogSection >();
 		results = new ArrayList< String >();
 		header = "";
 	}
+	
+	public static boolean IsQueryRunning(){ return getInstance().LogStarted; }
+	public static void    Pause()    { getInstance().PauseInternal();   }
+	public static void    Step()     { getInstance().StepInternal();    }
+	public static void    StepOut()  { getInstance().StepOutInternal(); }
+	public static void    Continue() { getInstance().ContinueInternal();}
 	
 	public static void StartLog(String outputFilename, boolean logIO) { getInstance().StartLogInternal(outputFilename, logIO); }
 	public static void StartLog(String outputFilename) { getInstance().StartLogInternal(outputFilename, true); }
@@ -65,6 +76,7 @@ public class Log
 	{
 		// Push a new section
 		getInstance().sections.push(new LogSection(text, getInstance().filename, getInstance().LogIO, getInstance().sections.size()));
+		while( Paused() );
 	}
 	
 	public static void EndLogSection()
@@ -72,6 +84,7 @@ public class Log
 		LogSection ls = getInstance().sections.pop();
 		// Output ls
 		ls.Output();
+		while( Paused() );
 	}
 	
 	public static void SetResultHeader(String _header)
@@ -107,6 +120,24 @@ public class Log
 		results.clear();		
 	}
 
+	private void    PauseInternal()    { pause = Integer.MAX_VALUE;   toggle = false; }
+	private void    StepInternal()     { pause = Integer.MAX_VALUE;   toggle = true;  }
+	private void    StepOutInternal()  { pause = sections.size() - 2; toggle = false; }
+	private void    ContinueInternal() { pause = -1;                  toggle = false; }
+	
+	private static boolean Paused()    { return getInstance().PausedInternal(); }
+	private boolean PausedInternal()
+	{
+		if( toggle )
+		{
+			toggle = false;
+			return false;
+		}
+		else
+		{
+			return (sections.size() - 1) < pause;
+		}
+	}
 }
 
 class LogSection

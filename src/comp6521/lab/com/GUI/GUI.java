@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 import java.util.Date;
 
 import comp6521.lab.com.IndexManager;
@@ -74,7 +75,7 @@ public class GUI extends JFrame
 		
 		// initialise page manager
 		PageManagerSingleton myPageManager = PageManagerSingleton.getInstance();	// set data source path
-		myPageManager.setPath("C:\\Users\\Julien\\Documents\\Concordia\\COMP6521\\");
+		myPageManager.setPath("Y:\\Dimitri\\Concordia\\Comp6521_AdvancedDatabaseSystemsAndTheory\\Lab\\ExData\\");
 		
 		// initialise memory manager
 		MemoryManager.getInstance().SetPageFile(CustomerPage.class, "Customer.txt");	// set default page types
@@ -98,253 +99,499 @@ public class GUI extends JFrame
 			
 			// execute queries
 			if ( (query.compareToIgnoreCase("Query A") == 0) || (query.compareToIgnoreCase("Query A - Indexed") == 0) )  //  A
-			{
-				// obtain user input from option pane dialogs
-				String inputStartDate = JOptionPane.showInputDialog("Enter Start Date", "08/25/1992 00:00:00");
-				String inputEndDate   = JOptionPane.showInputDialog("Enter End Date", "07/14/1997 00:00:00");
-
-				// date record element for parsing
-				DateRecordElement dateElement = new DateRecordElement();
-				
-				// get start date
-				dateElement.Parse(inputStartDate);
-				Date startDate = dateElement.getDate();
-
-				// get end date
-				dateElement.Parse(inputEndDate);
-				Date endDate = dateElement.getDate();
-					
+			{	
 				// execute query a
 				if (query.compareToIgnoreCase("Query A") == 0)
 				{
 					// execute query A
-					Query_A queryA = new Query_A();
-					queryA.PerformQuery(startDate, endDate);
+			    	SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+							// obtain user input from option pane dialogs
+							String inputStartDate = JOptionPane.showInputDialog("Enter Start Date", "01/01/1992 00:00:00");
+							String inputEndDate   = JOptionPane.showInputDialog("Enter End Date", "01/01/1998 00:00:00");
+
+							// date record element for parsing
+							DateRecordElement dateElement = new DateRecordElement();
+							
+							// get start date
+							dateElement.Parse(inputStartDate);
+							Date startDate = dateElement.getDate();
+
+							// get end date
+							dateElement.Parse(inputEndDate);
+							Date endDate = dateElement.getDate();
+			    			
+							// execute query A
+							Query_A queryA = new Query_A();
+							queryA.PerformQuery(startDate, endDate);
+							
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread				
 				}
 				
 				// execute query a indexed
 				if (query.compareToIgnoreCase("Query A - Indexed") == 0)
 				{
-					// execute query A indexed
-					Query_A_Indexed queryAIdx = new Query_A_Indexed();
-					queryAIdx.PerformQuery(startDate, endDate);	
-				}
+					// execute query A
+			    	SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							String inputStartDate = JOptionPane.showInputDialog("Enter Start Date", "01/01/1992 00:00:00");
+							String inputEndDate   = JOptionPane.showInputDialog("Enter End Date", "01/01/1998 00:00:00");
+							
+							// date record element for parsing
+							DateRecordElement dateElement = new DateRecordElement();
+							
+							// get start date
+							dateElement.Parse(inputStartDate);
+							Date startDate = dateElement.getDate();
+
+							// get end date
+							dateElement.Parse(inputEndDate);
+							Date endDate = dateElement.getDate();
+			    			
+							// execute query A indexed
+							Query_A_Indexed queryAIdx = new Query_A_Indexed();
+							queryAIdx.PerformQuery(startDate, endDate);
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
+				}	
 			}
 			
 			// execute queries
 			if ( (query.compareToIgnoreCase("Query B") == 0) || (query.compareToIgnoreCase("Query B - Indexed") == 0) )  //  B
 			{
-				// obtain user input from option pane dialogs
-				String input1 = JOptionPane.showInputDialog("Enter Input 1 (Comma Separated List of Integers)", "24");
-				String input2 = JOptionPane.showInputDialog("Enter Input 2 (Comma Separated List of Integers)", "10");
-
-				String[] input1List = input1.split(",");	// separate tokens
-				String[] input2List = input2.split(",");	// separate tokens
-			
 				// execute query b
 				if (query.compareToIgnoreCase("Query B") == 0)
 				{
 					// execute query b
-					Query_B queryB = new Query_B();
-					queryB.PerformQuery(input1List, input2List);
+			    	SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							String input1 = JOptionPane.showInputDialog("Enter Input 1 (Comma Separated List of Integers)", "15,22,18");
+							String input2 = JOptionPane.showInputDialog("Enter Input 2 (Comma Separated List of Integers)", "15,22,18");
+
+							String[] input1List = input1.split(",");	// separate tokens
+							String[] input2List = input2.split(",");	// separate tokens
+			    			
+							// execute query b
+							Query_B queryB = new Query_B();
+							queryB.PerformQuery(input1List, input2List);
+				
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 				
 				// execute query b indexed
 				if (query.compareToIgnoreCase("Query B - Indexed") == 0)
 				{
-					// execute query b indexed
-					Query_B_Indexed queryBIdx = new Query_B_Indexed();
-					queryBIdx.PerformQuery(input1List, input2List);	
+					// execute query b
+			    	SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+							// obtain user input from option pane dialogs
+							String input1 = JOptionPane.showInputDialog("Enter Input 1 (Comma Separated List of Integers)", "15,22,18");
+							String input2 = JOptionPane.showInputDialog("Enter Input 2 (Comma Separated List of Integers)", "15,22,18");
+
+							String[] input1List = input1.split(",");	// separate tokens
+							String[] input2List = input2.split(",");	// separate tokens
+			    			
+							// execute query b indexed
+							Query_B_Indexed queryBIdx = new Query_B_Indexed();
+							queryBIdx.PerformQuery(input1List, input2List);	
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 			}
 			
 			// execute queries
 			if ( (query.compareToIgnoreCase("Query C") == 0) || (query.compareToIgnoreCase("Query C - Indexed") == 0) )  //  C
 			{
-				// obtain user input from option pane dialogs
-				int p_size  = Integer.parseInt(JOptionPane.showInputDialog("Enter p_size", "26"));
-				
-				String r_name1 = JOptionPane.showInputDialog("Enter r_name1", "AMERICA");
-				String r_name2 = JOptionPane.showInputDialog("Enter r_name2", "AMERICA");
-				
 				// execute query c
 				if (query.compareToIgnoreCase("Query C") == 0)
 				{
 					// execute query c
-					Query_C queryC = new Query_C();
-					queryC.ProcessQuery(p_size, r_name1, r_name2);
+			    	SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							int p_size  = Integer.parseInt(JOptionPane.showInputDialog("Enter p_size", "48"));
+							
+							String r_name1 = JOptionPane.showInputDialog("Enter r_name1", "AMERICA");
+							String r_name2 = JOptionPane.showInputDialog("Enter r_name2", "AMERICA");
+			    			
+							// execute query c
+							Query_C queryC = new Query_C();
+							queryC.ProcessQuery(p_size, r_name1, r_name2);
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 				
 				// execute query c indexed
 				if (query.compareToIgnoreCase("Query C - Indexed") == 0)
 				{
-					// execute query c indexed
-					Query_C_Indexed queryCIdx = new Query_C_Indexed();
-					queryCIdx.ProcessQuery(p_size, r_name1, r_name2);	
+					// execute query c
+			    	SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							int p_size  = Integer.parseInt(JOptionPane.showInputDialog("Enter p_size", "48"));
+							
+							String r_name1 = JOptionPane.showInputDialog("Enter r_name1", "AMERICA");
+							String r_name2 = JOptionPane.showInputDialog("Enter r_name2", "AMERICA");
+							
+							// execute query c indexed
+							Query_C_Indexed queryCIdx = new Query_C_Indexed();
+							queryCIdx.ProcessQuery(p_size, r_name1, r_name2);
+							
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 			}
 			
 			// execute queries
 			if ( (query.compareToIgnoreCase("Query D") == 0) || (query.compareToIgnoreCase("Query D - Indexed") == 0) )  //  D
 			{
-				// obtain user input from option pane dialogs
-				String r_name = JOptionPane.showInputDialog("Enter r_name", "ASIA");
-				
 				// execute query d
 				if (query.compareToIgnoreCase("Query D") == 0)
 				{
-					// execute query d
-					Query_D queryD = new Query_D();
-					queryD.ProcessQuery(r_name);
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{		
+			    			// obtain user input from option pane dialogs
+							String r_name = JOptionPane.showInputDialog("Enter r_name", "AMERICA");
+			    			
+							// execute query d
+							Query_D queryD = new Query_D();
+							queryD.ProcessQuery(r_name);
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 				
 				// execute query d indexed
 				if (query.compareToIgnoreCase("Query D - Indexed") == 0)
 				{
-					// execute query d indexed
-					QueryD_Indexed queryDIdx = new QueryD_Indexed();
-					queryDIdx.ProcessQuery(r_name);	
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{		
+			    			// obtain user input from option pane dialogs
+							String r_name = JOptionPane.showInputDialog("Enter r_name", "AMERICA");
+								    			
+							// execute query d indexed
+							QueryD_Indexed queryDIdx = new QueryD_Indexed();
+							queryDIdx.ProcessQuery(r_name);
+					
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 			}
 			
 			// execute queries
 			if ( (query.compareToIgnoreCase("Query E") == 0) || (query.compareToIgnoreCase("Query E - Indexed") == 0) )  //  E
 			{
-				// obtain user input from option pane dialogs
-				String n_name1 = JOptionPane.showInputDialog("Enter n_name1", "CANADA");
-				String n_name2 = JOptionPane.showInputDialog("Enter n_name2", "RUSSIA");
-				
 				// execute query e
 				if (query.compareToIgnoreCase("Query E") == 0)
 				{
-					// execute query e
-					Query_E queryE = new Query_E();
-					queryE.ProcessQuery(n_name2, n_name1);
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							String n_name1 = JOptionPane.showInputDialog("Enter n_name1", "CANADA");
+							String n_name2 = JOptionPane.showInputDialog("Enter n_name2", "CANADA");
+			    			
+							// execute query e
+							Query_E queryE = new Query_E();
+							queryE.ProcessQuery(n_name2, n_name1);
+							
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 				
 				// execute query e indexed
 				if (query.compareToIgnoreCase("Query E - Indexed") == 0)
 				{
-					// execute query e indexed
-					Query_E_Indexed queryEIdx = new Query_E_Indexed();
-					queryEIdx.ProcessQuery(n_name2, n_name1);
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							String n_name1 = JOptionPane.showInputDialog("Enter n_name1", "CANADA");
+							String n_name2 = JOptionPane.showInputDialog("Enter n_name2", "CANADA");
+			    			
+							// execute query e indexed
+							Query_E_Indexed queryEIdx = new Query_E_Indexed();
+							queryEIdx.ProcessQuery(n_name2, n_name1);
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 			}
 			
 			// execute queries
 			if ( (query.compareToIgnoreCase("Query Z") == 0) || (query.compareToIgnoreCase("Query Z - Indexed") == 0) )  //  Z
-			{
-				// obtain user input from option pane dialogs
-				int yearOrderDate = Integer.parseInt(JOptionPane.showInputDialog("Enter year(o_orderdate)", "1994"));
-				
+			{				
 				// execute query z
 				if (query.compareToIgnoreCase("Query Z") == 0)
 				{
-					// execute query z
-					Query_Z queryZ = new Query_Z();
-					queryZ.ProcessQuery(yearOrderDate);
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							int yearOrderDate = Integer.parseInt(JOptionPane.showInputDialog("Enter year(o_orderdate)", "1993"));
+			    			
+							// execute query z
+							Query_Z queryZ = new Query_Z();
+							queryZ.ProcessQuery(yearOrderDate);
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 				
 				// execute query z indexed
 				if (query.compareToIgnoreCase("Query Z - Indexed") == 0)
 				{
-					// execute query e indexed
-					Query_Z_Indexed queryZIdx = new Query_Z_Indexed();
-					queryZIdx.ProcessQuery(yearOrderDate);
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+							// obtain user input from option pane dialogs
+							int yearOrderDate = Integer.parseInt(JOptionPane.showInputDialog("Enter year(o_orderdate)", "1993"));
+			    			
+							// execute query e indexed
+							Query_Z_Indexed queryZIdx = new Query_Z_Indexed();
+							queryZIdx.ProcessQuery(yearOrderDate);
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 			}
 			
 			// execute queries
 			if ( (query.compareToIgnoreCase("Query F") == 0) || (query.compareToIgnoreCase("Query F - Indexed") == 0) )  //  F
-			{
-				// obtain user input from option pane dialogs
-				String inputRecord = 
-					JOptionPane.showInputDialog("Enter Line Item Record\n\n" +
-					"LineItem(L_ORDERKEY, L_PARTKEY, L_SUPPKEY,\n " +
-					"		  L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE,\n " +
-					"		  L_DISCOUNT, L_RETURNFLAG, L_LINESTATUS,\n " +
-					"		  L_SHIPDATE, L_COMMITDATE, L_RECEIPTDATE,\n " +
-					"		  L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT)\n\n" +
-					"(Dates in YYYY-MM-DD format)\n\n", "800,149,302,988,990,990.123456677,990,A,A,2009-10-25,2009-10-25,2009-10-25,AAA,AAA,AAA");
-				
-				String[] input = inputRecord.split(",");	// separate tokens
-								
+			{				
 				// execute query z
 				if (query.compareToIgnoreCase("Query F") == 0)
 				{
-					// execute query z
-					Query_F queryF = new Query_F();
-					queryF.ProcessQuery(input);
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							String inputRecord = 
+								JOptionPane.showInputDialog("Enter Line Item Record\n\n" +
+								"LineItem(L_ORDERKEY, L_PARTKEY, L_SUPPKEY,\n " +
+								"		  L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE,\n " +
+								"		  L_DISCOUNT, L_RETURNFLAG, L_LINESTATUS,\n " +
+								"		  L_SHIPDATE, L_COMMITDATE, L_RECEIPTDATE,\n " +
+								"		  L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT)\n\n" +
+								"(Dates in YYYY-MM-DD format)\n\n", "800,149,302,988,990,990.123456677,990,A,A,2009-10-25,2009-10-25,2009-10-25,AAA,AAA,AAA");
+							
+							String[] input = inputRecord.split(",");	// separate tokens
+			    			
+							// execute query z
+							Query_F queryF = new Query_F();
+							queryF.ProcessQuery(input);
+							
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 				
 				// execute query z indexed
 				if (query.compareToIgnoreCase("Query F - Indexed") == 0)
 				{
-					// execute query e indexed
-					Query_F_Indexed queryFIdx = new Query_F_Indexed();
-					queryFIdx.ProcessQuery(input);
+					SwingWorker sw = new SwingWorker<Void,Void>()
+			    	{
+			    		public Void doInBackground()
+			    		{
+			    			// obtain user input from option pane dialogs
+							String inputRecord = 
+								JOptionPane.showInputDialog("Enter Line Item Record\n\n" +
+								"LineItem(L_ORDERKEY, L_PARTKEY, L_SUPPKEY,\n " +
+								"		  L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE,\n " +
+								"		  L_DISCOUNT, L_RETURNFLAG, L_LINESTATUS,\n " +
+								"		  L_SHIPDATE, L_COMMITDATE, L_RECEIPTDATE,\n " +
+								"		  L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT)\n\n" +
+								"(Dates in YYYY-MM-DD format)\n\n", "800,149,302,988,990,990.123456677,990,A,A,2009-10-25,2009-10-25,2009-10-25,AAA,AAA,AAA");
+							
+							String[] input = inputRecord.split(",");	// separate tokens
+			    			
+							// execute query e indexed
+							Query_F_Indexed queryFIdx = new Query_F_Indexed();
+							queryFIdx.ProcessQuery(input);
+						
+							return null;
+						}
+					};
+					
+					sw.execute();	// execute swing worker thread
 				}
 			}
 			
 			// build statistics
 			if ( query.compareToIgnoreCase("Generate Statistics") == 0 )  //  Build Statistics
 			{	
-				int selection = JOptionPane.showConfirmDialog(GUI.this, "Build Statistics?");	// prompt user
+				SwingWorker sw = new SwingWorker<Void,Void>()
+		    	{
+		    		public Void doInBackground()
+		    		{
+		    			int selection = JOptionPane.showConfirmDialog(GUI.this, "Build Statistics?");	// prompt user
 				
-				// build statistics
-				if (selection == 0) // selection = yes
-				{
-					Stats statistics = new Stats();
-					statistics.GenerateStats();	// generate statistics	
-				}		
+		    			// build statistics
+		    			if (selection == 0) // selection = yes
+		    			{
+		    				Stats statistics = new Stats();
+		    				statistics.GenerateStats();	// generate statistics	
+		    			}
+		    		
+		    			return null;
+					}
+				};
+				
+				sw.execute();	// execute swing worker thread
 			}
 			
 			// build indexes
 			if ( query.compareToIgnoreCase("Build Indexes") == 0 )  //  Build Indexes
 			{	
-				int selection = JOptionPane.showConfirmDialog(GUI.this, "Build Indexes?");	// prompt user
+				SwingWorker sw = new SwingWorker<Void,Void>()
+		    	{
+		    		public Void doInBackground()
+		    		{
+						int selection = JOptionPane.showConfirmDialog(GUI.this, "Build Indexes?");	// prompt user
 				
-				// build statistics
-				if (selection == 0) // selection = yes
-				{
-					IndexManager.getInstance().CreateIndexes();	// create indexes	
-				}		
+						// build statistics
+						if (selection == 0) // selection = yes
+						{
+							IndexManager.getInstance().CreateIndexes();	// create indexes	
+						}
+					
+						return null;
+					}
+				};
+				
+				sw.execute();	// execute swing worker thread
 			}
 		
 			// purge indexes
 			if ( query.compareToIgnoreCase("Purge Indexes") == 0 )  //  Purge Indexes
 			{	
-				int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Indexes?");	// prompt user
+				SwingWorker sw = new SwingWorker<Void,Void>()
+		    	{
+		    		public Void doInBackground()
+		    		{
+						int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Indexes?");	// prompt user
 				
-				// build statistics
-				if (selection == 0) // selection = yes
-				{
-					IndexManager.getInstance().PurgeIndexes();	// purge indexes	
-				}		
+						// build statistics
+						if (selection == 0) // selection = yes
+						{
+							IndexManager.getInstance().PurgeIndexes();	// purge indexes	
+						}
+				
+						return null;
+					}
+				};
+				
+				sw.execute();	// execute swing worker thread
 			}
 			
 			// purge outputs
 			if ( query.compareToIgnoreCase("Purge Outputs") == 0 )  //  Purge Indexes
 			{	
-				int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Outputs?");	// prompt user
+				SwingWorker sw = new SwingWorker<Void,Void>()
+		    	{
+		    		public Void doInBackground()
+		    		{
+						int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Outputs?");	// prompt user
 				
-				// build statistics
-				if (selection == 0) // selection = yes
-				{
-					PageManagerSingleton.getInstance().deleteFileType(".out");	// delete all .out files
-				}		
+						// build statistics
+						if (selection == 0) // selection = yes
+						{
+							PageManagerSingleton.getInstance().deleteFileType(".out");	// delete all .out files
+						}
+						
+						return null;
+					}
+				};
+				
+				sw.execute();	// execute swing worker thread
 			}
 			
 			// purge memory logs
 			if ( query.compareToIgnoreCase("Purge Memory Logs") == 0 )  //  purge memory logs
 			{	
-				int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Memory Logs?");	// prompt user
+				SwingWorker sw = new SwingWorker<Void,Void>()
+		    	{
+		    		public Void doInBackground()
+		    		{
+						int selection = JOptionPane.showConfirmDialog(GUI.this, "Purge Memory Logs?");	// prompt user
 				
-				// build statistics
-				if (selection == 0) // selection = yes
-				{
-					PageManagerSingleton.getInstance().deleteFileType(".mem");	// delete all .mem files
-				}		
+						// build statistics
+						if (selection == 0) // selection = yes
+						{
+							PageManagerSingleton.getInstance().deleteFileType(".mem");	// delete all .mem files
+						}		
+						
+						return null;
+					}
+				};
+				
+				sw.execute();	// execute swing worker thread
 			}
 		}
 	}

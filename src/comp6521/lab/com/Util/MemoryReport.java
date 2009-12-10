@@ -30,6 +30,7 @@ public class MemoryReport implements Runnable
 		{
 			try 
 			{
+				Thread.yield();
 				Thread.sleep(1);
 				if(Log.IsQueryRunning())
 				{

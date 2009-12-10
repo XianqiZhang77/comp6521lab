@@ -88,6 +88,7 @@ public class MemoryManager
 		{
 			System.out.println("Warning: asking for a page already in memory!");
 			System.out.println("-- " + rk.m_type + " page n." + pageNumber );
+			System.out.print(OutputMemoryUse());
 			page = CreatePage( c, PageManagerSingleton.getInstance().getRawPage( rk.m_filename, rk.m_pageSize, pageNumber ) );
 		}
 	   	else

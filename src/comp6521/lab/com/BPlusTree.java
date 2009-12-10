@@ -410,6 +410,7 @@ public class BPlusTree<T extends Page<?>, S extends RecordElement > {
 		int e = 0;
 		for( int i = 0; i < m_n+1; i++ )
 		{
+			//if( inserted || ( e < m_n && (node.m_elements[e] == null || node.m_elements[e].CompareTo(keyAdded.el) < 0 )) )
 			if( inserted || ( e < m_n && node.m_elements[e].CompareTo(keyAdded.el) < 0 ) )
 			{
 				els[i]  = node.m_elements[e];
@@ -870,7 +871,7 @@ class BPlusTreeNode<S extends RecordElement>
 		// Find index we'll insert the value in
 		int insertionIdx = -1;
 		for( int i = 0; i < m_nbElements && insertionIdx < 0; i++ )
-			if( pair.el.CompareTo( m_elements[i] ) < 0 )
+			if( m_elements[i] != null && pair.el.CompareTo( m_elements[i] ) < 0 )
 				insertionIdx = i;
 		
 		if( insertionIdx == -1 )

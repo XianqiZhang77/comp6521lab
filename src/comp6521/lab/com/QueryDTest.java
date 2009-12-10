@@ -30,33 +30,38 @@ public class QueryDTest
 		
 		// set default page types
 		MemoryManager myMemoryManager = MemoryManager.getInstance();
+
 		myMemoryManager.SetPageFile( LineItemPage.class,   "LineItem.txt" );
-		myMemoryManager.SetPageFile( RegionPage.class,   "Region.txt" );
-		myMemoryManager.SetPageFile( NationPage.class,   "Nation.txt" );
-		myMemoryManager.SetPageFile( SupplierPage.class, "Supplier.txt" );
+		myMemoryManager.SetPageFile( RegionPage.class,     "Region.txt" );
+		myMemoryManager.SetPageFile( NationPage.class,     "Nation.txt" );
+		myMemoryManager.SetPageFile( SupplierPage.class,   "Supplier.txt" );
 		myMemoryManager.SetPageFile( CustomerPage.class,   "Customer.txt" );
-		myMemoryManager.SetPageFile( PartPage.class, "Part.txt" );
-		myMemoryManager.SetPageFile( PartSuppPage.class, "PartSupp.txt");
+		myMemoryManager.SetPageFile( PartPage.class,       "Part.txt" );
+		myMemoryManager.SetPageFile( PartSuppPage.class,   "PartSupp.txt");
 		
 		// execute query d
 		//Query_D queryD = new Query_D();
 		//queryD.ProcessQuery("ASIA");
 		
-		DateRecordElement myDRE = new DateRecordElement();
-		myDRE.Parse("08/25/1992 00:00:00");
+		// execute query d indexed
+		QueryD_Indexed queryD = new QueryD_Indexed();
+		queryD.ProcessQuery("ASIA");
+		
+		//DateRecordElement myDRE = new DateRecordElement();
+		//myDRE.Parse("08/25/1992 00:00:00");
 		//Date startDate = myDRE.getDate();
 
 		//myDRE.Parse("25/08/1992");
 		//Date starDate = myDRE.getDate();
 		
-		DateRecordElement myDDRE = new DateRecordElement();
-		myDDRE.Parse("07/14/1997 00:00:00");
+		//DateRecordElement myDDRE = new DateRecordElement();
+		//myDDRE.Parse("07/14/1997 00:00:00");
 
-		String[] arg1 = {"24"};
-		String[] arg2 = {"10"};
+		//String[] arg1 = {"24"};
+		//String[] arg2 = {"10"};
 		
-		Query_E queryE = new Query_E();
-		queryE.ProcessQuery("UNITED STATES", "UNITED STATES");
+		//Query_E queryE = new Query_E();
+		//queryE.ProcessQuery("UNITED STATES", "UNITED STATES");
 	}
 
 }

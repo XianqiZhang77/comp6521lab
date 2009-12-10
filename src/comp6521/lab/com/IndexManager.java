@@ -39,6 +39,7 @@ public class IndexManager
 	// Methods
 	public void CreateIndexes()
 	{
+		//CreateSupplierFKIndex();
 		Log.StartLog("indexes.out");
 		CreateLineItemDateIndex();
 		CreateLineItemOrderIndex();
@@ -48,14 +49,14 @@ public class IndexManager
 		CreateNationFKIndex();
 		CreateNationPKIndex();
 		CreateNationNameIndex();
-		CreateSupplierFKIndex();
-		CreateSupplierPKIndex();
 		CreatePartSuppPartFKIndex();
 		CreatePartSuppSuppFKIndex();
 		CreatePartSizeIndex(); 
 		CreatePartPKIndex();   
 		CreateOrderDateIndex();
 		CreateOrderPKIndex();
+		CreateSupplierFKIndex();
+		CreateSupplierPKIndex();
 		Log.EndLog();
 	}
 	
